@@ -1,0 +1,41 @@
+Name: Edward (Eddie) Guo
+ID: 1576381
+CMPUT 275, Winter 2020
+
+Weekly Exercise 2: Restaurants and Pointers
+
+--------------
+Included Files
+--------------
+    * get_restaurant.cpp
+    * Makefile
+    * README
+
+-----------
+Accessories
+-----------
+    * Arduino Mega 2560 Board X1
+    * USB cable type A/B X1
+    * 3.5" TFT LCD 480x320 HD color screen module for Arduino UNO & MEGA 2560
+        board with touch panel X1
+
+--------------------
+Wiring Instructions
+--------------------
+    * Connect appropriate pins on the TFT display to the Arduino.
+
+---------------------
+Running Instructions
+---------------------
+    1. Connect the Arduino with the appropriate componenets (ex: TFT display) to
+    a computer using an A-B style USB cable. Ensure that the Arduino is using
+    the proper serial port (/dev/ttyACMO0).
+
+    2. In the directory containing the files get_restaurant.cpp and Makefile,
+    use the command "make upload" to upload the code to the Arduino.
+
+----------------------
+Notes and Assumptions
+----------------------
+    * The function runAvg() assumes that the run times do not overflow an
+    unsigned long.
