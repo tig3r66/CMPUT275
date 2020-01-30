@@ -1,8 +1,6 @@
 #ifndef _JOY_CURSOR_H
 #define _JOY_CURSOR_H
 
-#include <stdint.h>
-
 // pins to connect
 #define SD_CS 10
 #define JOY_VERT A9
