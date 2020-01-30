@@ -12,36 +12,13 @@
 #include <SPI.h>
 #include <SD.h>
 #include "lcd_image.h"
+#include "joy_cursor.h"
 
 MCUFRIEND_kbv tft;
-
-// pins to connect
-#define SD_CS 10
-#define JOY_VERT A9
-#define JOY_HORIZ A8
-#define JOY_SEL 53
-// screen and map dimensions
-#define DISPLAY_WIDTH 480
-#define DISPLAY_HEIGHT 320
-#define PADX 60
-#define YEG_SIZE 2048
 lcd_image_t yegImage = { "yeg-big.lcd", YEG_SIZE, YEG_SIZE };
-// joystick movement
-#define JOY_CENTER 512
-#define JOY_DEADZONE 64
-// cursor size and position
-#define CURSOR_SIZE 9
+
+// cursor position variable
 int cursorX, cursorY;
-
-
-// function declarations
-void setup();
-void lcd_setup();
-void redrawCursor(uint16_t);
-void processJoystick(uint8_t, uint8_t);
-void drawMapPatch(int, int);
-void constrainCursor(int*, int*);
-void lcdYegDraw(int, int, int, int, int, int);
 
 
 /*
