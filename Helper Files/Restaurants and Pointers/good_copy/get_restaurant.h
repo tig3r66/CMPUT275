@@ -37,15 +37,6 @@ const int PADX = 26;
 const int SLOW_RUN_PADY = 16, SLOW_RUN_AVG_PADY = 64;
 const int FAST_RUN_PADY = 112, FAST_RUN_AVG_PADY = 160;
 
-// holds restaurant data read from SD card
-struct restaurant {
-    int32_t lat;
-    int32_t lon;
-    // from 0 to 10
-    uint8_t rating;
-    char name[55];
-};
-
 // function declarations
 void setup();
 void printRunLabels();

@@ -12,6 +12,7 @@
 #include <SD.h>
 #include <TouchScreen.h>
 #include "get_restaurant.h"
+#include "rest_struct.h"
 
 // tft display and sd card objects
 MCUFRIEND_kbv tft;
