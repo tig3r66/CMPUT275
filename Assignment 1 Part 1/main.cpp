@@ -32,7 +32,6 @@ int main() {
     while (true) {
         // min and max cursor speeds are 0 and CURSOR_SIZE pixels/cycle
         processJoystick(0, CURSOR_SIZE);
-        break;
     }
 
     Serial.end();
@@ -188,7 +187,7 @@ void drawMapPatch(int cursorX0, int cursorY0) {
     uint8_t PAD = 0;
     if (CURSOR_SIZE & 1) PAD = 1;
 
-    // draw the cursor
+    // draw the map
     if (diffX == 0 && diffY < 0) {
         // up
         lcdYegDraw(icolNeg, irowPos, scolNeg, srowPos, CURSOR_SIZE, -diffY+PAD);
@@ -217,6 +216,21 @@ void drawMapPatch(int cursorX0, int cursorY0) {
         // down and right
         lcdYegDraw(icolNeg, irowNeg, scolNeg, srowNeg, diffX, CURSOR_SIZE);
         lcdYegDraw(icolNeg, irowNeg, scolNeg, srowNeg, CURSOR_SIZE, diffY);
+    }
+}
+
+
+void redrawMap() {
+    // NEED TO IMPLEMENT MAP REDRAW
+    // CONDITIONS ARE CORRECT
+    if (cursorX == (CURSOR_SIZE >> 1)) {
+        Serial.println("X0 bound reached");
+    } else if (cursorY == (CURSOR_SIZE >> 1)) {
+        Serial.println("Y0 bound reached");
+    } else if (cursorX == MAP_DISP_WIDTH - (CURSOR_SIZE >> 1) - PAD) {
+        Serial.println("X1 bound reached");
+    } else if (cursorY == MAP_DISP_HEIGHT - (CURSOR_SIZE >> 1) - PAD) {
+        Serial.println("Y1 bound reached");
     }
 }
 
