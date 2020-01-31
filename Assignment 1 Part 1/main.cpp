@@ -71,12 +71,12 @@ void lcd_setup() {
   tft.setRotation(1);
   tft.fillScreen(TFT_BLACK);
   // drawing map
-  int yegMiddleX = (YEG_SIZE - (DISPLAY_WIDTH - PADX)) >> 1;
+  int yegMiddleX = (YEG_SIZE - (MAP_DISP_WIDTH)) >> 1;
   int yegMiddleY = (YEG_SIZE - DISPLAY_HEIGHT) >> 1;
   lcd_image_draw(&yegImage, &tft, yegMiddleX, yegMiddleY, 0, 0,
-    DISPLAY_WIDTH - PADX, DISPLAY_HEIGHT);
+    MAP_DISP_WIDTH, DISPLAY_HEIGHT);
   // setting cursor to middle of YEG map
-  cursorX = (DISPLAY_WIDTH - PADX) >> 1;
+  cursorX = (MAP_DISP_WIDTH) >> 1;
   cursorY = DISPLAY_HEIGHT >> 1;
   redrawCursor(TFT_RED);
 }
@@ -139,7 +139,7 @@ void constrainCursor(int* cursorX, int* cursorY) {
   if (CURSOR_SIZE & 1) PAD = 1;
 
   *cursorX = constrain(*cursorX, (CURSOR_SIZE >> 1),
-    DISPLAY_WIDTH - PADX - (CURSOR_SIZE >> 1) - PAD);
+    MAP_DISP_WIDTH - (CURSOR_SIZE >> 1) - PAD);
   *cursorY = constrain(*cursorY, (CURSOR_SIZE >> 1),
     DISPLAY_HEIGHT - (CURSOR_SIZE >> 1) - PAD);
 }
@@ -168,7 +168,7 @@ void redrawCursor(uint16_t colour) {
 */
 void drawMapPatch(int cursorX0, int cursorY0) {
   // middle of the YEG map
-  int yegMiddleX = (YEG_SIZE - (DISPLAY_WIDTH - PADX)) >> 1;
+  int yegMiddleX = (YEG_SIZE - (MAP_DISP_WIDTH)) >> 1;
   int yegMiddleY = (YEG_SIZE - DISPLAY_HEIGHT) >> 1;
   // storing change in cursor position
   int diffX = cursorX - cursorX0;
