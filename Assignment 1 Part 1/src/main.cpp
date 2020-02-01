@@ -22,8 +22,8 @@ int cursorX, cursorY;
 
 
 /*
-    Description: moves a cursor across a partial map of Edmonton using a joystick
-    on a TFT display controlled by an Arduino.
+    Description: moves a cursor across a partial map of Edmonton using a
+    joystick on a TFT display controlled by an Arduino.
 */
 int main() {
     setup();
@@ -223,7 +223,9 @@ void drawMapPatch(int cursorX0, int cursorY0) {
 void redrawMap() {
     // NEED TO IMPLEMENT MAP REDRAW
     // CONDITIONS ARE CORRECT
-    int PAD = 1;
+    uint8_t PAD = 0;
+    if (CURSOR_SIZE & 1) PAD = 1;
+
     if (cursorX == (CURSOR_SIZE >> 1)) {
         Serial.println("X0 bound reached");
     } else if (cursorY == (CURSOR_SIZE >> 1)) {
