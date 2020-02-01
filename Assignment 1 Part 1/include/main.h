@@ -96,8 +96,16 @@ int32_t y_to_lat(int16_t);
 int16_t lon_to_x(int32_t);
 int16_t lat_to_y(int32_t);
 
-// sorting algorithms
+// sorting algorithms and helper functions
 void insertion_sort(int[], int);
+
+template <class T>
+void custom_swap(T &x, T &y) {
+    T temp;
+    temp = x;
+    x = y;
+    y = temp;
+}
 
 
 #endif
