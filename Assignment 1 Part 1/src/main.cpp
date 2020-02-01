@@ -24,7 +24,7 @@ lcd_image_t yegImage = { "yeg-big.lcd", YEG_SIZE, YEG_SIZE };
 
 // cursor position variable
 int cursorX, cursorY;
-// for map redraws
+// storing overall map shifts for total map redraws
 int shiftX = 0, shiftY = 0;
 
 // variables holding SD card read information
@@ -189,6 +189,7 @@ void processJoystick(uint8_t slow, uint8_t fast) {
     constrainCursor(&cursorX, &cursorY);
     if (cursorX0 != cursorX || cursorY != cursorY0) {
         drawMapPatch(cursorX0, cursorY0);
+        redrawMap(cursorX0, cursorY0);
         redrawCursor(TFT_RED);
     }
     delay(20);
@@ -289,47 +290,59 @@ void drawMapPatch(int cursorX0, int cursorY0) {
         lcdYegDraw(icolNeg, irowNeg, scolNeg, srowNeg, diffX, CURSOR_SIZE);
         lcdYegDraw(icolNeg, irowNeg, scolNeg, srowNeg, CURSOR_SIZE, diffY);
     }
+}
 
+
+void redrawMap(int cursorX0, int cursorY0) {
+    // middle of the YEG map
+    int yegMiddleX = (YEG_SIZE - (MAP_DISP_WIDTH)) >> 1;
+    int yegMiddleY = (YEG_SIZE - DISPLAY_HEIGHT) >> 1;
+    // storing change in cursor position
+    int diffX = cursorX - cursorX0;
+    int diffY = cursorY - cursorY0;
+    // storing appropriate irow and icol positions
+    int icolPos = yegMiddleX + cursorX0 + (CURSOR_SIZE >> 1) + diffX + shiftX;
+    int icolNeg = yegMiddleX + cursorX0 - (CURSOR_SIZE >> 1) + shiftX;
+    int irowPos = yegMiddleY + cursorY0 + (CURSOR_SIZE >> 1) + diffY + shiftY;
+    int irowNeg = yegMiddleY + cursorY0 - (CURSOR_SIZE >> 1) + shiftY;
+    // storing appropriate srow and scol positions
+    int scolPos = cursorX + (CURSOR_SIZE >> 1);
+    int scolNeg = cursorX0 - (CURSOR_SIZE >> 1);
+    int srowPos = cursorY + (CURSOR_SIZE >> 1);
+    int srowNeg = cursorY0 - (CURSOR_SIZE >> 1);
+    // PAD accounts for integer division by 2 (i.e., cursor has odd sidelength)
+    uint8_t PAD = 0;
+    if (CURSOR_SIZE & 1) PAD = 1;
+
+    // (CURSOR_SIZE << 1) leaves buffer at the map location that the cursor
+    // was previously just in case the user wants to reverse his/her action
+    // buffer exists because drawing the map takes a long time
     if (cursorX == (CURSOR_SIZE >> 1)) {
         // left side of screen reached
         lcdYegDraw(icolPos - MAP_DISP_WIDTH - scolPos, irowNeg - srowNeg, 0, 0,
             MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
         shiftX -= MAP_DISP_WIDTH;
+        cursorX += MAP_DISP_WIDTH - (CURSOR_SIZE << 1);
     } else if (cursorY == (CURSOR_SIZE >> 1)) {
         // top of screen reached
         lcdYegDraw(icolPos - scolPos, irowNeg - srowNeg - MAP_DISP_HEIGHT, 0, 0,
             MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
         shiftY -= MAP_DISP_HEIGHT;
+        cursorY += MAP_DISP_HEIGHT - (CURSOR_SIZE << 1);
     } else if (cursorX == MAP_DISP_WIDTH - (CURSOR_SIZE >> 1) - PAD) {
         // right side of sign reached
         lcdYegDraw(icolPos + MAP_DISP_WIDTH - scolPos, irowNeg - srowNeg, 0, 0,
             MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
         shiftX += MAP_DISP_WIDTH;
+        cursorX -= MAP_DISP_WIDTH - (CURSOR_SIZE << 1);
     } else if (cursorY == MAP_DISP_HEIGHT - (CURSOR_SIZE >> 1) - PAD) {
         // bottom of screen reached
         lcdYegDraw(icolPos - scolPos, irowNeg - srowNeg + MAP_DISP_HEIGHT, 0, 0,
             MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
         shiftY += MAP_DISP_HEIGHT;
+        cursorY -= MAP_DISP_HEIGHT - (CURSOR_SIZE << 1);
     }
 }
-
-
-// void redrawMap() {
-//     // NEED TO IMPLEMENT MAP REDRAW
-//     // CONDITIONS ARE CORRECT
-//     uint8_t PAD = 0;
-//     if (CURSOR_SIZE & 1) PAD = 1;
-
-//     if (cursorX == (CURSOR_SIZE >> 1)) {
-//         Serial.println("X0 bound reached");
-//     } else if (cursorY == (CURSOR_SIZE >> 1)) {
-//         Serial.println("Y0 bound reached");
-//     } else if (cursorX == MAP_DISP_WIDTH - (CURSOR_SIZE >> 1) - PAD) {
-//         Serial.println("X1 bound reached");
-//     } else if (cursorY == MAP_DISP_HEIGHT - (CURSOR_SIZE >> 1) - PAD) {
-//         Serial.println("Y1 bound reached");
-//     }
-// }
 
 
 /*
