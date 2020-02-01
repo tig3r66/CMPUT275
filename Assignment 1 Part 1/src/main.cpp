@@ -134,21 +134,57 @@ void getRestaurantFast(int restIndex, restaurant* restPtr) {
 }
 
 
+/*
+    Description: converts x position on YEG map to longitudinal data for the
+    real-world coordinates.
+
+    Arguments:
+        x (int16_t): the x position.
+    Returns:
+        map(x, 0, MAP_WIDTH, LON_WEST, LON_EAST) (int32_t): the longitude.
+*/
 int32_t x_to_lon(int16_t x) {
-    return map(x, 0, MAP_WIDTH , LON_WEST , LON_EAST);
+    return map(x, 0, MAP_WIDTH, LON_WEST, LON_EAST);
 }
 
 
+/*
+    Description: converts x position on YEG map to latitudinal data for the
+    real-world coordinates.
+
+    Arguments:
+        y (int16_t): the y position.
+    Returns:
+        map(y, 0, MAP_WIDTH, LON_WEST, LON_EAST) (int32_t): the latitude.
+*/
 int32_t y_to_lat(int16_t y) {
-    return map(y, 0, MAP_HEIGHT , LAT_NORTH , LAT_SOUTH);
+    return map(y, 0, MAP_HEIGHT, LAT_NORTH, LAT_SOUTH);
 }
 
 
+/*
+    Description: converts longitudinal data for the real-world YEG locations to
+    the x position on the YEG map.
+
+    Arguments:
+        lon (int32_t): the longitude.
+    Returns:
+        map(lon, LON_WEST, LON_EAST, 0, MAP_WIDTH) (int16_t): the x position.
+*/
 int16_t lon_to_x(int32_t lon) {
     return map(lon, LON_WEST, LON_EAST, 0, MAP_WIDTH);
 }
 
 
+/*
+    Description: converts latitudinal data for the real-world YEG locations to
+    the x position on the YEG map.
+
+    Arguments:
+        lat (int32_t): the latitude.
+    Returns:
+        map(lat, LAT_NORTH, LAT_SOUTH, 0, MAP_HEIGHT) (int16_t): the y position.
+*/
 int16_t lat_to_y(int32_t lat) {
     return map(lat, LAT_NORTH, LAT_SOUTH, 0, MAP_HEIGHT);
 }
@@ -189,7 +225,8 @@ void processJoystick(uint8_t slow, uint8_t fast) {
     constrainCursor(&cursorX, &cursorY);
     if (cursorX0 != cursorX || cursorY != cursorY0) {
         drawMapPatch(cursorX0, cursorY0);
-        redrawMap(cursorX0, cursorY0);
+        redrawMap(cursorX0, cursorY0); // perhaps make cleaner because it 
+                                       // makes a shitton of calculations
         redrawCursor(TFT_RED);
     }
     delay(20);
@@ -293,6 +330,11 @@ void drawMapPatch(int cursorX0, int cursorY0) {
 }
 
 
+// NEED TO CLAMP MAP TO PHYSICAL BOUNDARY
+// NEED TO CLAMP MAP TO PHYSICAL BOUNDARY
+// NEED TO CLAMP MAP TO PHYSICAL BOUNDARY
+// NEED TO CLAMP MAP TO PHYSICAL BOUNDARY
+// NEED TO CLAMP MAP TO PHYSICAL BOUNDARY
 void redrawMap(int cursorX0, int cursorY0) {
     // middle of the YEG map
     int yegMiddleX = (YEG_SIZE - (MAP_DISP_WIDTH)) >> 1;
