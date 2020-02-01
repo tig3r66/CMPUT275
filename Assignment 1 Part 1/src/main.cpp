@@ -11,14 +11,26 @@
 #include <MCUFRIEND_kbv.h>
 #include <SPI.h>
 #include <SD.h>
+#include <TouchScreen.h>
 #include "../include/lcd_image.h"
 #include "../include/main.h"
 
 MCUFRIEND_kbv tft;
+Sd2Card card;
+// initialize with 300 ohms of resistance
+TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
+
 lcd_image_t yegImage = { "yeg-big.lcd", YEG_SIZE, YEG_SIZE };
 
 // cursor position variable
 int cursorX, cursorY;
+// for map redraws
+int shiftX = 0, shiftY = 0;
+
+// variables holding SD card read information
+restaurant TEMP_BLOCK[8];
+RestDist REST_DIST[NUM_RESTAURANTS];
+unsigned long PREV_BLOCK_NUM = 0;
 
 
 /*
@@ -40,7 +52,8 @@ int main() {
 
 
 /*
-    Description: initializes important components of Arduino and TFT display.
+    Description: initializes important components of Arduino, TFT display, and
+    SD card.
 */
 void setup() {
     init();
@@ -59,6 +72,15 @@ void setup() {
         while (true) {}
     }
     Serial.println("OK!");
+
+    // SD card initialization for raw reads
+    Serial.print("Initializing SPI communication for raw reads...");
+    if (!card.init(SPI_HALF_SPEED, SD_CS)) {
+        Serial.println("failed! Is the card inserted properly?");
+        while (true) {}
+    } else {
+        Serial.println("OK!");
+    }
 }
 
 
@@ -70,6 +92,8 @@ void setup() {
 void lcd_setup() {
     tft.setRotation(1);
     tft.fillScreen(TFT_BLACK);
+    tft.setTextSize(2);
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
     // drawing map
     int yegMiddleX = (YEG_SIZE - (MAP_DISP_WIDTH)) >> 1;
     int yegMiddleY = (YEG_SIZE - DISPLAY_HEIGHT) >> 1;
@@ -79,6 +103,54 @@ void lcd_setup() {
     cursorX = (MAP_DISP_WIDTH) >> 1;
     cursorY = DISPLAY_HEIGHT >> 1;
     redrawCursor(TFT_RED);
+}
+
+
+void modeOne() {
+    // to implement
+}
+
+
+/*
+    Description: fast implementation of getRestaurant(). Reads data from an SD
+        card into the global restaurant struct TEMP_BLOCK. Reads a block once
+        for consecutive restaurants on the same block.
+
+    Arguments:
+        restIndex (int): the restaurant to be read.
+        restPtr (restaurant*): pointer to the restaurant struct.
+*/
+void getRestaurantFast(int restIndex, restaurant* restPtr) {
+    uint32_t blockNum = REST_START_BLOCK + restIndex / 8;
+    if (blockNum != PREV_BLOCK_NUM) {
+        while (!card.readBlock(blockNum, (uint8_t*) TEMP_BLOCK)) {
+            Serial.println("Read block failed, trying again.");
+        }
+    }
+    *restPtr = TEMP_BLOCK[restIndex % 8];
+    PREV_BLOCK_NUM = blockNum;
+
+    // storing TEMP_BLOCK information in a smaller global struct
+}
+
+
+int32_t x_to_lon(int16_t x) {
+    return map(x, 0, MAP_WIDTH , LON_WEST , LON_EAST);
+}
+
+
+int32_t y_to_lat(int16_t y) {
+    return map(y, 0, MAP_HEIGHT , LAT_NORTH , LAT_SOUTH);
+}
+
+
+int16_t lon_to_x(int32_t lon) {
+    return map(lon, LON_WEST, LON_EAST, 0, MAP_WIDTH);
+}
+
+
+int16_t lat_to_y(int32_t lat) {
+    return map(lat, LAT_NORTH, LAT_SOUTH, 0, MAP_HEIGHT);
 }
 
 
@@ -174,10 +246,10 @@ void drawMapPatch(int cursorX0, int cursorY0) {
     int diffX = cursorX - cursorX0;
     int diffY = cursorY - cursorY0;
     // storing appropriate irow and icol positions
-    int icolPos = yegMiddleX + cursorX0 + (CURSOR_SIZE >> 1) + diffX;
-    int icolNeg = yegMiddleX + cursorX0 - (CURSOR_SIZE >> 1);
-    int irowPos = yegMiddleY + cursorY0 + (CURSOR_SIZE >> 1) + diffY;
-    int irowNeg = yegMiddleY + cursorY0 - (CURSOR_SIZE >> 1);
+    int icolPos = yegMiddleX + cursorX0 + (CURSOR_SIZE >> 1) + diffX + shiftX;
+    int icolNeg = yegMiddleX + cursorX0 - (CURSOR_SIZE >> 1) + shiftX;
+    int irowPos = yegMiddleY + cursorY0 + (CURSOR_SIZE >> 1) + diffY + shiftY;
+    int irowNeg = yegMiddleY + cursorY0 - (CURSOR_SIZE >> 1) + shiftY;
     // storing appropriate srow and scol positions
     int scolPos = cursorX + (CURSOR_SIZE >> 1);
     int scolNeg = cursorX0 - (CURSOR_SIZE >> 1);
@@ -217,25 +289,47 @@ void drawMapPatch(int cursorX0, int cursorY0) {
         lcdYegDraw(icolNeg, irowNeg, scolNeg, srowNeg, diffX, CURSOR_SIZE);
         lcdYegDraw(icolNeg, irowNeg, scolNeg, srowNeg, CURSOR_SIZE, diffY);
     }
-}
-
-
-void redrawMap() {
-    // NEED TO IMPLEMENT MAP REDRAW
-    // CONDITIONS ARE CORRECT
-    uint8_t PAD = 0;
-    if (CURSOR_SIZE & 1) PAD = 1;
 
     if (cursorX == (CURSOR_SIZE >> 1)) {
-        Serial.println("X0 bound reached");
+        // left side of screen reached
+        lcdYegDraw(icolPos - MAP_DISP_WIDTH - scolPos, irowNeg - srowNeg, 0, 0,
+            MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
+        shiftX -= MAP_DISP_WIDTH;
     } else if (cursorY == (CURSOR_SIZE >> 1)) {
-        Serial.println("Y0 bound reached");
+        // top of screen reached
+        lcdYegDraw(icolPos - scolPos, irowNeg - srowNeg - MAP_DISP_HEIGHT, 0, 0,
+            MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
+        shiftY -= MAP_DISP_HEIGHT;
     } else if (cursorX == MAP_DISP_WIDTH - (CURSOR_SIZE >> 1) - PAD) {
-        Serial.println("X1 bound reached");
+        // right side of sign reached
+        lcdYegDraw(icolPos + MAP_DISP_WIDTH - scolPos, irowNeg - srowNeg, 0, 0,
+            MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
+        shiftX += MAP_DISP_WIDTH;
     } else if (cursorY == MAP_DISP_HEIGHT - (CURSOR_SIZE >> 1) - PAD) {
-        Serial.println("Y1 bound reached");
+        // bottom of screen reached
+        lcdYegDraw(icolPos - scolPos, irowNeg - srowNeg + MAP_DISP_HEIGHT, 0, 0,
+            MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
+        shiftY += MAP_DISP_HEIGHT;
     }
 }
+
+
+// void redrawMap() {
+//     // NEED TO IMPLEMENT MAP REDRAW
+//     // CONDITIONS ARE CORRECT
+//     uint8_t PAD = 0;
+//     if (CURSOR_SIZE & 1) PAD = 1;
+
+//     if (cursorX == (CURSOR_SIZE >> 1)) {
+//         Serial.println("X0 bound reached");
+//     } else if (cursorY == (CURSOR_SIZE >> 1)) {
+//         Serial.println("Y0 bound reached");
+//     } else if (cursorX == MAP_DISP_WIDTH - (CURSOR_SIZE >> 1) - PAD) {
+//         Serial.println("X1 bound reached");
+//     } else if (cursorY == MAP_DISP_HEIGHT - (CURSOR_SIZE >> 1) - PAD) {
+//         Serial.println("Y1 bound reached");
+//     }
+// }
 
 
 /*
