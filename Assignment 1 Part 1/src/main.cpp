@@ -113,14 +113,15 @@ void modeOne() {
 
 /*
     Description: fast implementation of getRestaurant(). Reads data from an SD
-        card into the global restaurant struct TEMP_BLOCK. Reads a block once
+        card into the global restaurant struct TEMP_BLOCK then stores this
+        information into a smaller global struct REST_DIST. Reads a block once
         for consecutive restaurants on the same block.
 
     Arguments:
-        restIndex (int): the restaurant to be read.
+        restIndex (uint16_t): the restaurant to be read.
         restPtr (restaurant*): pointer to the restaurant struct.
 */
-void getRestaurantFast(int restIndex, restaurant* restPtr) {
+void getRestaurantFast(uint16_t restIndex, restaurant* restPtr) {
     uint32_t blockNum = REST_START_BLOCK + restIndex / 8;
     if (blockNum != PREV_BLOCK_NUM) {
         while (!card.readBlock(blockNum, (uint8_t*) TEMP_BLOCK)) {
@@ -131,6 +132,9 @@ void getRestaurantFast(int restIndex, restaurant* restPtr) {
     PREV_BLOCK_NUM = blockNum;
 
     // storing TEMP_BLOCK information in a smaller global struct
+    REST_DIST[restIndex].index = restIndex;
+    // need to calculate Manhattan distance here
+    // need to correlate cursor position on map with actual position on map
 }
 
 
