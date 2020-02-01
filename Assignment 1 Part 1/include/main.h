@@ -82,18 +82,22 @@ void modeOne();
 // tft display-related functions
 void redrawCursor(uint16_t);
 void processJoystick(uint8_t, uint8_t);
+void redrawMap(int, int);
 void drawMapPatch(int, int);
 void constrainCursor(int*, int*);
 void lcdYegDraw(int, int, int, int, int, int);
 
 // retrieving restaurant from memeory
-void getRestaurantFast(int, restaurant*);
+void getRestaurantFast(uint16_t, restaurant*);
 
 // converts between x/y map position and lat/lon (and vice versa)
 int32_t x_to_lon(int16_t);
 int32_t y_to_lat(int16_t);
 int16_t lon_to_x(int32_t);
 int16_t lat_to_y(int32_t);
+
+// sorting algorithms
+void insertion_sort(int[], int);
 
 
 #endif

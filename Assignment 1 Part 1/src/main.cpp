@@ -139,6 +139,24 @@ void getRestaurantFast(uint16_t restIndex, restaurant* restPtr) {
 
 
 /*
+    Description: implementation of insertion sort.
+
+    Arguments:
+        array[] (int): pointer to an array.
+        n (int): the number of items in the array.
+    Notes:
+        Need to change this function so it sorts based on the RestDist struct.
+*/
+void insertion_sort(int array[], int n) {
+    for (int i = 1; i < n; i++) {
+        for (int j = i-1; j >= 0 && array[j] > array[j+1]; j--) {
+            swap(array[j], array[j+1]);
+        }
+    }
+}
+
+
+/*
     Description: converts x position on YEG map to longitudinal data for the
     real-world coordinates.
 
