@@ -175,7 +175,7 @@ void processScroll(int &currentSelect, bool &hold, int& restX, int& restY) {
         currentSelect--;
     }
 
-    int select = constrain(0, 21, select);
+    int select = constrain(select, 0, 21);
     if (!(digitalRead(53))) {
         hold = false;
         restaurant selectedRest;
