@@ -77,6 +77,7 @@ struct RestDist {
 void setup();
 void lcd_setup();
 
+// processed when joystick is pressed
 void modeOne();
 
 // tft display-related functions
@@ -97,7 +98,16 @@ int16_t lon_to_x(int32_t);
 int16_t lat_to_y(int32_t);
 
 // sorting algorithms and helper functions
-void insertion_sort(int[], int);
+void insertion_sort(RestDist[], int);
+
+//new functions, sort later
+void rest_dest_fill();
+void list_resturants();
+void processScroll(int&, bool&);
+void redrawText(int, int);
+void drawdot(int, int);
+
+
 
 template <class T>
 void custom_swap(T &x, T &y) {

@@ -12,6 +12,7 @@
 #include <SPI.h>
 #include <SD.h>
 #include <TouchScreen.h>
+#include <stdlib.h>
 #include "../include/lcd_image.h"
 #include "../include/main.h"
 
@@ -40,8 +41,12 @@ unsigned long PREV_BLOCK_NUM = 0;
 int main() {
     setup();
     lcd_setup();
-
+    bool mode = false; // 0 = false, 1 = true
     while (true) {
+        rest_dist_fill();
+        if (mode) {
+            modeOne();
+        }
         // min and max cursor speeds are 0 and CURSOR_SIZE pixels/cycle
         processJoystick(0, CURSOR_SIZE);
     }
@@ -108,8 +113,73 @@ void lcd_setup() {
 
 void modeOne() {
     // to implement
+    bool hold = true;
+    list_resturants();
+    int currentSelect = 0;
+    while (hold) {
+        proccessScroll(currentSelect, hold);
+    }
+    // redrawing map patch around selected resturant
+    lcd_image_draw(&yegImage, &tft, restX-(MAP_DISP_WIDTH >> 1), 
+        restY-(DISPLAY_HEIGHT >> 1), MAP_DISP_WIDTH, DISPLAY_HEIGHT);
+    //drawing dots
+    draw_dot(restx, resty); //implement
 }
 
+void rest_dist_fill() {
+    for (int i = 0; i < NUM_RESTAURANTS; i++) {
+        restaurant rest;
+        getRestaurantFast(i, &rest);
+        int xDiff = abs(cursorX - rest.lat); //fix
+        int yDiff = abs(cursorY - rest.lat); //fix
+        REST_DIST rd = {i, xDiff + yDiff};
+    }
+    insertion_sort(REST_DIST); //sorting by dist to location
+}
+
+void list_resturants() {
+    tft.fillScreen(0);
+    tft.setCursor(0, 0);
+    tft.setTextWrap(false);
+    for (int i = 0; i < 21; i++) {
+        restaurant rest;
+        getRestaurantFast(REST_DIST[i].index, &rest)
+        if (i == 0) {
+            tft.setTextColor(TFT_BLACK, TFT_WHITE);
+        }
+        else {
+            tft.setTextColor(TFT_WHITE, TFT_BLACK);
+        }
+        tft.println(rest.name);
+    }
+    tft.println();
+}
+
+void proccessScroll(int &currentSelect, bool &hold) {
+    uint16_t yVal = analogRead(JOY_VERT);
+    if (yVal > JOY_DEADZONE + JOY_CENTER) {
+        redrawText(currentSelect, currentSelect+1);
+        currentSelect++;
+
+    }
+    else if (yVal < JOY_CENTER - JOY_DEADZONE) {
+        redrawText(currentSelect, currentSelect-1);
+        currentSelect--
+
+    }
+      select = constrain(0, 21);
+    if (!(digitalRead(53))) {
+        hold = false;
+    }
+}
+
+void redrawText(int prev, int current) { // implement
+
+}
+
+void drawdot(int x, int y) {
+    
+}
 
 /*
     Description: fast implementation of getRestaurant(). Reads data from an SD
@@ -147,9 +217,9 @@ void getRestaurantFast(uint16_t restIndex, restaurant* restPtr) {
     Notes:
         Need to change this function so it sorts based on the RestDist struct.
 */
-void insertion_sort(int array[], int n) {
+void insertion_sort(RestDist array[], int n) {
     for (int i = 1; i < n; i++) {
-        for (int j = i-1; j >= 0 && array[j] > array[j+1]; j--) {
+        for (int j = i-1; j >= 0 && array[j].dist > array[j+1].dist; j--) {
             custom_swap(array[j], array[j+1]);
         }
     }
@@ -227,7 +297,6 @@ void processJoystick(uint8_t slow, uint8_t fast) {
     uint16_t EPSILON_POS = JOY_CENTER + JOY_DEADZONE;
     uint16_t EPSILON_NEG = JOY_CENTER - JOY_DEADZONE;
     uint16_t MAX_STICK = (1 << 10) - 1;
-
     // store current cursor position
     int cursorX0 = cursorX, cursorY0 = cursorY;
     // x movement
@@ -425,3 +494,5 @@ void redrawMap(int cursorX0, int cursorY0) {
 void lcdYegDraw(int icol, int irow, int scol, int srow, int width, int height) {
     lcd_image_draw(&yegImage, &tft, icol, irow, scol, srow, width, height);
 }
+
+
