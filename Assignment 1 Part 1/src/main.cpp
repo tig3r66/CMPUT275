@@ -49,9 +49,11 @@ int main() {
     while (true) {
         if (MODE == 0) {
             // min and max cursor speeds are 0 and CURSOR_SIZE pixels/cycle
-            processJoystick(0, CURSOR_SIZE);
+            modeZero(0, CURSOR_SIZE);
         } else if (MODE == 1) {
-            modeOne();
+            tft.drawRect(0, 0, MAP_DISP_WIDTH, MAP_DISP_HEIGHT, TFT_BLACK);
+            // errors in modeOne()
+            // modeOne();
         }
     }
 
@@ -116,21 +118,22 @@ void lcd_setup() {
 
 
 void modeOne() {
-    //joystick pressed
-    if (!digitalRead(53)) { //joystick pressed
-        MODE = 0;
-    }
+    // // joystick pressed
+    // if (!digitalRead(53)) {
+    //     MODE = 0;
+    // }
 
-    // to implement
-    listResturants();
-    int currentSelect = 0;
-    int restX, restY; // use for dot
-    while (hold) {
-        processScroll(currentSelect, hold, restX, restY);
-    }
-    // redrawing map patch around selected resturant
-    lcdYegDraw(restX-(MAP_DISP_WIDTH >> 1), 
-        restY-(DISPLAY_HEIGHT >> 1),0, 0 MAP_DISP_WIDTH, DISPLAY_HEIGHT);
+    // // to implement
+    // listResturants();
+    // int currentSelect = 0;
+    // int restX, restY; // use for dot
+    // bool hold = true;
+    // while (hold) {
+    //     processScroll(currentSelect, hold, restX, restY);
+    // }
+    // // redrawing map patch around selected resturant
+    // lcdYegDraw(restX-(MAP_DISP_WIDTH >> 1), 
+    //     restY-(DISPLAY_HEIGHT >> 1),0, 0 MAP_DISP_WIDTH, DISPLAY_HEIGHT);
     // set cursor to pos restX, restY, remeber to convert!
 }
 
@@ -151,6 +154,7 @@ void listResturants() {
     tft.fillScreen(0);
     tft.setCursor(0, 0);
     tft.setTextWrap(false);
+
     for (int i = 0; i < 21; i++) {
         char restName[100];
         getRestaurantName(restName, i);
@@ -176,6 +180,9 @@ void processScroll(int &currentSelect, bool &hold, int& restX, int& restY) {
     }
 
     int select = constrain(select, 0, 21);
+    // you sure this is correct?
+    // you sure this is correct?
+    // you sure this is correct?
     if (!(digitalRead(53))) {
         hold = false;
         restaurant selectedRest;
@@ -263,62 +270,6 @@ void insertion_sort(RestDist array[], int n) {
 
 
 /*
-    Description: converts x position on YEG map to longitudinal data for the
-    real-world coordinates.
-
-    Arguments:
-        x (int16_t): the x position.
-    Returns:
-        map(x, 0, MAP_WIDTH, LON_WEST, LON_EAST) (int32_t): the longitude.
-*/
-int32_t x_to_lon(int16_t x) {
-    return map(x, 0, MAP_WIDTH, LON_WEST, LON_EAST);
-}
-
-
-/*
-    Description: converts x position on YEG map to latitudinal data for the
-    real-world coordinates.
-
-    Arguments:
-        y (int16_t): the y position.
-    Returns:
-        map(y, 0, MAP_WIDTH, LON_WEST, LON_EAST) (int32_t): the latitude.
-*/
-int32_t y_to_lat(int16_t y) {
-    return map(y, 0, MAP_HEIGHT, LAT_NORTH, LAT_SOUTH);
-}
-
-
-/*
-    Description: converts longitudinal data for the real-world YEG locations to
-    the x position on the YEG map.
-
-    Arguments:
-        lon (int32_t): the longitude.
-    Returns:
-        map(lon, LON_WEST, LON_EAST, 0, MAP_WIDTH) (int16_t): the x position.
-*/
-int16_t lon_to_x(int32_t lon) {
-    return map(lon, LON_WEST, LON_EAST, 0, MAP_WIDTH);
-}
-
-
-/*
-    Description: converts latitudinal data for the real-world YEG locations to
-    the x position on the YEG map.
-
-    Arguments:
-        lat (int32_t): the latitude.
-    Returns:
-        map(lat, LAT_NORTH, LAT_SOUTH, 0, MAP_HEIGHT) (int16_t): the y position.
-*/
-int16_t lat_to_y(int32_t lat) {
-    return map(lat, LAT_NORTH, LAT_SOUTH, 0, MAP_HEIGHT);
-}
-
-
-/*
     Description: translates joystick inputs to movement of the cursor on the TFT
     screen. Constrains the cursor to within the map portion of the screen, and
     sets variable speed.
@@ -327,12 +278,7 @@ int16_t lat_to_y(int32_t lat) {
         slow (uint8_t): the minimum cursor speed (pixels/loop).
         fast (uint8_t): the maximum cursor speed (pixels/loop).
 */
-void processJoystick(uint8_t slow, uint8_t fast) {
-    // joystick pressed
-    if (!digitalRead(53)) {
-        MODE = 1;
-    }
-
+void modeZero(uint8_t slow, uint8_t fast) {
     uint16_t xVal = analogRead(JOY_HORIZ);
     uint16_t yVal = analogRead(JOY_VERT);
     uint16_t EPSILON_POS = JOY_CENTER + JOY_DEADZONE;
@@ -360,6 +306,11 @@ void processJoystick(uint8_t slow, uint8_t fast) {
         redrawMap(cursorX0, cursorY0); // perhaps make cleaner because it 
                                        // makes a shitton of calculations
         redrawCursor(TFT_RED);
+    }
+
+    // joystick pressed
+    if (!digitalRead(JOY_SEL)) {
+        MODE = 1;
     }
     delay(20);
 }
@@ -534,4 +485,60 @@ void redrawMap(int cursorX0, int cursorY0) {
 */
 void lcdYegDraw(int icol, int irow, int scol, int srow, int width, int height) {
     lcd_image_draw(&yegImage, &tft, icol, irow, scol, srow, width, height);
+}
+
+
+/*
+    Description: converts x position on YEG map to longitudinal data for the
+    real-world coordinates.
+
+    Arguments:
+        x (int16_t): the x position.
+    Returns:
+        map(x, 0, MAP_WIDTH, LON_WEST, LON_EAST) (int32_t): the longitude.
+*/
+int32_t x_to_lon(int16_t x) {
+    return map(x, 0, MAP_WIDTH, LON_WEST, LON_EAST);
+}
+
+
+/*
+    Description: converts x position on YEG map to latitudinal data for the
+    real-world coordinates.
+
+    Arguments:
+        y (int16_t): the y position.
+    Returns:
+        map(y, 0, MAP_WIDTH, LON_WEST, LON_EAST) (int32_t): the latitude.
+*/
+int32_t y_to_lat(int16_t y) {
+    return map(y, 0, MAP_HEIGHT, LAT_NORTH, LAT_SOUTH);
+}
+
+
+/*
+    Description: converts longitudinal data for the real-world YEG locations to
+    the x position on the YEG map.
+
+    Arguments:
+        lon (int32_t): the longitude.
+    Returns:
+        map(lon, LON_WEST, LON_EAST, 0, MAP_WIDTH) (int16_t): the x position.
+*/
+int16_t lon_to_x(int32_t lon) {
+    return map(lon, LON_WEST, LON_EAST, 0, MAP_WIDTH);
+}
+
+
+/*
+    Description: converts latitudinal data for the real-world YEG locations to
+    the x position on the YEG map.
+
+    Arguments:
+        lat (int32_t): the latitude.
+    Returns:
+        map(lat, LAT_NORTH, LAT_SOUTH, 0, MAP_HEIGHT) (int16_t): the y position.
+*/
+int16_t lat_to_y(int32_t lat) {
+    return map(lat, LAT_NORTH, LAT_SOUTH, 0, MAP_HEIGHT);
 }
