@@ -134,7 +134,7 @@ void rest_dist_fill() {
         int yDiff = abs(cursorY - rest.lat); //fix
         REST_DIST rd = {i, xDiff + yDiff};
     }
-    insertion_sort(REST_DIST); //sorting by dist to location
+    insertion_sort(REST_DIST, NUM_RESTAURANTS); //sorting by dist to location
 }
 
 void list_resturants() {
@@ -143,11 +143,10 @@ void list_resturants() {
     tft.setTextWrap(false);
     for (int i = 0; i < 21; i++) {
         restaurant rest;
-        getRestaurantFast(REST_DIST[i].index, &rest)
+        getRestaurantFast(REST_DIST[i].index, &rest);
         if (i == 0) {
             tft.setTextColor(TFT_BLACK, TFT_WHITE);
-        }
-        else {
+        } else {
             tft.setTextColor(TFT_WHITE, TFT_BLACK);
         }
         tft.println(rest.name);
@@ -155,19 +154,17 @@ void list_resturants() {
     tft.println();
 }
 
-void proccessScroll(int &currentSelect, bool &hold) {
+void processScroll(int &currentSelect, bool &hold) {
     uint16_t yVal = analogRead(JOY_VERT);
     if (yVal > JOY_DEADZONE + JOY_CENTER) {
         redrawText(currentSelect, currentSelect+1);
         currentSelect++;
-
-    }
-    else if (yVal < JOY_CENTER - JOY_DEADZONE) {
+    } else if (yVal < JOY_CENTER - JOY_DEADZONE) {
         redrawText(currentSelect, currentSelect-1);
-        currentSelect--
-
+        currentSelect--;
     }
-      select = constrain(0, 21);
+
+    int select = constrain(0, 21);
     if (!(digitalRead(53))) {
         hold = false;
     }
