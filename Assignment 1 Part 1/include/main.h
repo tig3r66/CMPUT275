@@ -53,6 +53,9 @@
 // cursor size
 #define CURSOR_SIZE 9
 
+//font size
+#define FONT_SIZE 16
+
 
 // ================================== STRUCTS ==================================
 // holds restaurant data read from SD card
@@ -101,11 +104,12 @@ int16_t lat_to_y(int32_t);
 void insertion_sort(RestDist[], int);
 
 //new functions, sort later
-void rest_dest_fill();
-void list_resturants();
-void processScroll(int&, bool&);
+void restDistFill();
+void listResturants();
+void processScroll(int&, bool&, int&, int&);
 void redrawText(int, int);
-void drawdot(int, int);
+void drawDot(int, int);
+void getRestaurantName(char[], int);
 
 
 
