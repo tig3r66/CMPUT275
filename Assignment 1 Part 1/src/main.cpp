@@ -46,12 +46,20 @@ uint8_t MODE = 0;
 int main() {
     setup();
     lcd_setup();
+
     while (true) {
         if (MODE == 0) {
+            // joystick button pressed
+            if (!digitalRead(JOY_SEL)) MODE = 1;
             // min and max cursor speeds are 0 and CURSOR_SIZE pixels/cycle
             modeZero(0, CURSOR_SIZE);
         } else if (MODE == 1) {
-            tft.drawRect(0, 0, MAP_DISP_WIDTH, MAP_DISP_HEIGHT, TFT_BLACK);
+            tft.fillRect(0, 0, MAP_DISP_WIDTH, MAP_DISP_HEIGHT, TFT_BLACK);
+            if (!digitalRead(JOY_SEL)) {
+                MODE = 0;
+                // redraw map over the selected restaurant
+            };
+
             // errors in modeOne()
             // modeOne();
         }
@@ -307,12 +315,6 @@ void modeZero(uint8_t slow, uint8_t fast) {
                                        // makes a shitton of calculations
         redrawCursor(TFT_RED);
     }
-
-    // joystick pressed
-    if (!digitalRead(JOY_SEL)) {
-        MODE = 1;
-    }
-    delay(20);
 }
 
 
