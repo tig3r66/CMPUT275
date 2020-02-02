@@ -23,15 +23,20 @@ TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 
 lcd_image_t yegImage = { "yeg-big.lcd", YEG_SIZE, YEG_SIZE };
 
-// cursor position variable
-int cursorX, cursorY;
-// storing overall map shifts for total map redraws
-int shiftX = 0, shiftY = 0;
 
 // variables holding SD card read information
 restaurant TEMP_BLOCK[8];
 RestDist REST_DIST[NUM_RESTAURANTS];
 unsigned long PREV_BLOCK_NUM = 0;
+
+// cursor position variable
+int cursorX, cursorY;
+
+// storing overall map shifts for total map redraws
+int shiftX = 0, shiftY = 0;
+
+// for the display mode
+uint8_t MODE = 0;
 
 
 /*
@@ -42,13 +47,12 @@ int main() {
     setup();
     lcd_setup();
     while (true) {
-        restDistFill();
-        if (!digitalRead(53)) { //joystick pressed
+        if (MODE == 0) {
+            // min and max cursor speeds are 0 and CURSOR_SIZE pixels/cycle
+            processJoystick(0, CURSOR_SIZE);
+        } else if (MODE == 1) {
             modeOne();
         }
-        // put touch screen implemnentation here
-        // min and max cursor speeds are 0 and CURSOR_SIZE pixels/cycle
-        processJoystick(0, CURSOR_SIZE);
     }
 
     Serial.end();
@@ -112,19 +116,24 @@ void lcd_setup() {
 
 
 void modeOne() {
+    //joystick pressed
+    if (!digitalRead(53)) { //joystick pressed
+        MODE = 0;
+    }
+
     // to implement
-    bool hold = true;
     listResturants();
     int currentSelect = 0;
-    int restX, restY; //use for dot
+    int restX, restY; // use for dot
     while (hold) {
         processScroll(currentSelect, hold, restX, restY);
     }
     // redrawing map patch around selected resturant
     lcdYegDraw(restX-(MAP_DISP_WIDTH >> 1), 
         restY-(DISPLAY_HEIGHT >> 1),0, 0 MAP_DISP_WIDTH, DISPLAY_HEIGHT);
-    //set cursor to pos restX, restY, remeber to convert!
+    // set cursor to pos restX, restY, remeber to convert!
 }
+
 
 void restDistFill() {
     for (int i = 0; i < NUM_RESTAURANTS; i++) {
@@ -134,8 +143,9 @@ void restDistFill() {
         int yDiff = abs(cursorY - rest.lat); //fix
         RestDist rd = {i, xDiff + yDiff};
     }
-    insertion_sort(REST_DIST, NUM_RESTAURANTS); //sorting by dist to location
+    insertion_sort(REST_DIST, NUM_RESTAURANTS); // sorting by dist to location
 }
+
 
 void listResturants() {
     tft.fillScreen(0);
@@ -153,6 +163,7 @@ void listResturants() {
     }
     tft.println();
 }
+
 
 void processScroll(int &currentSelect, bool &hold, int& restX, int& restY) {
     uint16_t yVal = analogRead(JOY_VERT);
@@ -174,6 +185,7 @@ void processScroll(int &currentSelect, bool &hold, int& restX, int& restY) {
     }
 }
 
+
 void redrawText(int prev, int current) { // implement
     // redrawing and reprinting old selection
     tft.setTextColor(TFT_WHITE);
@@ -192,15 +204,18 @@ void redrawText(int prev, int current) { // implement
     tft.println(name);
 }
 
+
 void drawDot(int x, int y) {
     // for dots on maps
 }
+
 
 void getRestaurantName(char name[], int index) {
     restaurant rest;
     getRestaurantFast(REST_DIST[index].index, &rest);
     name = rest.name;
 }
+
 
 /*
     Description: fast implementation of getRestaurant(). Reads data from an SD
@@ -313,6 +328,11 @@ int16_t lat_to_y(int32_t lat) {
         fast (uint8_t): the maximum cursor speed (pixels/loop).
 */
 void processJoystick(uint8_t slow, uint8_t fast) {
+    // joystick pressed
+    if (!digitalRead(53)) {
+        MODE = 1;
+    }
+
     uint16_t xVal = analogRead(JOY_HORIZ);
     uint16_t yVal = analogRead(JOY_VERT);
     uint16_t EPSILON_POS = JOY_CENTER + JOY_DEADZONE;
@@ -515,5 +535,3 @@ void redrawMap(int cursorX0, int cursorY0) {
 void lcdYegDraw(int icol, int irow, int scol, int srow, int width, int height) {
     lcd_image_draw(&yegImage, &tft, icol, irow, scol, srow, width, height);
 }
-
-
