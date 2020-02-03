@@ -116,8 +116,7 @@ void lcd_setup() {
     // drawing map
     int yegMiddleX = (YEG_SIZE - (MAP_DISP_WIDTH)) >> 1;
     int yegMiddleY = (YEG_SIZE - DISPLAY_HEIGHT) >> 1;
-    lcd_image_draw(&yegImage, &tft, yegMiddleX, yegMiddleY, 0, 0,
-        MAP_DISP_WIDTH, DISPLAY_HEIGHT);
+    lcdYegDraw(yegMiddleX, yegMiddleY, 0, 0, MAP_DISP_WIDTH, DISPLAY_HEIGHT);
     // setting cursor to middle of YEG map
     cursorX = (MAP_DISP_WIDTH) >> 1;
     cursorY = DISPLAY_HEIGHT >> 1;
@@ -151,7 +150,7 @@ void restDistFill() {
         restaurant rest;
         getRestaurantFast(i, &rest);
         int xDiff = abs(cursorX - rest.lat); //fix
-        int yDiff = abs(cursorY - rest.lat); //fix
+        int yDiff = abs(cursorY - rest.lon); //fix
         RestDist rd = {i, xDiff + yDiff};
     }
     insertion_sort(REST_DIST, NUM_RESTAURANTS); // sorting by dist to location
@@ -307,12 +306,14 @@ void modeZero(uint8_t slow, uint8_t fast) {
         cursorY += map(yVal, EPSILON_POS, MAX_STICK, slow, fast);
     }
 
-    // constrain cursor within the map
-    constrainCursor(&cursorX, &cursorY);
     if (cursorX0 != cursorX || cursorY != cursorY0) {
+        // constrain cursor within the map
+        constrainCursor(&cursorX, &cursorY);
+        // constrain the display to the YEG map
+        constrainMap(&shiftX, &shiftY);
+
         drawMapPatch(cursorX0, cursorY0);
-        redrawMap(cursorX0, cursorY0); // perhaps make cleaner because it 
-                                       // makes a shitton of calculations
+        redrawMap(cursorX0, cursorY0);
         redrawCursor(TFT_RED);
     }
 }
@@ -415,11 +416,15 @@ void drawMapPatch(int cursorX0, int cursorY0) {
 }
 
 
-// NEED TO CLAMP MAP TO PHYSICAL BOUNDARY
-// NEED TO CLAMP MAP TO PHYSICAL BOUNDARY
-// NEED TO CLAMP MAP TO PHYSICAL BOUNDARY
-// NEED TO CLAMP MAP TO PHYSICAL BOUNDARY
-// NEED TO CLAMP MAP TO PHYSICAL BOUNDARY
+void constrainMap(int* shiftX, int* shiftY) {
+    int yegMiddleX = (YEG_SIZE - (MAP_DISP_WIDTH)) >> 1;
+    int yegMiddleY = (YEG_SIZE - DISPLAY_HEIGHT) >> 1;
+
+    *shiftX = constrain(*shiftX, -yegMiddleX, YEG_SIZE - yegMiddleX);
+    *shiftY = constrain(*shiftY, -yegMiddleY, YEG_SIZE - yegMiddleY);
+}
+
+
 void redrawMap(int cursorX0, int cursorY0) {
     // middle of the YEG map
     int yegMiddleX = (YEG_SIZE - (MAP_DISP_WIDTH)) >> 1;
@@ -441,30 +446,38 @@ void redrawMap(int cursorX0, int cursorY0) {
     uint8_t PAD = 0;
     if (CURSOR_SIZE & 1) PAD = 1;
 
+    int leftShift = constrain(icolPos - MAP_DISP_WIDTH - scolPos, 0, YEG_SIZE);
+    int rightShift = constrain(icolPos + MAP_DISP_WIDTH - scolPos, 0, YEG_SIZE);
+    int upShift = constrain(irowNeg - srowNeg - MAP_DISP_HEIGHT, 0, YEG_SIZE);
+    int downShift = constrain(irowNeg - srowNeg + MAP_DISP_HEIGHT, 0, YEG_SIZE);
+
+    bool moveLeft = true, moveRight, moveUp = true, moveDown = true;
+    // implement no redraw at map boundaries
+
     // (CURSOR_SIZE << 1) leaves buffer at the map location that the cursor
     // was previously just in case the user wants to reverse his/her action
     // buffer exists because drawing the map takes a long time
-    if (cursorX == (CURSOR_SIZE >> 1)) {
+    if (cursorX == (CURSOR_SIZE >> 1) && moveLeft) {
         // left side of screen reached
-        lcdYegDraw(icolPos - MAP_DISP_WIDTH - scolPos, irowNeg - srowNeg, 0, 0,
-            MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
+        lcdYegDraw(leftShift, irowNeg - srowNeg, 0, 0, MAP_DISP_WIDTH,
+            MAP_DISP_HEIGHT);
         shiftX -= MAP_DISP_WIDTH;
         cursorX += MAP_DISP_WIDTH - (CURSOR_SIZE << 1);
-    } else if (cursorY == (CURSOR_SIZE >> 1)) {
+    } else if (cursorY == (CURSOR_SIZE >> 1) && moveUp) {
         // top of screen reached
-        lcdYegDraw(icolPos - scolPos, irowNeg - srowNeg - MAP_DISP_HEIGHT, 0, 0,
-            MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
+        lcdYegDraw(icolPos - scolPos, upShift, 0, 0, MAP_DISP_WIDTH,
+            MAP_DISP_HEIGHT);
         shiftY -= MAP_DISP_HEIGHT;
         cursorY += MAP_DISP_HEIGHT - (CURSOR_SIZE << 1);
-    } else if (cursorX == MAP_DISP_WIDTH - (CURSOR_SIZE >> 1) - PAD) {
+    } else if (cursorX == MAP_DISP_WIDTH - (CURSOR_SIZE >> 1) - PAD && moveRight) {
         // right side of sign reached
-        lcdYegDraw(icolPos + MAP_DISP_WIDTH - scolPos, irowNeg - srowNeg, 0, 0,
-            MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
+        lcdYegDraw(rightShift, irowNeg - srowNeg, 0, 0, MAP_DISP_WIDTH,
+            MAP_DISP_HEIGHT);
         shiftX += MAP_DISP_WIDTH;
         cursorX -= MAP_DISP_WIDTH - (CURSOR_SIZE << 1);
-    } else if (cursorY == MAP_DISP_HEIGHT - (CURSOR_SIZE >> 1) - PAD) {
+    } else if (cursorY == MAP_DISP_HEIGHT - (CURSOR_SIZE >> 1) - PAD && moveDown) {
         // bottom of screen reached
-        lcdYegDraw(icolPos - scolPos, irowNeg - srowNeg + MAP_DISP_HEIGHT, 0, 0,
+        lcdYegDraw(icolPos - scolPos, downShift, 0, 0,
             MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
         shiftY += MAP_DISP_HEIGHT;
         cursorY -= MAP_DISP_HEIGHT - (CURSOR_SIZE << 1);

@@ -34,6 +34,10 @@
 #define DISPLAY_HEIGHT 320
 #define YEG_SIZE 2048
 
+// dimensions of the part allocated to the map display
+#define MAP_DISP_WIDTH (DISPLAY_WIDTH - 60)
+#define MAP_DISP_HEIGHT DISPLAY_HEIGHT
+
 // more map constants
 #define MAP_WIDTH 2048
 #define MAP_HEIGHT 2048
@@ -41,10 +45,6 @@
 #define LAT_SOUTH 5340953l
 #define LON_WEST -11368652l
 #define LON_EAST -11333496l
-
-// dimensions of the part allocated to the map display
-#define MAP_DISP_WIDTH (DISPLAY_WIDTH - 60)
-#define MAP_DISP_HEIGHT DISPLAY_HEIGHT
 
 // joystick movement
 #define JOY_CENTER 512
@@ -85,11 +85,12 @@ void modeOne();
 
 // tft display-related functions
 void redrawCursor(uint16_t);
-void processJoystick(uint8_t, uint8_t);
+void modeZero(uint8_t, uint8_t);
 void redrawMap(int, int);
 void drawMapPatch(int, int);
-void constrainCursor(int*, int*);
 void lcdYegDraw(int, int, int, int, int, int);
+void constrainCursor(int*, int*);
+void constrainMap(int*, int*);
 
 // retrieving restaurant from memeory
 void getRestaurantFast(uint16_t, restaurant*);
