@@ -33,6 +33,8 @@
 #define DISPLAY_WIDTH 480
 #define DISPLAY_HEIGHT 320
 #define YEG_SIZE 2048
+#define YEG_MIDDLE_X ((YEG_SIZE - (MAP_DISP_WIDTH)) >> 1)
+#define YEG_MIDDLE_Y ((YEG_SIZE - DISPLAY_HEIGHT) >> 1)
 
 // dimensions of the part allocated to the map display
 #define MAP_DISP_WIDTH (DISPLAY_WIDTH - 60)

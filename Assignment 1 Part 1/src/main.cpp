@@ -113,10 +113,8 @@ void lcd_setup() {
     tft.fillScreen(TFT_BLACK);
     tft.setTextSize(2);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
-    // drawing map
-    int yegMiddleX = (YEG_SIZE - (MAP_DISP_WIDTH)) >> 1;
-    int yegMiddleY = (YEG_SIZE - DISPLAY_HEIGHT) >> 1;
-    lcdYegDraw(yegMiddleX, yegMiddleY, 0, 0, MAP_DISP_WIDTH, DISPLAY_HEIGHT);
+
+    lcdYegDraw(YEG_MIDDLE_X, YEG_MIDDLE_Y, 0, 0, MAP_DISP_WIDTH, DISPLAY_HEIGHT);
     // setting cursor to middle of YEG map
     cursorX = (MAP_DISP_WIDTH) >> 1;
     cursorY = DISPLAY_HEIGHT >> 1;
@@ -363,17 +361,14 @@ void redrawCursor(uint16_t colour) {
         cursorY0 (uint16_t): the original cursor's Y position.
 */
 void drawMapPatch(int cursorX0, int cursorY0) {
-    // middle of the YEG map
-    int yegMiddleX = (YEG_SIZE - (MAP_DISP_WIDTH)) >> 1;
-    int yegMiddleY = (YEG_SIZE - DISPLAY_HEIGHT) >> 1;
     // storing change in cursor position
     int diffX = cursorX - cursorX0;
     int diffY = cursorY - cursorY0;
     // storing appropriate irow and icol positions
-    int icolPos = yegMiddleX + cursorX0 + (CURSOR_SIZE >> 1) + diffX + shiftX;
-    int icolNeg = yegMiddleX + cursorX0 - (CURSOR_SIZE >> 1) + shiftX;
-    int irowPos = yegMiddleY + cursorY0 + (CURSOR_SIZE >> 1) + diffY + shiftY;
-    int irowNeg = yegMiddleY + cursorY0 - (CURSOR_SIZE >> 1) + shiftY;
+    int icolPos = YEG_MIDDLE_X + cursorX0 + (CURSOR_SIZE >> 1) + diffX + shiftX;
+    int icolNeg = YEG_MIDDLE_X + cursorX0 - (CURSOR_SIZE >> 1) + shiftX;
+    int irowPos = YEG_MIDDLE_Y + cursorY0 + (CURSOR_SIZE >> 1) + diffY + shiftY;
+    int irowNeg = YEG_MIDDLE_Y + cursorY0 - (CURSOR_SIZE >> 1) + shiftY;
     // storing appropriate srow and scol positions
     int scolPos = cursorX + (CURSOR_SIZE >> 1);
     int scolNeg = cursorX0 - (CURSOR_SIZE >> 1);
@@ -417,26 +412,20 @@ void drawMapPatch(int cursorX0, int cursorY0) {
 
 
 void constrainMap(int* shiftX, int* shiftY) {
-    int yegMiddleX = (YEG_SIZE - (MAP_DISP_WIDTH)) >> 1;
-    int yegMiddleY = (YEG_SIZE - DISPLAY_HEIGHT) >> 1;
-
-    *shiftX = constrain(*shiftX, -yegMiddleX, YEG_SIZE - yegMiddleX);
-    *shiftY = constrain(*shiftY, -yegMiddleY, YEG_SIZE - yegMiddleY);
+    *shiftX = constrain(*shiftX, -YEG_MIDDLE_X, YEG_SIZE - YEG_MIDDLE_X);
+    *shiftY = constrain(*shiftY, -YEG_MIDDLE_Y, YEG_SIZE - YEG_MIDDLE_Y);
 }
 
 
 void redrawMap(int cursorX0, int cursorY0) {
-    // middle of the YEG map
-    int yegMiddleX = (YEG_SIZE - (MAP_DISP_WIDTH)) >> 1;
-    int yegMiddleY = (YEG_SIZE - DISPLAY_HEIGHT) >> 1;
     // storing change in cursor position
     int diffX = cursorX - cursorX0;
     int diffY = cursorY - cursorY0;
     // storing appropriate irow and icol positions
-    int icolPos = yegMiddleX + cursorX0 + (CURSOR_SIZE >> 1) + diffX + shiftX;
-    int icolNeg = yegMiddleX + cursorX0 - (CURSOR_SIZE >> 1) + shiftX;
-    int irowPos = yegMiddleY + cursorY0 + (CURSOR_SIZE >> 1) + diffY + shiftY;
-    int irowNeg = yegMiddleY + cursorY0 - (CURSOR_SIZE >> 1) + shiftY;
+    int icolPos = YEG_MIDDLE_X + cursorX0 + (CURSOR_SIZE >> 1) + diffX + shiftX;
+    int icolNeg = YEG_MIDDLE_X + cursorX0 - (CURSOR_SIZE >> 1) + shiftX;
+    int irowPos = YEG_MIDDLE_Y + cursorY0 + (CURSOR_SIZE >> 1) + diffY + shiftY;
+    int irowNeg = YEG_MIDDLE_Y + cursorY0 - (CURSOR_SIZE >> 1) + shiftY;
     // storing appropriate srow and scol positions
     int scolPos = cursorX + (CURSOR_SIZE >> 1);
     int scolNeg = cursorX0 - (CURSOR_SIZE >> 1);
