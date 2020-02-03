@@ -446,10 +446,14 @@ void redrawMap(int cursorX0, int cursorY0) {
     uint8_t PAD = 0;
     if (CURSOR_SIZE & 1) PAD = 1;
 
-    int leftShift = constrain(icolPos - MAP_DISP_WIDTH - scolPos, 0, YEG_SIZE);
-    int rightShift = constrain(icolPos + MAP_DISP_WIDTH - scolPos, 0, YEG_SIZE);
-    int upShift = constrain(irowNeg - srowNeg - MAP_DISP_HEIGHT, 0, YEG_SIZE);
-    int downShift = constrain(irowNeg - srowNeg + MAP_DISP_HEIGHT, 0, YEG_SIZE);
+    int leftShift = constrain(icolPos - MAP_DISP_WIDTH - scolPos, 0,
+        YEG_SIZE-MAP_DISP_WIDTH);
+    int rightShift = constrain(icolPos + MAP_DISP_WIDTH - scolPos, 0,
+        YEG_SIZE-MAP_DISP_WIDTH);
+    int upShift = constrain(irowNeg - srowNeg - MAP_DISP_HEIGHT, 0,
+        YEG_SIZE-MAP_DISP_HEIGHT);
+    int downShift = constrain(irowNeg - srowNeg + MAP_DISP_HEIGHT, 0,
+        YEG_SIZE-MAP_DISP_HEIGHT);
 
     bool moveLeft = true, moveRight, moveUp = true, moveDown = true;
     // implement no redraw at map boundaries
