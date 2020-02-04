@@ -37,7 +37,7 @@ int shiftX = 0, shiftY = 0;
 bool HIT_UP = false, HIT_DOWN = false, HIT_LEFT = false, HIT_RIGHT = false;
 
 // for the display mode
-uint8_t MODE = 0;
+uint8_t MODE = 0; 
 
 
 /*
@@ -55,8 +55,9 @@ int main() {
             // min and max cursor speeds are 0 and CURSOR_SIZE pixels/cycle
             modeZero(0, CURSOR_SIZE);
         } else if (MODE == 1) {
-            tft.fillRect(0, 0, MAP_DISP_WIDTH, MAP_DISP_HEIGHT, TFT_BLACK);
-            // mode one here
+            tft.fillScreen(TFT_BLACK);
+            modeOne();// mode one here, dont break out of this until selected rest
+            MODE = 0;
         }
     }
 
@@ -162,6 +163,71 @@ void insertion_sort(RestDist array[], int n) {
     }
 }
 
+
+void modeOne() {
+    // intial print
+    for (int i = 0; i < MAX_LIST; i++) {
+        restaurant rest;
+        getRestaurantFast(REST_DIST[i].index, &rest);
+        if (i == 0) {
+            tft.setTextColor(TFT_BLACK, TFT_WHITE);
+            tft.print(rest.name);
+        }
+        else {
+            tft.setTextColor(TFT_WHITE, TFT_BLACK);
+            tft.print(rest.name);
+        }
+        tft.print('\n');
+    }
+    int selection = 0;
+    while (true) {
+        menuProcess(selection);
+        if (!(digitalRead(JOY_SEL))) {
+            // get long and lat from selection 1
+            // redraw map
+            // set cursor to pos long and lat
+            tft.fillScreen(0);
+            return;
+        }
+    }
+}
+
+void menuProcess(int& selection) {
+    uint16_t joyY = analogRead(JOY_VERT);
+    if (joyY < (JOY_CENTER - JOY_DEADZONE)) {
+        // scroll one up
+        selection--;
+        if (selection >= 0) {
+            redrawText(selection, selection+1); 
+        }
+    }
+    else if (joyY > (JOY_CENTER + JOY_DEADZONE)) {
+        // scroll one down
+        selection++;
+        if (selection < MAX_LIST) {
+            redrawText(selection, selection-1);
+        }
+    }
+    selection = constrain(selection, 0, MAX_LIST-1);
+}
+
+void redrawText(int current, int prev) {
+    // patching over prev and reprinting it
+    tft.fillRect(0, FONT_SIZE*prev, MAP_DISP_WIDTH, FONT_SIZE, TFT_BLACK);
+    // get prev name and print it
+    restaurant r;
+    getRestaurantFast(REST_DIST[prev].index, &r);
+    tft.setTextColor(TFT_WHITE);
+    tft.setCursor(0, prev*FONT_SIZE);
+    tft.print(r.name);
+    // patch over new and reprint it
+    tft.fillRect(0, FONT_SIZE*current, MAP_DISP_WIDTH, FONT_SIZE, TFT_WHITE);
+    // get current name and print it
+    getRestaurantFast(REST_DIST[current].index, &r); //?
+    tft.setTextColor(TFT_BLACK);
+    tft.setCursor(0, current*FONT_SIZE);
+    tft.print(r.name);
+}
 
 /*
     Description: translates joystick inputs to movement of the cursor on the TFT

@@ -58,6 +58,9 @@
 //font size
 #define FONT_SIZE 16
 
+//number of restuarants listed
+#define MAX_LIST 20
+
 
 // ================================== STRUCTS ==================================
 // holds restaurant data read from SD card
@@ -108,7 +111,8 @@ int16_t lat_to_y(int32_t);
 void insertion_sort(RestDist[], int);
 
 // new functions, sort later
-
+void menuProcess(int& selection);
+void redrawText(int current, int prev);
 
 
 template <class T>
