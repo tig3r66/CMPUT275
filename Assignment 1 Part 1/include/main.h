@@ -109,7 +109,7 @@ void insertion_sort(RestDist[], int);
 //new functions, sort later
 void restDistFill();
 void listResturants();
-void processScroll(int&, bool&, int&, int&);
+void processScroll(int&);
 void redrawText(int, int);
 void drawDot(int, int);
 void getRestaurantName(char[], int);

@@ -53,16 +53,13 @@ int main() {
             // joystick button pressed
             if (!digitalRead(JOY_SEL)) MODE = 1;
             // min and max cursor speeds are 0 and CURSOR_SIZE pixels/cycle
-            modeZero(0, CURSOR_SIZE);
+            modeZero(0, CURSOR_SIZE); 
+            // add touch screen process in mode 0, new function
+            //processTouchScreen();
+            // use restDistFill and drawDot
         } else if (MODE == 1) {
-            tft.fillRect(0, 0, MAP_DISP_WIDTH, MAP_DISP_HEIGHT, TFT_BLACK);
-            if (!digitalRead(JOY_SEL)) {
-                MODE = 0;
-                // redraw map over the selected restaurant
-            };
-
-            // errors in modeOne()
-            // modeOne();
+            modeOne(); // should not break out of here until joystick pressed
+            MODE = 0;
         }
     }
 
@@ -125,24 +122,27 @@ void lcd_setup() {
 
 
 void modeOne() {
-    // // joystick pressed
-    // if (!digitalRead(53)) {
-    //     MODE = 0;
-    // }
-
-    // // to implement
-    // listResturants();
-    // int currentSelect = 0;
-    // int restX, restY; // use for dot
-    // bool hold = true;
-    // while (hold) {
-    //     processScroll(currentSelect, hold, restX, restY);
-    // }
-    // // redrawing map patch around selected resturant
-    // lcdYegDraw(restX-(MAP_DISP_WIDTH >> 1), 
-    //     restY-(DISPLAY_HEIGHT >> 1),0, 0 MAP_DISP_WIDTH, DISPLAY_HEIGHT);
-    // set cursor to pos restX, restY, remeber to convert!
+    restDistFill(); // intialize list of all rest in order of dis in rest dist array
+    tft.fillRect(0, 0, MAP_DISP_WIDTH, MAP_DISP_HEIGHT, TFT_BLACK); // wipe map
+    listResturants(); //intially list rest
+    bool hold = true; // is break allowed?
+    int selected = 0; // selected rest in list with scroll
+    while (hold) {
+        processScroll(selected);
+        if (!digitalRead(JOY_SEL)) {
+            hold = false;
+            restaurant Rest;
+            getRestaurantFast(selected, &Rest);
+            int selectedX = Rest.lat;
+            int selectedY = Rest.lon; 
+            // convert into map coord
+        }
+    }
+    //redraw map match centered at map coord and cursor at 
+    //map coord, go to mode 0
+    //lcdYegDraw();  
 }
+
 
 
 void restDistFill() {
@@ -161,7 +161,6 @@ void listResturants() {
     tft.fillScreen(0);
     tft.setCursor(0, 0);
     tft.setTextWrap(false);
-
     for (int i = 0; i < 21; i++) {
         char restName[100];
         getRestaurantName(restName, i);
@@ -176,7 +175,7 @@ void listResturants() {
 }
 
 
-void processScroll(int &currentSelect, bool &hold, int& restX, int& restY) {
+void processScroll(int &currentSelect) {
     uint16_t yVal = analogRead(JOY_VERT);
     if (yVal > JOY_DEADZONE + JOY_CENTER) {
         redrawText(currentSelect, currentSelect+1);
@@ -185,18 +184,7 @@ void processScroll(int &currentSelect, bool &hold, int& restX, int& restY) {
         redrawText(currentSelect, currentSelect-1);
         currentSelect--;
     }
-
-    int select = constrain(select, 0, 21);
-    // you sure this is correct?
-    // you sure this is correct?
-    // you sure this is correct?
-    if (!(digitalRead(53))) {
-        hold = false;
-        restaurant selectedRest;
-        getRestaurantFast(currentSelect, &selectedRest);
-        restX = selectedRest.lat; //convert to map
-        restY = selectedRest.lon; //convert to map
-    }
+    currentSelect = constrain(currentSelect, 0, 21);
 }
 
 
