@@ -439,29 +439,23 @@ void redrawMap(int cursorX0, int cursorY0) {
     // buffer exists because drawing the map takes a long time
     if (cursorX == (CURSOR_SIZE >> 1) && !HIT_LEFT) {
         // left side of screen reached
-        HIT_RIGHT = false;
         lcdYegDraw(leftShift, irowNeg - srowNeg, 0, 0, MAP_DISP_WIDTH,
             MAP_DISP_HEIGHT);
         if (leftShift == 0) HIT_LEFT = true;
-        shiftX -= MAP_DISP_WIDTH;
-        cursorX += MAP_DISP_WIDTH - (CURSOR_SIZE << 1);
+        helperMove(&HIT_RIGHT, &shiftX, "left");
     } else if (cursorY == (CURSOR_SIZE >> 1) && !HIT_UP) {
         // top of screen reached
-        HIT_DOWN = false;
         lcdYegDraw(icolPos - scolPos, upShift, 0, 0, MAP_DISP_WIDTH,
             MAP_DISP_HEIGHT);
         if (upShift == 0) HIT_UP = true;
-        shiftY -= MAP_DISP_HEIGHT;
-        cursorY += MAP_DISP_HEIGHT - (CURSOR_SIZE << 1);
+        helperMove(&HIT_DOWN, &shiftY, "up");
     } else if (cursorX == MAP_DISP_WIDTH - (CURSOR_SIZE >> 1) - PAD
         && !HIT_RIGHT) {
             // right side of sign reached
-            HIT_LEFT = false;
             lcdYegDraw(rightShift, irowNeg - srowNeg, 0, 0, MAP_DISP_WIDTH,
                 MAP_DISP_HEIGHT);
             if (rightShift == YEG_SIZE - MAP_DISP_WIDTH) HIT_RIGHT = true;
-            shiftX += MAP_DISP_WIDTH;
-            cursorX -= MAP_DISP_WIDTH - (CURSOR_SIZE << 1);
+            helperMove(&HIT_LEFT, &shiftX, "right");
     } else if (cursorY == MAP_DISP_HEIGHT - (CURSOR_SIZE >> 1) - PAD
         && !HIT_DOWN) {
             // bottom of screen reached
@@ -469,8 +463,25 @@ void redrawMap(int cursorX0, int cursorY0) {
             lcdYegDraw(icolPos - scolPos, downShift, 0, 0,
                 MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
             if (downShift == YEG_SIZE - MAP_DISP_HEIGHT) HIT_DOWN = true;
-            shiftY += MAP_DISP_HEIGHT;
-            cursorY -= MAP_DISP_HEIGHT - (CURSOR_SIZE << 1);
+            helperMove(&HIT_UP, &shiftY, "down");
+    }
+}
+
+
+void helperMove(bool* oppDir, int* shiftLen, char mainDir[]) {
+    *oppDir = false;
+    if (mainDir == "left") {
+        *shiftLen -= MAP_DISP_WIDTH;
+        cursorX += MAP_DISP_WIDTH - (CURSOR_SIZE << 1);
+    } else if (mainDir == "right") {
+        *shiftLen += MAP_DISP_WIDTH;
+        cursorX -= MAP_DISP_WIDTH - (CURSOR_SIZE << 1);
+    } else if (mainDir == "up") {
+        *shiftLen -= MAP_DISP_HEIGHT;
+        cursorY += MAP_DISP_HEIGHT - (CURSOR_SIZE << 1);
+    } else if (mainDir == "down") {
+        *shiftLen += MAP_DISP_HEIGHT;
+        cursorY -= MAP_DISP_HEIGHT - (CURSOR_SIZE << 1);
     }
 }
 

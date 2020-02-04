@@ -93,6 +93,7 @@ void drawMapPatch(int, int);
 void lcdYegDraw(int, int, int, int, int, int);
 void constrainCursor(int*, int*);
 void constrainMap(int*, int*);
+void helperMove(bool*, int*, char[]);
 
 // retrieving restaurant from memeory
 void getRestaurantFast(uint16_t, restaurant*);
@@ -106,7 +107,7 @@ int16_t lat_to_y(int32_t);
 // sorting algorithms and helper functions
 void insertion_sort(RestDist[], int);
 
-//new functions, sort later
+// new functions, sort later
 void restDistFill();
 void listResturants();
 void processScroll(int&);
