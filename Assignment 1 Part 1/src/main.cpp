@@ -414,8 +414,8 @@ void drawMapPatch(int cursorX0, int cursorY0) {
 
 
 void constrainMap(int* shiftX, int* shiftY) {
-    *shiftX = constrain(*shiftX, -YEG_MIDDLE_X, YEG_SIZE - YEG_MIDDLE_X);
-    *shiftY = constrain(*shiftY, -YEG_MIDDLE_Y, YEG_SIZE - YEG_MIDDLE_Y);
+    *shiftX = constrain(*shiftX, -YEG_MIDDLE_X, YEG_SIZE - YEG_MIDDLE_X - MAP_DISP_WIDTH);
+    *shiftY = constrain(*shiftY, -YEG_MIDDLE_Y, YEG_SIZE - YEG_MIDDLE_Y - MAP_DISP_HEIGHT);
 }
 
 
@@ -465,7 +465,8 @@ void redrawMap(int cursorX0, int cursorY0) {
         if (upShift == 0) HIT_UP = true;
         shiftY -= MAP_DISP_HEIGHT;
         cursorY += MAP_DISP_HEIGHT - (CURSOR_SIZE << 1);
-    } else if (cursorX == MAP_DISP_WIDTH - (CURSOR_SIZE >> 1) - PAD) {
+    } else if (cursorX == MAP_DISP_WIDTH - (CURSOR_SIZE >> 1) - PAD
+        && !HIT_RIGHT) {
         // right side of sign reached
         HIT_LEFT = false;
         lcdYegDraw(rightShift, irowNeg - srowNeg, 0, 0, MAP_DISP_WIDTH,
@@ -473,12 +474,15 @@ void redrawMap(int cursorX0, int cursorY0) {
         if (shiftX == YEG_SIZE - MAP_DISP_WIDTH) HIT_RIGHT = true;
         shiftX += MAP_DISP_WIDTH;
         cursorX -= MAP_DISP_WIDTH - (CURSOR_SIZE << 1);
-    } else if (cursorY == MAP_DISP_HEIGHT - (CURSOR_SIZE >> 1) - PAD) {
+    } else if (cursorY == MAP_DISP_HEIGHT - (CURSOR_SIZE >> 1) - PAD
+        && !HIT_DOWN) {
         // bottom of screen reached
         HIT_UP = false;
         lcdYegDraw(icolPos - scolPos, downShift, 0, 0,
             MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
-        if (downShift == YEG_SIZE - MAP_DISP_HEIGHT) HIT_DOWN = true;
+        if (downShift == YEG_SIZE - MAP_DISP_HEIGHT) {
+            HIT_DOWN = true;
+        }
         shiftY += MAP_DISP_HEIGHT;
         cursorY -= MAP_DISP_HEIGHT - (CURSOR_SIZE << 1);
     }
