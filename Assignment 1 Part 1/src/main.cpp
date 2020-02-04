@@ -240,7 +240,7 @@ void getRestaurantFast(uint16_t restIndex, restaurant* restPtr) {
     PREV_BLOCK_NUM = blockNum;
 
     // storing TEMP_BLOCK information in a smaller global struct
-    REST_DIST[restIndex].index = restIndex;
+    //REST_DIST[restIndex].index = restIndex;
     // need to calculate Manhattan distance here
     // need to correlate cursor position on map with actual position on map
 }
