@@ -56,13 +56,7 @@ int main() {
             modeZero(0, CURSOR_SIZE);
         } else if (MODE == 1) {
             tft.fillRect(0, 0, MAP_DISP_WIDTH, MAP_DISP_HEIGHT, TFT_BLACK);
-            if (!digitalRead(JOY_SEL)) {
-                MODE = 0;
-                // redraw map over the selected restaurant
-            };
-
-            // errors in modeOne()
-            // modeOne();
+            // mode one here
         }
     }
 
@@ -121,113 +115,6 @@ void lcd_setup() {
     cursorX = (MAP_DISP_WIDTH) >> 1;
     cursorY = DISPLAY_HEIGHT >> 1;
     redrawCursor(TFT_RED);
-}
-
-
-void modeOne() {
-    // // joystick pressed
-    // if (!digitalRead(53)) {
-    //     MODE = 0;
-    // }
-
-    // // to implement
-    // listResturants();
-    // int currentSelect = 0;
-    // int restX, restY; // use for dot
-    // bool hold = true;
-    // while (hold) {
-    //     processScroll(currentSelect, hold, restX, restY);
-    // }
-    // // redrawing map patch around selected resturant
-    // lcdYegDraw(restX-(MAP_DISP_WIDTH >> 1), 
-    //     restY-(DISPLAY_HEIGHT >> 1),0, 0 MAP_DISP_WIDTH, DISPLAY_HEIGHT);
-    // set cursor to pos restX, restY, remeber to convert!
-}
-
-
-void restDistFill() {
-    for (int i = 0; i < NUM_RESTAURANTS; i++) {
-        restaurant rest;
-        getRestaurantFast(i, &rest);
-        int xDiff = abs(cursorX - rest.lat); //fix
-        int yDiff = abs(cursorY - rest.lon); //fix
-        RestDist rd = {i, xDiff + yDiff};
-    }
-    insertion_sort(REST_DIST, NUM_RESTAURANTS); // sorting by dist to location
-}
-
-
-void listResturants() {
-    tft.fillScreen(0);
-    tft.setCursor(0, 0);
-    tft.setTextWrap(false);
-
-    for (int i = 0; i < 21; i++) {
-        char restName[100];
-        getRestaurantName(restName, i);
-        if (i == 0) {
-            tft.setTextColor(TFT_BLACK, TFT_WHITE);
-        } else {
-            tft.setTextColor(TFT_WHITE, TFT_BLACK);
-        }
-        tft.println(restName);
-    }
-    tft.println();
-}
-
-
-void processScroll(int &currentSelect, bool &hold, int& restX, int& restY) {
-    uint16_t yVal = analogRead(JOY_VERT);
-    if (yVal > JOY_DEADZONE + JOY_CENTER) {
-        redrawText(currentSelect, currentSelect+1);
-        currentSelect++;
-    } else if (yVal < JOY_CENTER - JOY_DEADZONE) {
-        redrawText(currentSelect, currentSelect-1);
-        currentSelect--;
-    }
-
-    int select = constrain(select, 0, 21);
-    // you sure this is correct?
-    // you sure this is correct?
-    // you sure this is correct?
-    if (!(digitalRead(53))) {
-        hold = false;
-        restaurant selectedRest;
-        getRestaurantFast(currentSelect, &selectedRest);
-        restX = selectedRest.lat; //convert to map
-        restY = selectedRest.lon; //convert to map
-    }
-}
-
-
-void redrawText(int prev, int current) { // implement
-    // redrawing and reprinting old selection
-    tft.setTextColor(TFT_WHITE);
-    tft.drawRect(0,FONT_SIZE*prev, MAP_DISP_WIDTH, FONT_SIZE, 
-        TFT_BLACK);
-    tft.setCursor(0, prev*FONT_SIZE);
-    char name[100]; 
-    getRestaurantName(name, prev);
-    tft.println(name);
-    // redrawing and reprinting new selection
-    tft.setTextColor(TFT_BLACK);
-    tft.drawRect(0, FONT_SIZE*current, MAP_DISP_WIDTH, FONT_SIZE, 
-        TFT_WHITE);
-    tft.setCursor(0, current*FONT_SIZE);
-    getRestaurantName(name, current);
-    tft.println(name);
-}
-
-
-void drawDot(int x, int y) {
-    // for dots on maps
-}
-
-
-void getRestaurantName(char name[], int index) {
-    restaurant rest;
-    getRestaurantFast(REST_DIST[index].index, &rest);
-    name = rest.name;
 }
 
 
@@ -413,25 +300,38 @@ void drawMapPatch(int cursorX0, int cursorY0) {
 }
 
 
+/*
+    Description: constrains the global shift in X and Y position to within the
+    physical boundaries of the YEG map.
+
+    Arguments:
+        shiftX (int*): pointer to the X shift.
+        shiftY (int*): pointer to the Y shift.
+*/
 void constrainMap(int* shiftX, int* shiftY) {
-    *shiftX = constrain(*shiftX, -YEG_MIDDLE_X, YEG_SIZE - YEG_MIDDLE_X - MAP_DISP_WIDTH);
-    *shiftY = constrain(*shiftY, -YEG_MIDDLE_Y, YEG_SIZE - YEG_MIDDLE_Y - MAP_DISP_HEIGHT);
+    *shiftX = constrain(*shiftX, -YEG_MIDDLE_X,
+        YEG_SIZE - YEG_MIDDLE_X - MAP_DISP_WIDTH);
+    *shiftY = constrain(*shiftY, -YEG_MIDDLE_Y,
+        YEG_SIZE - YEG_MIDDLE_Y - MAP_DISP_HEIGHT);
 }
 
 
+/*
+    Description: redraws the shifted map of Edmonton depending on the cursor
+    nudge direction.
+
+    Arguments:
+        cursorX0 (uint16_t): the original cursor's X position.
+        cursorY0 (uint16_t): the original cursor's Y position.
+*/
 void redrawMap(int cursorX0, int cursorY0) {
     // storing change in cursor position
     int diffX = cursorX - cursorX0;
-    int diffY = cursorY - cursorY0;
     // storing appropriate irow and icol positions
     int icolPos = YEG_MIDDLE_X + cursorX0 + (CURSOR_SIZE >> 1) + diffX + shiftX;
-    int icolNeg = YEG_MIDDLE_X + cursorX0 - (CURSOR_SIZE >> 1) + shiftX;
-    int irowPos = YEG_MIDDLE_Y + cursorY0 + (CURSOR_SIZE >> 1) + diffY + shiftY;
     int irowNeg = YEG_MIDDLE_Y + cursorY0 - (CURSOR_SIZE >> 1) + shiftY;
     // storing appropriate srow and scol positions
     int scolPos = cursorX + (CURSOR_SIZE >> 1);
-    int scolNeg = cursorX0 - (CURSOR_SIZE >> 1);
-    int srowPos = cursorY + (CURSOR_SIZE >> 1);
     int srowNeg = cursorY0 - (CURSOR_SIZE >> 1);
     // PAD accounts for integer division by 2 (i.e., cursor has odd sidelength)
     uint8_t PAD = 0;
@@ -447,8 +347,7 @@ void redrawMap(int cursorX0, int cursorY0) {
         YEG_SIZE - MAP_DISP_HEIGHT);
 
     // (CURSOR_SIZE << 1) leaves buffer at the map location that the cursor
-    // was previously just in case the user wants to reverse his/her action
-    // buffer exists because drawing the map takes a long time
+    // was previously
     if (cursorX == (CURSOR_SIZE >> 1) && !HIT_LEFT) {
         // left side of screen reached
         lcdYegDraw(leftShift, irowNeg - srowNeg, 0, 0, MAP_DISP_WIDTH,
@@ -480,7 +379,16 @@ void redrawMap(int cursorX0, int cursorY0) {
 }
 
 
-void helperMove(bool* oppDir, int* shiftLen, char mainDir[]) {
+/*
+    Description: helper function for redrawMap() which aids with map boundary
+    clamping and map shifting.
+
+    Arguments:
+        oppDir (bool*): pointer to the opposite direction of map shift.
+        shiftLen (int*): the X or Y shift to store for future map shifts.
+        mainDir (const char*): user passes in the parameter of movement.
+*/
+void helperMove(bool* oppDir, int* shiftLen, const char* mainDir) {
     *oppDir = false;
     if (mainDir == "left") {
         *shiftLen -= MAP_DISP_WIDTH;
