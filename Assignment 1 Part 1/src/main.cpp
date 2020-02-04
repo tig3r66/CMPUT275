@@ -390,16 +390,16 @@ void redrawMap(int cursorX0, int cursorY0) {
 */
 void helperMove(bool* oppDir, int* shiftLen, const char* mainDir) {
     *oppDir = false;
-    if (mainDir == "left") {
+    if (strcmp(mainDir, "left") == 0) {
         *shiftLen -= MAP_DISP_WIDTH;
         cursorX += MAP_DISP_WIDTH - (CURSOR_SIZE << 1);
-    } else if (mainDir == "right") {
+    } else if (strcmp(mainDir, "right") == 0) {
         *shiftLen += MAP_DISP_WIDTH;
         cursorX -= MAP_DISP_WIDTH - (CURSOR_SIZE << 1);
-    } else if (mainDir == "up") {
+    } else if (strcmp(mainDir, "up") == 0) {
         *shiftLen -= MAP_DISP_HEIGHT;
         cursorY += MAP_DISP_HEIGHT - (CURSOR_SIZE << 1);
-    } else if (mainDir == "down") {
+    } else if (strcmp(mainDir, "down") == 0) {
         *shiftLen += MAP_DISP_HEIGHT;
         cursorY -= MAP_DISP_HEIGHT - (CURSOR_SIZE << 1);
     }
