@@ -110,8 +110,8 @@ int16_t lat_to_y(int32_t);
 // sorting algorithms
 void insertion_sort(RestDist[], int);
 
-// new functions, sort later
-void menuProcess(int& selection);
+// helps with scrolling through restaurants
+void menuProcess(uint8_t& selection);
 void redrawText(int current, int prev);
 
 

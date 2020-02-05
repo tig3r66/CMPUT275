@@ -56,6 +56,7 @@ int main() {
             modeZero(0, CURSOR_SIZE);
         } else if (MODE == 1) {
             tft.fillScreen(TFT_BLACK);
+            // loops until the joystick button is pressed
             modeOne();
             MODE = 0;
         }
@@ -76,8 +77,6 @@ void setup() {
     pinMode(JOY_SEL, INPUT_PULLUP);
 
     uint16_t ID = tft.readID();
-    Serial.print("ID = 0x");
-    Serial.println(ID, HEX);
     if (ID == 0xD3D3) ID = 0x9481;
     tft.begin(ID);
 
@@ -172,17 +171,16 @@ void insertion_sort(RestDist array[], int n) {
 
 
 void modeOne() {
+    // reading in all restaurants
     for (int i = 0; i < NUM_RESTAURANTS; i++) {
         getRestaurantFast(i, TEMP_BLOCK);
     }
-
-    Serial.println("INSERTION SORT STARTED");
+    // sorting restaurants closest to the cursor position
     insertion_sort(REST_DIST, NUM_RESTAURANTS);
-    Serial.println("INSERTION SORT COMPLETE");
 
-    // initial print
+    // initial printing of the 21 closest restaurants to the cursor position
     tft.setCursor(0, 0);
-    for (int i = 0; i < MAX_LIST; i++) {
+    for (uint8_t i = 0; i < MAX_LIST; i++) {
         restaurant rest;
         getRestaurantFast(REST_DIST[i].index, &rest);
         if (i == 0) {
@@ -196,7 +194,7 @@ void modeOne() {
     }
 
     // processing menu
-    int selection = 0;
+    uint8_t selection = 0;
     while (true) {
         menuProcess(selection);
         if (!(digitalRead(JOY_SEL))) {
@@ -210,7 +208,7 @@ void modeOne() {
 }
 
 
-void menuProcess(int& selection) {
+void menuProcess(uint8_t& selection) {
     uint16_t joyY = analogRead(JOY_VERT);
     if (joyY < (JOY_CENTER - JOY_DEADZONE)) {
         // scroll one up
@@ -218,16 +216,17 @@ void menuProcess(int& selection) {
         if (selection >= 0) {
             redrawText(selection, selection+1); 
         }
-    }
-    else if (joyY > (JOY_CENTER + JOY_DEADZONE)) {
+    } else if (joyY > (JOY_CENTER + JOY_DEADZONE)) {
         // scroll one down
         selection++;
         if (selection < MAX_LIST) {
             redrawText(selection, selection-1);
         }
     }
+
     // constrains to number of restaurants displayed
     selection = constrain(selection, 0, MAX_LIST-1);
+    // for better (less sensitive) scrolling user experience
     delay(50);
 }
 
@@ -237,13 +236,13 @@ void redrawText(int current, int prev) {
     restaurant tempRest;
     getRestaurantFast(REST_DIST[prev].index, &tempRest);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
-    tft.setCursor(0, prev*FONT_SIZE);
+    tft.setCursor(0, prev * FONT_SIZE);
     tft.print(tempRest.name);
 
     // get current name and print it
     getRestaurantFast(REST_DIST[current].index, &tempRest);
     tft.setTextColor(TFT_BLACK, TFT_WHITE);
-    tft.setCursor(0, current*FONT_SIZE);
+    tft.setCursor(0, current * FONT_SIZE);
     tft.print(tempRest.name);
 }
 
@@ -265,12 +264,14 @@ void modeZero(uint8_t slow, uint8_t fast) {
     uint16_t MAX_STICK = (1 << 10) - 1;
     // store current cursor position
     int cursorX0 = cursorX, cursorY0 = cursorY;
+
     // x movement
     if (xVal > EPSILON_POS) {
         cursorX -= map(xVal, EPSILON_POS, MAX_STICK, slow, fast);
     } else if (xVal < EPSILON_NEG) {
         cursorX += map(xVal, 0, EPSILON_NEG, fast, slow);
     }
+
     // y movement
     if (yVal < EPSILON_NEG) {
         cursorY -= map(yVal, 0, EPSILON_NEG, fast, slow);
@@ -283,8 +284,9 @@ void modeZero(uint8_t slow, uint8_t fast) {
         constrainCursor(&cursorX, &cursorY);
         // constrain the display to the YEG map
         constrainMap(&shiftX, &shiftY);
-
+        // redraw
         drawMapPatch(cursorX0, cursorY0);
+        // draws once cursor reaches border (except at physical map border)
         redrawMap(cursorX0, cursorY0);
         redrawCursor(TFT_RED);
     }
@@ -305,7 +307,6 @@ void constrainCursor(int* cursorX, int* cursorY) {
     // PAD accounts for integer division by 2 (i.e., cursor has odd sidelength)
     uint8_t PAD = 0;
     if (CURSOR_SIZE & 1) PAD = 1;
-
     *cursorX = constrain(*cursorX, (CURSOR_SIZE >> 1),
         MAP_DISP_WIDTH - (CURSOR_SIZE >> 1) - PAD);
     *cursorY = constrain(*cursorY, (CURSOR_SIZE >> 1),
@@ -431,8 +432,7 @@ void redrawMap(int cursorX0, int cursorY0) {
     int downShift = constrain(irowNeg - srowNeg + MAP_DISP_HEIGHT, 0,
         YEG_SIZE - MAP_DISP_HEIGHT);
 
-    // (CURSOR_SIZE << 1) leaves buffer at the map location that the cursor
-    // was previously
+    // (CURSOR_SIZE << 1) leaves buffer for user at the previous map location
     if (cursorX == (CURSOR_SIZE >> 1) && !HIT_LEFT) {
         // left side of screen reached
         lcdYegDraw(leftShift, irowNeg - srowNeg, 0, 0, MAP_DISP_WIDTH,
