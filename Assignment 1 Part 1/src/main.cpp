@@ -53,7 +53,7 @@ int main() {
             // joystick button pressed
             if (!digitalRead(JOY_SEL)) MODE = 1;
             // min and max cursor speeds are 0 and CURSOR_SIZE pixels/cycle
-            modeZero(0, CURSOR_SIZE);
+            modeZero(0, CURSOR_SIZE); 
         } else if (MODE == 1) {
             tft.fillScreen(TFT_BLACK);
             // loops until the joystick button is pressed
@@ -178,20 +178,7 @@ void modeOne() {
     // sorting restaurants closest to the cursor position
     insertion_sort(REST_DIST, NUM_RESTAURANTS);
 
-    // initial printing of the 21 closest restaurants to the cursor position
-    tft.setCursor(0, 0);
-    for (uint8_t i = 0; i < MAX_LIST; i++) {
-        restaurant rest;
-        getRestaurantFast(REST_DIST[i].index, &rest);
-        if (i == 0) {
-            tft.setTextColor(TFT_BLACK, TFT_WHITE);
-            tft.print(rest.name);
-        } else {
-            tft.setTextColor(TFT_WHITE, TFT_BLACK);
-            tft.print(rest.name);
-        }
-        tft.setCursor(0, (i+1) * FONT_SIZE);
-    }
+    printRestList();
 
     // processing menu
     uint8_t selection = 0;
@@ -208,24 +195,38 @@ void modeOne() {
 }
 
 
+void printRestList() {
+    tft.setCursor(0, 0);
+    for (uint8_t i = 0; i < MAX_LIST; i++) {
+        restaurant rest;
+        getRestaurantFast(REST_DIST[i].index, &rest);
+        if (i == 0) {
+            tft.setTextColor(TFT_BLACK, TFT_WHITE);
+            tft.print(rest.name);
+        } else {
+            tft.setTextColor(TFT_WHITE, TFT_BLACK);
+            tft.print(rest.name);
+        }
+        tft.setCursor(0, (i+1) * FONT_SIZE);
+    }
+}
+
+
 void menuProcess(uint8_t& selection) {
     uint16_t joyY = analogRead(JOY_VERT);
     if (joyY < (JOY_CENTER - JOY_DEADZONE)) {
         // scroll one up
-        selection--;
-        if (selection >= 0) {
+        if (selection > 0) {
+            selection--;
             redrawText(selection, selection+1); 
         }
     } else if (joyY > (JOY_CENTER + JOY_DEADZONE)) {
         // scroll one down
-        selection++;
-        if (selection < MAX_LIST) {
+        if (selection < MAX_LIST - 1) {
+            selection++;
             redrawText(selection, selection-1);
         }
     }
-
-    // constrains to number of restaurants displayed
-    selection = constrain(selection, 0, MAX_LIST-1);
     // for better (less sensitive) scrolling user experience
     delay(50);
 }
@@ -287,7 +288,7 @@ void modeZero(uint8_t slow, uint8_t fast) {
         // redraw
         drawMapPatch(cursorX0, cursorY0);
         // draws once cursor reaches border (except at physical map border)
-        redrawMap(cursorX0, cursorY0);
+        redrawMap();
         redrawCursor(TFT_RED);
     }
 }
@@ -410,53 +411,47 @@ void constrainMap(int* shiftX, int* shiftY) {
         cursorX0 (uint16_t): the original cursor's X position.
         cursorY0 (uint16_t): the original cursor's Y position.
 */
-void redrawMap(int cursorX0, int cursorY0) {
-    // storing change in cursor position
-    int diffX = cursorX - cursorX0;
+void redrawMap() {
     // storing appropriate irow and icol positions
-    int icolPos = YEG_MIDDLE_X + cursorX0 + (CURSOR_SIZE >> 1) + diffX + shiftX;
-    int irowNeg = YEG_MIDDLE_Y + cursorY0 - (CURSOR_SIZE >> 1) + shiftY;
-    // storing appropriate srow and scol positions
-    int scolPos = cursorX + (CURSOR_SIZE >> 1);
-    int srowNeg = cursorY0 - (CURSOR_SIZE >> 1);
+    int icol = YEG_MIDDLE_X + cursorX + shiftX;
+    int irow = YEG_MIDDLE_Y + cursorY + shiftY;
     // PAD accounts for integer division by 2 (i.e., cursor has odd sidelength)
     uint8_t PAD = 0;
     if (CURSOR_SIZE & 1) PAD = 1;
 
-    int leftShift = constrain(icolPos - MAP_DISP_WIDTH - scolPos, 0,
+    int leftShift = constrain(icol - MAP_DISP_WIDTH - cursorX, 0,
         YEG_SIZE - MAP_DISP_WIDTH);
-    int upShift = constrain(irowNeg - srowNeg - MAP_DISP_HEIGHT, 0,
+    int upShift = constrain(irow - cursorY - MAP_DISP_HEIGHT, 0,
         YEG_SIZE - MAP_DISP_HEIGHT);
-    int rightShift = constrain(icolPos + MAP_DISP_WIDTH - scolPos, 0,
+    int rightShift = constrain(icol + MAP_DISP_WIDTH - cursorX, 0,
         YEG_SIZE - MAP_DISP_WIDTH);
-    int downShift = constrain(irowNeg - srowNeg + MAP_DISP_HEIGHT, 0,
+    int downShift = constrain(irow - cursorY + MAP_DISP_HEIGHT, 0,
         YEG_SIZE - MAP_DISP_HEIGHT);
 
     // (CURSOR_SIZE << 1) leaves buffer for user at the previous map location
     if (cursorX == (CURSOR_SIZE >> 1) && !HIT_LEFT) {
         // left side of screen reached
-        lcdYegDraw(leftShift, irowNeg - srowNeg, 0, 0, MAP_DISP_WIDTH,
+        lcdYegDraw(leftShift, irow - cursorY, 0, 0, MAP_DISP_WIDTH,
             MAP_DISP_HEIGHT);
         if (leftShift == 0) HIT_LEFT = true;
         helperMove(&HIT_RIGHT, &shiftX, "left");
     } else if (cursorY == (CURSOR_SIZE >> 1) && !HIT_UP) {
         // top of screen reached
-        lcdYegDraw(icolPos - scolPos, upShift, 0, 0, MAP_DISP_WIDTH,
+        lcdYegDraw(icol - cursorX, upShift, 0, 0, MAP_DISP_WIDTH,
             MAP_DISP_HEIGHT);
         if (upShift == 0) HIT_UP = true;
         helperMove(&HIT_DOWN, &shiftY, "up");
     } else if (cursorX == MAP_DISP_WIDTH - (CURSOR_SIZE >> 1) - PAD
         && !HIT_RIGHT) {
             // right side of sign reached
-            lcdYegDraw(rightShift, irowNeg - srowNeg, 0, 0, MAP_DISP_WIDTH,
+            lcdYegDraw(rightShift, irow - cursorY, 0, 0, MAP_DISP_WIDTH,
                 MAP_DISP_HEIGHT);
             if (rightShift == YEG_SIZE - MAP_DISP_WIDTH) HIT_RIGHT = true;
             helperMove(&HIT_LEFT, &shiftX, "right");
     } else if (cursorY == MAP_DISP_HEIGHT - (CURSOR_SIZE >> 1) - PAD
         && !HIT_DOWN) {
             // bottom of screen reached
-            HIT_UP = false;
-            lcdYegDraw(icolPos - scolPos, downShift, 0, 0,
+            lcdYegDraw(icol - cursorX, downShift, 0, 0,
                 MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
             if (downShift == YEG_SIZE - MAP_DISP_HEIGHT) HIT_DOWN = true;
             helperMove(&HIT_UP, &shiftY, "down");

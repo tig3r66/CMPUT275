@@ -91,12 +91,13 @@ void modeOne();
 // tft display-related functions
 void redrawCursor(uint16_t);
 void modeZero(uint8_t, uint8_t);
-void redrawMap(int, int);
+void redrawMap();
 void drawMapPatch(int, int);
 void lcdYegDraw(int, int, int, int, int, int);
 void constrainCursor(int*, int*);
 void constrainMap(int*, int*);
 void helperMove(bool*, int*, const char*);
+void printRestList();
 
 // retrieving restaurant from memeory
 void getRestaurantFast(uint16_t, restaurant*);
