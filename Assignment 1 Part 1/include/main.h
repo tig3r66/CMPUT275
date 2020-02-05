@@ -55,11 +55,11 @@
 // cursor size
 #define CURSOR_SIZE 9
 
-//font size
-#define FONT_SIZE 16
+// font size
+#define FONT_SIZE 15
 
 //number of restuarants listed
-#define MAX_LIST 20
+#define MAX_LIST 21
 
 
 // ================================== STRUCTS ==================================

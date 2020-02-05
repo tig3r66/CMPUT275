@@ -56,7 +56,7 @@ int main() {
             modeZero(0, CURSOR_SIZE);
         } else if (MODE == 1) {
             tft.fillScreen(TFT_BLACK);
-            modeOne();// mode one here, dont break out of this until selected rest
+            modeOne();
             MODE = 0;
         }
     }
@@ -141,8 +141,15 @@ void getRestaurantFast(uint16_t restIndex, restaurant* restPtr) {
 
     // storing TEMP_BLOCK information in a smaller global struct
     REST_DIST[restIndex].index = restIndex;
-    // need to calculate Manhattan distance here
-    // need to correlate cursor position on map with actual position on map
+
+    // position of current cursor on map
+    int icol = YEG_MIDDLE_X + cursorX + shiftX;
+    int irow = YEG_MIDDLE_Y + cursorY + shiftY;
+
+    // calculating Manhattan distance and storing into global REST_DIST struct
+    int manDist = abs(icol - lon_to_x(restPtr->lon))
+        + abs(irow - lat_to_y(restPtr->lat));
+    REST_DIST[restIndex].dist = manDist;
 }
 
 
@@ -165,20 +172,30 @@ void insertion_sort(RestDist array[], int n) {
 
 
 void modeOne() {
-    // intial print
+    for (int i = 0; i < NUM_RESTAURANTS; i++) {
+        getRestaurantFast(i, TEMP_BLOCK);
+    }
+
+    Serial.println("INSERTION SORT STARTED");
+    insertion_sort(REST_DIST, NUM_RESTAURANTS);
+    Serial.println("INSERTION SORT COMPLETE");
+
+    // initial print
+    tft.setCursor(0, 0);
     for (int i = 0; i < MAX_LIST; i++) {
         restaurant rest;
         getRestaurantFast(REST_DIST[i].index, &rest);
         if (i == 0) {
             tft.setTextColor(TFT_BLACK, TFT_WHITE);
             tft.print(rest.name);
-        }
-        else {
+        } else {
             tft.setTextColor(TFT_WHITE, TFT_BLACK);
             tft.print(rest.name);
         }
-        tft.print('\n');
+        tft.setCursor(0, (i+1) * FONT_SIZE);
     }
+
+    // processing menu
     int selection = 0;
     while (true) {
         menuProcess(selection);
@@ -191,6 +208,7 @@ void modeOne() {
         }
     }
 }
+
 
 void menuProcess(int& selection) {
     uint16_t joyY = analogRead(JOY_VERT);
@@ -208,26 +226,27 @@ void menuProcess(int& selection) {
             redrawText(selection, selection-1);
         }
     }
+    // constrains to number of restaurants displayed
     selection = constrain(selection, 0, MAX_LIST-1);
+    delay(50);
 }
 
+
 void redrawText(int current, int prev) {
-    // patching over prev and reprinting it
-    tft.fillRect(0, FONT_SIZE*prev, MAP_DISP_WIDTH, FONT_SIZE, TFT_BLACK);
-    // get prev name and print it
-    restaurant r;
-    getRestaurantFast(REST_DIST[prev].index, &r);
-    tft.setTextColor(TFT_WHITE);
+    // drawing over prev and reprinting it
+    restaurant tempRest;
+    getRestaurantFast(REST_DIST[prev].index, &tempRest);
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.setCursor(0, prev*FONT_SIZE);
-    tft.print(r.name);
-    // patch over new and reprint it
-    tft.fillRect(0, FONT_SIZE*current, MAP_DISP_WIDTH, FONT_SIZE, TFT_WHITE);
+    tft.print(tempRest.name);
+
     // get current name and print it
-    getRestaurantFast(REST_DIST[current].index, &r); //?
-    tft.setTextColor(TFT_BLACK);
+    getRestaurantFast(REST_DIST[current].index, &tempRest);
+    tft.setTextColor(TFT_BLACK, TFT_WHITE);
     tft.setCursor(0, current*FONT_SIZE);
-    tft.print(r.name);
+    tft.print(tempRest.name);
 }
+
 
 /*
     Description: translates joystick inputs to movement of the cursor on the TFT
