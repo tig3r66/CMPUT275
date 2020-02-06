@@ -52,6 +52,8 @@ int main() {
         if (MODE == 0) {
             // joystick button pressed
             if (!digitalRead(JOY_SEL)) MODE = 1;
+            // if user touches screen, draw closest restaurants
+            processTouchScreen();
             // min and max cursor speeds are 0 and CURSOR_SIZE pixels/cycle
             modeZero(0, CURSOR_SIZE); 
         } else if (MODE == 1) {
@@ -107,6 +109,7 @@ void lcd_setup() {
     tft.setRotation(1);
     tft.fillScreen(TFT_BLACK);
     tft.setTextSize(2);
+    tft.setTextWrap(false);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
 
     lcdYegDraw(YEG_MIDDLE_X, YEG_MIDDLE_Y, 0, 0, MAP_DISP_WIDTH,
@@ -170,6 +173,7 @@ void insertion_sort(RestDist array[], int n) {
 }
 
 
+// FIX THIS
 void modeOne() {
     // reading in all restaurants
     for (int i = 0; i < NUM_RESTAURANTS; i++) {
@@ -184,30 +188,45 @@ void modeOne() {
     uint8_t selection = 0;
     while (true) {
         menuProcess(selection);
-        if (!(digitalRead(JOY_SEL))) {
-            // FIX THIS
-            // FIX THIS
-            // FIX THIS
-            tft.fillScreen(TFT_BLACK);
+        if (!(digitalRead(JOY_SEL))) { // FIX THIS
+            tft.fillRect(MAP_DISP_WIDTH, 0, PADX, MAP_DISP_HEIGHT, TFT_BLACK);
 
             // storing latitude and longitude info for the selected restaurant
             restaurant temp;
             getRestaurantFast(selection, &temp);
+
             // getting current cursor position on map longitude and latitude
-            int32_t curLon = x_to_lon(cursorX + YEG_MIDDLE_X + shiftX);
-            int32_t curLat = y_to_lat(cursorY + YEG_MIDDLE_Y + shiftY);
 
             // setting the shift position
 
+            // getting map longitude and latitude
+
             // redraw map with restaurant centered
+            lcdYegDraw(lon_to_x(temp.lon), lat_to_y(temp.lat), 0, 0, MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
 
             // set cursor to middle of map and redraw cursor
             cursorX = MAP_DISP_WIDTH >> 1;
             cursorY = MAP_DISP_HEIGHT >> 1;
             redrawCursor(TFT_RED);
-
-            return;
+            break;
         }
+    }
+}
+
+
+void processTouchScreen() {
+    TSPoint touch = ts.getPoint();
+    pinMode(YP, OUTPUT);
+    pinMode(XM, OUTPUT);
+
+    int screen_x = map(touch.y, TS_MINX, TS_MAXX, tft.width() - 1, 0);
+    // int screen_y = map(touch.x, TS_MINY, TS_MAXY, tft.height() - 1, 0);
+    if (touch.z < MINPRESSURE || touch.z > MAXPRESSURE
+        || screen_x < MAP_DISP_WIDTH) {
+            return;
+    } else if (screen_x < MAP_DISP_WIDTH) {
+        // implement this
+        // drawRestDots();
     }
 }
 

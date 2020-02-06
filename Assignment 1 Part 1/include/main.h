@@ -35,6 +35,7 @@
 #define YEG_SIZE 2048
 #define YEG_MIDDLE_X ((YEG_SIZE - (MAP_DISP_WIDTH)) >> 1)
 #define YEG_MIDDLE_Y ((YEG_SIZE - DISPLAY_HEIGHT) >> 1)
+#define PADX 60
 
 // dimensions of the part allocated to the map display
 #define MAP_DISP_WIDTH (DISPLAY_WIDTH - 60)
@@ -114,6 +115,9 @@ void insertion_sort(RestDist[], int);
 // helps with scrolling through restaurants
 void menuProcess(uint8_t& selection);
 void redrawText(int current, int prev);
+
+// processes touch screen input
+void processTouchScreen();
 
 
 template <class T>
