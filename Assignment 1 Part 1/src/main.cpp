@@ -208,6 +208,10 @@ void modeOne() {
 }
 
 
+/*
+    Description: processes touches on the TFT display. When the user touches the
+    map, the closest restaurants to the cursor are drawn as blue dots.
+*/
 void processTouchScreen() {
     TSPoint touch = ts.getPoint();
     pinMode(YP, OUTPUT);
