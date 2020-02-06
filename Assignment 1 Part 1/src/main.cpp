@@ -222,30 +222,43 @@ void processTouchScreen() {
         || screen_x > MAP_DISP_WIDTH) {
             return;
     } else if (screen_x < MAP_DISP_WIDTH) {
-        // implement this
         sortOnCursor();
-        Serial.println("reach"); // test
-        int i = 0;
-        while (true) {
-            restaurant tempRest; 
-            getRestaurantFast(REST_DIST[i].index, &tempRest);
-            int16_t img_x = lon_to_x(tempRest.lon);
-            int16_t img_y = lat_to_y(tempRest.lat);
-            int16_t screenPosX = img_x - YEG_MIDDLE_X - shiftX;
-            int16_t screenPosY = img_y - YEG_MIDDLE_Y + shiftY;
-            if (REST_DIST[i].dist > 550) {
-                break;
-            }
-            if (screenPosX < MAP_DISP_WIDTH && screenPosY < MAP_DISP_HEIGHT
-                && screenPosY >= 0 && screenPosX >= 0) {
-                    drawDot(screenPosX, screenPosY);
-            }
-            i++;
-        }
+        drawCloseRests(3, 550);
     }
 }
 
 
+/*
+    Description: draws dots over restaurants that are closest to the cursor.
+
+    Arguments:
+        radius (int): the desired radius of the drawn dot.
+        distance (int): the restaurants at a desired distance from the cursor.
+        colour (uint16_t): the colour of the dot drawn [OPTIONAL].
+*/
+void drawCloseRests(int radius, int distance, uint16_t colour = TFT_BLUE) {
+    uint16_t i = 0;
+    while (REST_DIST[i].dist > distance) {
+        restaurant tempRest; 
+        getRestaurantFast(REST_DIST[i].index, &tempRest);
+        int16_t img_x = lon_to_x(tempRest.lon);
+        int16_t img_y = lat_to_y(tempRest.lat);
+        int16_t scol = img_x - YEG_MIDDLE_X - shiftX;
+        int16_t srow = img_y - YEG_MIDDLE_Y + shiftY;
+
+        if (scol < MAP_DISP_WIDTH && srow < MAP_DISP_HEIGHT && srow >= 0
+            && scol >= 0) {
+                drawCircle(scol, srow, radius, colour);
+        }
+        i++;
+    }
+}
+
+
+/*
+    Description: initial drawing of the names of the closest 21 restaurants to
+    the cursor. Highlights the first entry.
+*/
 void printRestList() {
     tft.setCursor(0, 0);
     for (uint8_t i = 0; i < MAX_LIST; i++) {
@@ -263,7 +276,15 @@ void printRestList() {
 }
 
 
-void menuProcess(uint8_t& selection) {
+/*
+    Description: processes the joystick movements to move the selection
+    highlight either up or down.
+
+    Arguments:
+        &selection (uint16_t): the memory address of the selected restaurant's
+            index.
+*/
+void menuProcess(uint16_t& selection) {
     uint16_t joyY = analogRead(JOY_VERT);
     if (joyY < (JOY_CENTER - JOY_DEADZONE)) {
         // scroll one up
@@ -283,6 +304,14 @@ void menuProcess(uint8_t& selection) {
 }
 
 
+/*
+    Description: highlights the selected restaurant and unhighlights the
+    previous restaurant.
+
+    Arguments:
+        current (int): the currently selected restaurant.
+        prev (int): the previously selected restaurant.
+*/
 void redrawText(int current, int prev) {
     // drawing over prev and reprinting it
     restaurant tempRest;
@@ -298,10 +327,12 @@ void redrawText(int current, int prev) {
     tft.print(tempRest.name);
 }
 
-void drawDot(uint16_t x, uint16_t y) {
-    tft.fillCircle(x, y, 3, TFT_BLUE);
-}
 
+/*
+    Description: reads in all the restaurants into a smaller global array
+    REST_DIST via a caching array called TEMP_BLOCK then sorts the restaurants
+    based on their distance from the cursor.
+*/
 void sortOnCursor() {
     // reading in all restaurants
     for (int i = 0; i < NUM_RESTAURANTS; i++) {
@@ -310,6 +341,7 @@ void sortOnCursor() {
     // sorting restaurants closest to the cursor position
     insertion_sort(REST_DIST, NUM_RESTAURANTS);
 }
+
 
 /*
     Description: translates joystick inputs to movement of the cursor on the TFT
@@ -362,10 +394,8 @@ void modeZero(uint8_t slow, uint8_t fast) {
     displayed on the TFT display. This function assumes the cursor is a square.
 
     Arguments:
-        cursorX (int*): the value stored at the memory location of the cursor's
-        X position.
-        cursorY (int*): the value stored at the memory location of the cursor's
-        Y position.
+        cursorX (int*): pointer to the cursor's X position.
+        cursorY (int*): pointer to the cursor's Y position.
 */
 void constrainCursor(int* cursorX, int* cursorY) {
     // PAD accounts for integer division by 2 (i.e., cursor has odd sidelength)
@@ -528,8 +558,9 @@ void redrawMap() {
 
     Arguments:
         oppDir (bool*): pointer to the opposite direction of map shift.
-        shiftLen (int*): the X or Y shift to store for future map shifts.
-        mainDir (const char*): user passes in the parameter of movement.
+        shiftLen (int*): pointer to the X or Y shift to store for future map
+            shifts.
+        mainDir (const char*): pointer to the desired movement.
 */
 void helperMove(bool* oppDir, int* shiftLen, const char* mainDir) {
     *oppDir = false;
