@@ -179,7 +179,7 @@ void modeOne() {
     printRestList();
 
     // processing menu
-    uint8_t selection = 0;
+    uint16_t selection = 0;
     while (true) {
         menuProcess(selection);
         if (!(digitalRead(JOY_SEL))) { // FIX THIS
@@ -223,9 +223,10 @@ void processTouchScreen() {
             return;
     } else if (screen_x < MAP_DISP_WIDTH) {
         sortOnCursor();
-        drawCloseRests(3, 550);
+        drawCloseRests(3, 550, TFT_BLUE);
     }
 }
+
 
 
 /*
@@ -234,21 +235,19 @@ void processTouchScreen() {
     Arguments:
         radius (int): the desired radius of the drawn dot.
         distance (int): the restaurants at a desired distance from the cursor.
-        colour (uint16_t): the colour of the dot drawn [OPTIONAL].
+        colour (uint16_t): the colour of the dot drawn.
 */
-void drawCloseRests(int radius, int distance, uint16_t colour = TFT_BLUE) {
-    uint16_t i = 0;
-    while (REST_DIST[i].dist > distance) {
+void drawCloseRests(uint8_t radius, uint16_t distance, uint16_t colour) {
+    int i = 0;
+    while (REST_DIST[i].dist < distance) {
         restaurant tempRest; 
         getRestaurantFast(REST_DIST[i].index, &tempRest);
-        int16_t img_x = lon_to_x(tempRest.lon);
-        int16_t img_y = lat_to_y(tempRest.lat);
-        int16_t scol = img_x - YEG_MIDDLE_X - shiftX;
-        int16_t srow = img_y - YEG_MIDDLE_Y + shiftY;
+        int16_t scol = lon_to_x(tempRest.lon) - YEG_MIDDLE_X - shiftX;
+        int16_t srow = lat_to_y(tempRest.lat) - YEG_MIDDLE_Y + shiftY;
 
         if (scol < MAP_DISP_WIDTH && srow < MAP_DISP_HEIGHT && srow >= 0
             && scol >= 0) {
-                drawCircle(scol, srow, radius, colour);
+                tft.fillCircle(scol, srow, radius, colour);
         }
         i++;
     }
@@ -558,9 +557,8 @@ void redrawMap() {
 
     Arguments:
         oppDir (bool*): pointer to the opposite direction of map shift.
-        shiftLen (int*): pointer to the X or Y shift to store for future map
-            shifts.
-        mainDir (const char*): pointer to the desired movement.
+        shiftLen (int*): the X or Y shift to store for future map shifts.
+        mainDir (const char*): user passes in the parameter of movement.
 */
 void helperMove(bool* oppDir, int* shiftLen, const char* mainDir) {
     *oppDir = false;
