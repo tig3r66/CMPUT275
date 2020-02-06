@@ -175,13 +175,7 @@ void insertion_sort(RestDist array[], int n) {
 
 // FIX THIS
 void modeOne() {
-    // reading in all restaurants
-    for (int i = 0; i < NUM_RESTAURANTS; i++) {
-        getRestaurantFast(i, TEMP_BLOCK);
-    }
-    // sorting restaurants closest to the cursor position
-    insertion_sort(REST_DIST, NUM_RESTAURANTS);
-
+    sortOnCursor();
     printRestList();
 
     // processing menu
@@ -218,15 +212,32 @@ void processTouchScreen() {
     TSPoint touch = ts.getPoint();
     pinMode(YP, OUTPUT);
     pinMode(XM, OUTPUT);
-
     int screen_x = map(touch.y, TS_MINX, TS_MAXX, tft.width() - 1, 0);
     // int screen_y = map(touch.x, TS_MINY, TS_MAXY, tft.height() - 1, 0);
     if (touch.z < MINPRESSURE || touch.z > MAXPRESSURE
-        || screen_x < MAP_DISP_WIDTH) {
+        || screen_x > MAP_DISP_WIDTH) {
             return;
     } else if (screen_x < MAP_DISP_WIDTH) {
         // implement this
-        // drawRestDots();
+        sortOnCursor();
+        Serial.println("reach"); // test
+        int i = 0;
+        while (true) {
+            restaurant tempRest; 
+            getRestaurantFast(REST_DIST[i].index, &tempRest);
+            int16_t img_x = lon_to_x(tempRest.lon);
+            int16_t img_y = lat_to_y(tempRest.lat);
+            int16_t screenPosX = img_x - YEG_MIDDLE_X - shiftX;
+            int16_t screenPosY = img_y - YEG_MIDDLE_Y + shiftY;
+            if (REST_DIST[i].dist > 550) {
+                break;
+            }
+            if (screenPosX < MAP_DISP_WIDTH && screenPosY < MAP_DISP_HEIGHT
+                && screenPosY >= 0 && screenPosX >= 0) {
+                    drawDot(screenPosX, screenPosY);
+            }
+            i++;
+        }
     }
 }
 
@@ -283,6 +294,18 @@ void redrawText(int current, int prev) {
     tft.print(tempRest.name);
 }
 
+void drawDot(uint16_t x, uint16_t y) {
+    tft.fillCircle(x, y, 3, TFT_BLUE);
+}
+
+void sortOnCursor() {
+    // reading in all restaurants
+    for (int i = 0; i < NUM_RESTAURANTS; i++) {
+        getRestaurantFast(i, TEMP_BLOCK);
+    }
+    // sorting restaurants closest to the cursor position
+    insertion_sort(REST_DIST, NUM_RESTAURANTS);
+}
 
 /*
     Description: translates joystick inputs to movement of the cursor on the TFT

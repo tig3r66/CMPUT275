@@ -113,11 +113,17 @@ int16_t lat_to_y(int32_t);
 void insertion_sort(RestDist[], int);
 
 // helps with scrolling through restaurants
-void menuProcess(uint8_t& selection);
-void redrawText(int current, int prev);
+void menuProcess(uint8_t&);
+void redrawText(int, int);
 
 // processes touch screen input
 void processTouchScreen();
+
+// draws dot
+void drawDot(uint16_t, uint16_t);
+
+// sort 
+void sortOnCursor();
 
 
 template <class T>
