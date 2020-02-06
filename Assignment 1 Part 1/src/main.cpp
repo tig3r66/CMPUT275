@@ -185,10 +185,27 @@ void modeOne() {
     while (true) {
         menuProcess(selection);
         if (!(digitalRead(JOY_SEL))) {
-            // get long and lat from selection 1
-            // redraw map
-            // set cursor to pos long and lat
-            tft.fillScreen(0);
+            // FIX THIS
+            // FIX THIS
+            // FIX THIS
+            tft.fillScreen(TFT_BLACK);
+
+            // storing latitude and longitude info for the selected restaurant
+            restaurant temp;
+            getRestaurantFast(selection, &temp);
+            // getting current cursor position on map longitude and latitude
+            int32_t curLon = x_to_lon(cursorX + YEG_MIDDLE_X + shiftX);
+            int32_t curLat = y_to_lat(cursorY + YEG_MIDDLE_Y + shiftY);
+
+            // setting the shift position
+
+            // redraw map with restaurant centered
+
+            // set cursor to middle of map and redraw cursor
+            cursorX = MAP_DISP_WIDTH >> 1;
+            cursorY = MAP_DISP_HEIGHT >> 1;
+            redrawCursor(TFT_RED);
+
             return;
         }
     }
