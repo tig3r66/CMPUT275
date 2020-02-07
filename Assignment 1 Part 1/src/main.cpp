@@ -200,12 +200,15 @@ void modeOne() {
             // getting map longitude and latitude
 
             // redraw map with restaurant centered
-            lcdYegDraw(lon_to_x(temp.lon), lat_to_y(temp.lat), 0, 0, MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
+            lcdYegDraw(lon_to_x(temp.lon) - MAP_DISP_WIDTH, lat_to_y(temp.lat) - MAP_DISP_HEIGHT, 0, 0, 
+                MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
 
             // set cursor to middle of map and redraw cursor
             cursorX = MAP_DISP_WIDTH >> 1;
             cursorY = MAP_DISP_HEIGHT >> 1;
             redrawCursor(TFT_RED);
+            shiftX = (lon_to_x(temp.lon) - MAP_DISP_WIDTH) - YEG_MIDDLE_X;
+            shiftY = (lat_to_y(temp.lon) - MAP_DISP_WIDTH) - YEG_MIDDLE_Y;
             break;
         }
     }
