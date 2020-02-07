@@ -124,6 +124,8 @@ void drawCloseRests(uint8_t, uint16_t, uint16_t);
 // draws dot
 void drawDot(uint16_t, uint16_t);
 
+void readRestData();
+
 
 template <class T>
 void custom_swap(T &x, T &y) {

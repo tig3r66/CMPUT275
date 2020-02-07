@@ -46,6 +46,7 @@ uint8_t MODE = 0;
 */
 int main() {
     setup();
+    readRestData();
     lcd_setup();
 
     while (true) {
@@ -62,10 +63,6 @@ int main() {
             modeOne();
             MODE = 0;
         }
-        //Serial.print("ShiftX: ");
-        //Serial.println(shiftX);
-        //Serial.print("ShiftY: ");
-        //Serial.println(shiftY);
     }
 
     Serial.end();
@@ -179,7 +176,8 @@ void insertion_sort(RestDist array[], int n) {
 
 // FIX THIS
 void modeOne() {
-    sortOnCursor();
+    readRestData();
+    insertion_sort(REST_DIST, NUM_RESTAURANTS);
     printRestList();
 
     // processing menu
@@ -229,11 +227,16 @@ void processTouchScreen() {
         || screen_x > MAP_DISP_WIDTH) {
             return;
     } else if (screen_x < MAP_DISP_WIDTH) {
-        sortOnCursor();
         drawCloseRests(3, 600, TFT_BLUE);
     }
 }
 
+
+void readRestData() {
+    for (int i = 0; i < NUM_RESTAURANTS; i++) {
+        getRestaurantFast(i, TEMP_BLOCK);
+    }
+}
 
 
 /*
@@ -245,27 +248,16 @@ void processTouchScreen() {
         colour (uint16_t): the colour of the dot drawn.
 */
 void drawCloseRests(uint8_t radius, uint16_t distance, uint16_t colour) {
-    int i = 0;
-
-    while (REST_DIST[i].dist < distance) {
-        restaurant tempRest; 
+    for (int i = 0; i < NUM_RESTAURANTS; i++) {
+        restaurant tempRest;
         getRestaurantFast(REST_DIST[i].index, &tempRest);
         int16_t scol = lon_to_x(tempRest.lon) - (YEG_MIDDLE_X + shiftX);
         int16_t srow = lat_to_y(tempRest.lat) - (YEG_MIDDLE_Y + shiftY);
 
         if (scol < MAP_DISP_WIDTH && srow < MAP_DISP_HEIGHT && srow >= 0
             && scol >= 0) {
-                Serial.println(tempRest.name);
-                Serial.println();
-                Serial.println(lon_to_x(tempRest.lon));
-                Serial.println(lat_to_y(tempRest.lat));
-                Serial.println();
-                Serial.println(scol);
-                Serial.println(srow);
-                Serial.println();
                 tft.fillCircle(scol, srow, radius, colour);
         }
-        i++;
     }
 }
 
@@ -340,21 +332,6 @@ void redrawText(int current, int prev) {
     tft.setTextColor(TFT_BLACK, TFT_WHITE);
     tft.setCursor(0, current * FONT_SIZE);
     tft.print(tempRest.name);
-}
-
-
-/*
-    Description: reads in all the restaurants into a smaller global array
-    REST_DIST via a caching array called TEMP_BLOCK then sorts the restaurants
-    based on their distance from the cursor.
-*/
-void sortOnCursor() {
-    // reading in all restaurants
-    for (int i = 0; i < NUM_RESTAURANTS; i++) {
-        getRestaurantFast(i, TEMP_BLOCK);
-    }
-    // sorting restaurants closest to the cursor position
-    insertion_sort(REST_DIST, NUM_RESTAURANTS);
 }
 
 
