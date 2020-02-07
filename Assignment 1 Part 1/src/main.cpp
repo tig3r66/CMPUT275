@@ -41,8 +41,13 @@ uint8_t MODE = 0;
 
 
 /*
-    Description: moves a cursor across a partial map of Edmonton using a
-    joystick on a TFT display controlled by an Arduino.
+    Description: moves a cursor across a map of Edmonton using a joystick on a
+    TFT display controlled by an Arduino. If the user touches the screen, then
+    the closest restaurants are drawn as dots. If the user pushes the joystick
+    button, then a list of the closest restaurants are drawn. The user can
+    select the highlighted restaurant from the list by pushing the joystick
+    button, and the map will be redrawn with the restaurant centered as much
+    as possible on the TFT display.
 */
 int main() {
     setup();
@@ -232,6 +237,9 @@ void processTouchScreen() {
 }
 
 
+/*
+    Description: reads all restaurant data from the SD card.
+*/
 void readRestData() {
     for (int i = 0; i < NUM_RESTAURANTS; i++) {
         getRestaurantFast(i, TEMP_BLOCK);
