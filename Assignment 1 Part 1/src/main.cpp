@@ -62,6 +62,10 @@ int main() {
             modeOne();
             MODE = 0;
         }
+        //Serial.print("ShiftX: ");
+        //Serial.println(shiftX);
+        //Serial.print("ShiftY: ");
+        //Serial.println(shiftY);
     }
 
     Serial.end();
@@ -243,15 +247,19 @@ void drawCloseRests(uint8_t radius, uint16_t distance, uint16_t colour) {
     while (REST_DIST[i].dist < distance) {
         restaurant tempRest; 
         getRestaurantFast(REST_DIST[i].index, &tempRest);
-        int16_t scol = lon_to_x(tempRest.lon) - YEG_MIDDLE_X + shiftX;
-        int16_t srow = lat_to_y(tempRest.lat) - YEG_MIDDLE_Y + shiftY;
+        int16_t scol = lon_to_x(tempRest.lon) - (YEG_MIDDLE_X + shiftX);
+        int16_t srow = lat_to_y(tempRest.lat) - (YEG_MIDDLE_Y + shiftY);
 
         if (scol < MAP_DISP_WIDTH && srow < MAP_DISP_HEIGHT && srow >= 0
             && scol >= 0) {
-    // Serial.println(tempRest.name);
-    // Serial.println(scol);
-    // Serial.println(srow);
-    // Serial.println();
+                Serial.println(tempRest.name);
+                Serial.println();
+                Serial.println(lon_to_x(tempRest.lon));
+                Serial.println(lat_to_y(tempRest.lat));
+                Serial.println();
+                Serial.println(scol);
+                Serial.println(srow);
+                Serial.println();
                 tft.fillCircle(scol, srow, radius, colour);
         }
         i++;
