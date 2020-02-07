@@ -230,7 +230,7 @@ void processTouchScreen() {
             return;
     } else if (screen_x < MAP_DISP_WIDTH) {
         sortOnCursor();
-        drawCloseRests(3, 550, TFT_BLUE);
+        drawCloseRests(3, 600, TFT_BLUE);
     }
 }
 
