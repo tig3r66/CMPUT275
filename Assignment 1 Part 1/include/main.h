@@ -121,9 +121,7 @@ void redrawText(int, int);
 void processTouchScreen();
 void drawCloseRests(uint8_t, uint16_t, uint16_t);
 
-// draws dot
-void drawDot(uint16_t, uint16_t);
-
+// read
 void readRestData();
 
 

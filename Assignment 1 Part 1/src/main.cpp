@@ -207,10 +207,11 @@ void modeOne() {
             xEdge = constrain(xEdge, 0, YEG_SIZE - MAP_DISP_WIDTH); // 0 to 2048 - patch width
             yEdge = constrain(yEdge, 0, YEG_SIZE - MAP_DISP_HEIGHT); // 0 to 2048 - patch height
             lcdYegDraw(xEdge, yEdge, 0, 0, MAP_DISP_WIDTH, MAP_DISP_HEIGHT); // draw patch
+            Serial.println("reach");
             // reset cursor postions
             cursorX = xPos - xEdge;
             cursorY = yPos - yEdge;
-            constrainCursor(cursorX, cursorY); // ensuring cursor isnt in illegal pos
+            constrainCursor(&cursorX, &cursorY); // ensuring cursor isnt in illegal pos
             redrawCursor(TFT_RED);
             // reset shifts
             shiftX = xEdge - YEG_MIDDLE_X;
