@@ -195,23 +195,25 @@ void modeOne() {
             // storing latitude and longitude info for the selected restaurant
             restaurant temp;
             getRestaurantFast(selection, &temp);
-
-            // getting current cursor position on map longitude and latitude
-
-            // setting the shift position
-
-            // getting map longitude and latitude
-
-            // redraw map with restaurant centered
-            lcdYegDraw(lon_to_x(temp.lon) - MAP_DISP_WIDTH, lat_to_y(temp.lat) - MAP_DISP_HEIGHT, 0, 0, 
-                MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
-
-            // set cursor to middle of map and redraw cursor
-            cursorX = MAP_DISP_WIDTH >> 1;
-            cursorY = MAP_DISP_HEIGHT >> 1;
+            uint16_t xPos = lon_to_x(temp.lon); // x pos on map
+            uint16_t yPos = lat_to_y(temp.lat); // y pos on map
+            // constrain x and y to map
+            xPos = constrain(xPos, 0, YEG_SIZE);
+            yPos = constrain(yPos, 0, YEG_SIZE);
+            // if selected rest within map
+            uint16_t xEdge = xPos - MAP_DISP_WIDTH; // x corner of patch
+            uint16_t yEdge = yPos - MAP_DISP_HEIGHT; // y corner of patch
+            //keeping corners of patch within bounds of map
+            xEdge = constrain(xEdge, 0, YEG_SIZE - MAP_DISP_WIDTH); // 0 to 2048 - patch width
+            yEdge = constrain(yEdge, 0, YEG_SIZE - MAP_DISP_HEIGHT); // 0 to 2048 - patch height
+            lcdYegDraw(xEdge, yEdge, 0, 0, MAP_DISP_WIDTH, MAP_DISP_HEIGHT); // draw patch
+            // reset cursor postions
+            cursorX = xPos - xEdge;
+            cursorY = yPos - yEdge;
             redrawCursor(TFT_RED);
-            shiftX = (lon_to_x(temp.lon) - MAP_DISP_WIDTH) - YEG_MIDDLE_X;
-            shiftY = (lat_to_y(temp.lon) - MAP_DISP_WIDTH) - YEG_MIDDLE_Y;
+            // reset shifts
+            shiftX = xEdge - YEG_MIDDLE_X;
+            shiftY = yEdge - YEG_MIDDLE_Y; 
             break;
         }
     }
