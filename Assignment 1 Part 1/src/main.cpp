@@ -232,7 +232,7 @@ void processTouchScreen() {
         || screen_x > MAP_DISP_WIDTH) {
             return;
     } else if (screen_x < MAP_DISP_WIDTH) {
-        drawCloseRests(3, 600, TFT_BLUE);
+        drawCloseRests(3, MAP_DISP_WIDTH + MAP_DISP_HEIGHT, TFT_BLUE);
     }
 }
 
