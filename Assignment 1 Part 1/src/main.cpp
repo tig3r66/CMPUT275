@@ -210,6 +210,7 @@ void modeOne() {
             // reset cursor postions
             cursorX = xPos - xEdge;
             cursorY = yPos - yEdge;
+            constrainCursor(cursorX, cursorY); // ensuring cursor isnt in illegal pos
             redrawCursor(TFT_RED);
             // reset shifts
             shiftX = xEdge - YEG_MIDDLE_X;
