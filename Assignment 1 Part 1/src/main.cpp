@@ -222,8 +222,8 @@ void modeOne() {
             redrawCursor(TFT_RED);
 
             // reset shifts
-            shiftX = xEdge - YEG_MIDDLE_X;
-            shiftY = yEdge - YEG_MIDDLE_Y;
+            //shiftX = xEdge - YEG_MIDDLE_X;
+            //shiftY = yEdge - YEG_MIDDLE_Y;
 
             // fix this later
             return;
