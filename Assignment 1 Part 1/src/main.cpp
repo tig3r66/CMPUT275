@@ -34,7 +34,6 @@ int cursorX, cursorY;
 
 // storing overall map shifts for total map redraws
 int shiftX = 0, shiftY = 0;
-bool HIT_UP = false, HIT_DOWN = false, HIT_LEFT = false, HIT_RIGHT = false;
 
 
 /*
@@ -395,11 +394,22 @@ void modeZero(uint8_t slow, uint8_t fast) {
         constrainMap(&shiftX, &shiftY);
         // redraw
         drawMapPatch(cursorX0, cursorY0);
-        // draws once cursor reaches border (except at physical map border)
 
-        // CHANGE THIS SO REDRAWMAP() ONLY REDRAWS IF IT'S NOT TOUCHING THE SIDE
-        // OF THE MAP
-        redrawMap();
+        // PAD accounts for integer division by 2 (i.e., cursor has odd
+        // sidelength)
+        uint8_t PAD = 0;
+        if (CURSOR_SIZE & 1) PAD = 1;
+
+        // position of current cursor on map
+        int icol = YEG_MIDDLE_X + cursorX + shiftX;
+        int irow = YEG_MIDDLE_Y + cursorY + shiftY;
+
+        // draws once cursor reaches border (except at physical map border)
+        if (icol - (CURSOR_SIZE >> 1) != 0 && irow - (CURSOR_SIZE >> 1) != 0
+            && icol != (YEG_SIZE - (CURSOR_SIZE >> 1) + PAD)
+            && irow != YEG_SIZE - (CURSOR_SIZE >> 1) + PAD) {
+                redrawMap();
+        }
         redrawCursor(TFT_RED);
     }
 }
@@ -505,9 +515,9 @@ void drawMapPatch(int cursorX0, int cursorY0) {
         shiftY (int*): pointer to the Y shift.
 */
 void constrainMap(int* shiftX, int* shiftY) {
-    *shiftX = constrain(*shiftX, -YEG_MIDDLE_X,
+    *shiftX = constrain(*shiftX, - YEG_MIDDLE_X,
         YEG_SIZE - YEG_MIDDLE_X - MAP_DISP_WIDTH);
-    *shiftY = constrain(*shiftY, -YEG_MIDDLE_Y,
+    *shiftY = constrain(*shiftY, - YEG_MIDDLE_Y,
         YEG_SIZE - YEG_MIDDLE_Y - MAP_DISP_HEIGHT);
 }
 
@@ -538,32 +548,26 @@ void redrawMap() {
         YEG_SIZE - MAP_DISP_HEIGHT);
 
     // (CURSOR_SIZE << 1) leaves buffer for user at the previous map location
-    if (cursorX == (CURSOR_SIZE >> 1) && !HIT_LEFT) {
+    if (cursorX == (CURSOR_SIZE >> 1)) {
         // left side of screen reached
         lcdYegDraw(leftShift, irow - cursorY, 0, 0, MAP_DISP_WIDTH,
             MAP_DISP_HEIGHT);
-        if (leftShift == 0) HIT_LEFT = true;
-        helperMove(&HIT_RIGHT, &shiftX, "left");
-    } else if (cursorY == (CURSOR_SIZE >> 1) && !HIT_UP) {
+        helperMove(&shiftX, "left");
+    } else if (cursorY == (CURSOR_SIZE >> 1)) {
         // top of screen reached
         lcdYegDraw(icol - cursorX, upShift, 0, 0, MAP_DISP_WIDTH,
             MAP_DISP_HEIGHT);
-        if (upShift == 0) HIT_UP = true;
-        helperMove(&HIT_DOWN, &shiftY, "up");
-    } else if (cursorX == MAP_DISP_WIDTH - (CURSOR_SIZE >> 1) - PAD
-        && !HIT_RIGHT) {
-            // right side of sign reached
-            lcdYegDraw(rightShift, irow - cursorY, 0, 0, MAP_DISP_WIDTH,
-                MAP_DISP_HEIGHT);
-            if (rightShift == YEG_SIZE - MAP_DISP_WIDTH) HIT_RIGHT = true;
-            helperMove(&HIT_LEFT, &shiftX, "right");
-    } else if (cursorY == MAP_DISP_HEIGHT - (CURSOR_SIZE >> 1) - PAD
-        && !HIT_DOWN) {
-            // bottom of screen reached
-            lcdYegDraw(icol - cursorX, downShift, 0, 0,
-                MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
-            if (downShift == YEG_SIZE - MAP_DISP_HEIGHT) HIT_DOWN = true;
-            helperMove(&HIT_UP, &shiftY, "down");
+        helperMove(&shiftY, "up");
+    } else if (cursorX == MAP_DISP_WIDTH - (CURSOR_SIZE >> 1) - PAD) {
+        // right side of sign reached
+        lcdYegDraw(rightShift, irow - cursorY, 0, 0, MAP_DISP_WIDTH,
+            MAP_DISP_HEIGHT);
+        helperMove(&shiftX, "right");
+    } else if (cursorY == MAP_DISP_HEIGHT - (CURSOR_SIZE >> 1) - PAD) {
+        // bottom of screen reached
+        lcdYegDraw(icol - cursorX, downShift, 0, 0,
+            MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
+        helperMove(&shiftY, "down");
     }
 }
 
@@ -573,12 +577,10 @@ void redrawMap() {
     clamping and map shifting.
 
     Arguments:
-        oppDir (bool*): pointer to the opposite direction of map shift.
         shiftLen (int*): the X or Y shift to store for future map shifts.
         mainDir (const char*): user passes in the parameter of movement.
 */
-void helperMove(bool* oppDir, int* shiftLen, const char* mainDir) {
-    *oppDir = false;
+void helperMove(int* shiftLen, const char* mainDir) {
     if (strcmp(mainDir, "left") == 0) {
         *shiftLen -= MAP_DISP_WIDTH;
         cursorX += MAP_DISP_WIDTH - (CURSOR_SIZE << 1);

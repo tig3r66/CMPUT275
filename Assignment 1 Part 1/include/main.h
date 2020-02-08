@@ -97,7 +97,7 @@ void drawMapPatch(int, int);
 void lcdYegDraw(int, int, int, int, int, int);
 void constrainCursor(int*, int*);
 void constrainMap(int*, int*);
-void helperMove(bool*, int*, const char*);
+void helperMove(int*, const char*);
 void printRestList();
 
 // retrieving restaurant from memeory
