@@ -195,15 +195,15 @@ void modeOne() {
 
             // storing latitude and longitude info for the selected restaurant
             restaurant temp;
-            getRestaurantFast(selection, &temp);
+            getRestaurantFast(REST_DIST[selection].index, &temp);
             // x pos on map
             uint16_t xPos = lon_to_x(temp.lon);
             // y pos on map 
             uint16_t yPos = lat_to_y(temp.lat);
 
             // constrain x and y to map
-            //xPos = constrain(xPos, 0, YEG_SIZE);
-            //yPos = constrain(yPos, 0, YEG_SIZE);
+            xPos = constrain(xPos, 0, YEG_SIZE);
+            yPos = constrain(yPos, 0, YEG_SIZE);
 
             // x corner of patch
             uint16_t xEdge = xPos - (MAP_DISP_WIDTH >> 1);
@@ -222,8 +222,8 @@ void modeOne() {
             redrawCursor(TFT_RED);
 
             // reset shifts
-            shiftX = xEdge;
-            shiftY = yEdge;
+            shiftX = xEdge - YEG_MIDDLE_X;
+            shiftY = yEdge - YEG_MIDDLE_Y;
 
             // fix this later
             return;
