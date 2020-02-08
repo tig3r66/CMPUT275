@@ -197,18 +197,18 @@ void modeOne() {
             restaurant temp;
             getRestaurantFast(REST_DIST[selection].index, &temp);
             // x pos on map
-            uint16_t xPos = lon_to_x(temp.lon);
+            int16_t xPos = lon_to_x(temp.lon);
             // y pos on map 
-            uint16_t yPos = lat_to_y(temp.lat);
+            int16_t yPos = lat_to_y(temp.lat);
 
             // constrain x and y to map
             xPos = constrain(xPos, 0, YEG_SIZE);
             yPos = constrain(yPos, 0, YEG_SIZE);
 
             // x corner of patch
-            uint16_t xEdge = xPos - (MAP_DISP_WIDTH >> 1);
+            int16_t xEdge = xPos - (MAP_DISP_WIDTH >> 1);
             // y corner of patch
-            uint16_t yEdge = yPos - (MAP_DISP_HEIGHT >> 1);
+            int16_t yEdge = yPos - (MAP_DISP_HEIGHT >> 1);
 
             //keeping corners of patch within bounds of map
             xEdge = constrain(xEdge, 0, YEG_SIZE - MAP_DISP_WIDTH);
