@@ -36,9 +36,6 @@ int cursorX, cursorY;
 int shiftX = 0, shiftY = 0;
 bool HIT_UP = false, HIT_DOWN = false, HIT_LEFT = false, HIT_RIGHT = false;
 
-// for the display mode
-uint8_t MODE = 0; 
-
 
 /*
     Description: moves a cursor across a map of Edmonton using a joystick on a
@@ -53,6 +50,9 @@ int main() {
     setup();
     readRestData();
     lcd_setup();
+
+    // for the display mode
+    uint8_t MODE = 0;
 
     while (true) {
         if (MODE == 0) {
@@ -195,28 +195,37 @@ void modeOne() {
             // storing latitude and longitude info for the selected restaurant
             restaurant temp;
             getRestaurantFast(selection, &temp);
-            uint16_t xPos = lon_to_x(temp.lon); // x pos on map
-            uint16_t yPos = lat_to_y(temp.lat); // y pos on map
+            // x pos on map
+            uint16_t xPos = lon_to_x(temp.lon);
+            // y pos on map 
+            uint16_t yPos = lat_to_y(temp.lat);
+
             // constrain x and y to map
             xPos = constrain(xPos, 0, YEG_SIZE);
             yPos = constrain(yPos, 0, YEG_SIZE);
-            // if selected rest within map
-            uint16_t xEdge = xPos - MAP_DISP_WIDTH; // x corner of patch
-            uint16_t yEdge = yPos - MAP_DISP_HEIGHT; // y corner of patch
+
+            // x corner of patch
+            uint16_t xEdge = xPos - MAP_DISP_WIDTH;
+            // y corner of patch
+            uint16_t yEdge = yPos - MAP_DISP_HEIGHT;
+
             //keeping corners of patch within bounds of map
-            xEdge = constrain(xEdge, 0, YEG_SIZE - MAP_DISP_WIDTH); // 0 to 2048 - patch width
-            yEdge = constrain(yEdge, 0, YEG_SIZE - MAP_DISP_HEIGHT); // 0 to 2048 - patch height
-            lcdYegDraw(xEdge, yEdge, 0, 0, MAP_DISP_WIDTH, MAP_DISP_HEIGHT); // draw patch
-            Serial.println("reach");
+            xEdge = constrain(xEdge, 0, YEG_SIZE - MAP_DISP_WIDTH);
+            yEdge = constrain(yEdge, 0, YEG_SIZE - MAP_DISP_HEIGHT);
+            lcdYegDraw(xEdge, yEdge, 0, 0, MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
+
             // reset cursor postions
             cursorX = xPos - xEdge;
             cursorY = yPos - yEdge;
-            constrainCursor(&cursorX, &cursorY); // ensuring cursor isnt in illegal pos
+            constrainCursor(&cursorX, &cursorY);
             redrawCursor(TFT_RED);
+
             // reset shifts
             shiftX = xEdge - YEG_MIDDLE_X;
-            shiftY = yEdge - YEG_MIDDLE_Y; 
-            break;
+            shiftY = yEdge - YEG_MIDDLE_Y;
+
+            // fix this later
+            return;
         }
     }
 }
@@ -267,7 +276,7 @@ void drawCloseRests(uint8_t radius, uint16_t distance, uint16_t colour) {
         int16_t srow = lat_to_y(tempRest.lat) - (YEG_MIDDLE_Y + shiftY);
 
         if (scol < MAP_DISP_WIDTH && srow < MAP_DISP_HEIGHT && srow >= 0
-            && scol >= 0) {
+            && scol >= 0 && REST_DIST[i].dist <= distance) {
                 tft.fillCircle(scol, srow, radius, colour);
         }
     }
