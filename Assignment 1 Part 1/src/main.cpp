@@ -67,7 +67,6 @@ int main() {
             // loops until the joystick button is pressed
             modeOne();
             MODE = 0;
-            Serial.println("broken out of mode 1, should be able to move");
         }
     }
 
@@ -202,8 +201,8 @@ void modeOne() {
             int16_t yPos = lat_to_y(temp.lat);
 
             // constrain x and y to map
-            xPos = constrain(xPos, 0, YEG_SIZE);
-            yPos = constrain(yPos, 0, YEG_SIZE);
+            xPos = constrain(xPos, CURSOR_SIZE, YEG_SIZE - CURSOR_SIZE);
+            yPos = constrain(yPos, CURSOR_SIZE, YEG_SIZE - CURSOR_SIZE);
 
             // x corner of patch
             int16_t xEdge = xPos - (MAP_DISP_WIDTH >> 1);
@@ -397,6 +396,9 @@ void modeZero(uint8_t slow, uint8_t fast) {
         // redraw
         drawMapPatch(cursorX0, cursorY0);
         // draws once cursor reaches border (except at physical map border)
+
+        // CHANGE THIS SO REDRAWMAP() ONLY REDRAWS IF IT'S NOT TOUCHING THE SIDE
+        // OF THE MAP
         redrawMap();
         redrawCursor(TFT_RED);
     }
