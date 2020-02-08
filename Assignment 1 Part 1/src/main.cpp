@@ -60,7 +60,7 @@ int main() {
             // if user touches screen, draw closest restaurants
             processTouchScreen();
             // min and max cursor speeds are 0 and CURSOR_SIZE pixels/cycle
-            modeZero(0, CURSOR_SIZE); 
+            modeZero(0, CURSOR_SIZE);
         } else if (MODE == 1) {
             tft.fillScreen(TFT_BLACK);
             // loops until the joystick button is pressed
@@ -149,7 +149,7 @@ void getRestaurantFast(uint16_t restIndex, restaurant* restPtr) {
     // storing TEMP_BLOCK information in a smaller global struct
     REST_DIST[restIndex].index = restIndex;
 
-    // position of current cursor on map
+    // image (not screen) position of cursor on the YEG map
     int icol = YEG_MIDDLE_X + cursorX + shiftX;
     int irow = YEG_MIDDLE_Y + cursorY + shiftY;
 
@@ -178,7 +178,11 @@ void insertion_sort(RestDist array[], int n) {
 }
 
 
-// FIX THIS
+/*
+    Description: allows the user to select a restaurant from the 21 closest
+    restaurants to the cursor. Once selected, the map of Edmonton is redrawn
+    with the restaurant centered as much as possible on the TFT display.
+*/
 void modeOne() {
     readRestData();
     insertion_sort(REST_DIST, NUM_RESTAURANTS);
@@ -188,45 +192,50 @@ void modeOne() {
     uint16_t selection = 0;
     while (true) {
         menuProcess(selection);
-        if (!(digitalRead(JOY_SEL))) { // FIX THIS
+        if (!(digitalRead(JOY_SEL))) {
             tft.fillRect(MAP_DISP_WIDTH, 0, PADX, MAP_DISP_HEIGHT, TFT_BLACK);
-
-            // storing latitude and longitude info for the selected restaurant
-            restaurant temp;
-            getRestaurantFast(REST_DIST[selection].index, &temp);
-            // x pos on map
-            int16_t xPos = lon_to_x(temp.lon);
-            // y pos on map 
-            int16_t yPos = lat_to_y(temp.lat);
-
-            // constrain x and y to map
-            xPos = constrain(xPos, CURSOR_SIZE, YEG_SIZE - CURSOR_SIZE);
-            yPos = constrain(yPos, CURSOR_SIZE, YEG_SIZE - CURSOR_SIZE);
-
-            // x corner of patch
-            int16_t xEdge = xPos - (MAP_DISP_WIDTH >> 1);
-            // y corner of patch
-            int16_t yEdge = yPos - (MAP_DISP_HEIGHT >> 1);
-
-            //keeping corners of patch within bounds of map
-            xEdge = constrain(xEdge, 0, YEG_SIZE - MAP_DISP_WIDTH);
-            yEdge = constrain(yEdge, 0, YEG_SIZE - MAP_DISP_HEIGHT);
-            lcdYegDraw(xEdge, yEdge, 0, 0, MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
-
-            // reset cursor postions
-            cursorX = xPos - xEdge;
-            cursorY = yPos - yEdge;
-            constrainCursor(&cursorX, &cursorY);
-            redrawCursor(TFT_RED);
-
-            // reset shifts
-            shiftX = xEdge - YEG_MIDDLE_X;
-            shiftY = yEdge - YEG_MIDDLE_Y;
-
-            // fix this later
+            centreOverRest(selection);
             return;
         }
     }
+}
+
+
+/*
+    Description: redraws the map of Edmonton centered as much as possible over
+    the selected restaurant.
+
+    Arguments:
+        selection (uint16_t): the index of the selected restaurant.
+*/
+void centreOverRest(uint16_t selection) {
+    // storing latitude and longitude info for the selected restaurant
+    restaurant temp;
+    getRestaurantFast(REST_DIST[selection].index, &temp);
+
+    // getting and constraining the x and y coordinates of the restaurant to the
+    // map dimensions
+    int16_t xPos = lon_to_x(temp.lon);
+    int16_t yPos = lat_to_y(temp.lat);
+    xPos = constrain(xPos, CURSOR_SIZE, YEG_SIZE - CURSOR_SIZE);
+    yPos = constrain(yPos, CURSOR_SIZE, YEG_SIZE - CURSOR_SIZE);
+
+    // x corner of patch
+    int16_t xEdge = xPos - (MAP_DISP_WIDTH >> 1);
+    // y corner of patch
+    int16_t yEdge = yPos - (MAP_DISP_HEIGHT >> 1);
+    // keeping corners of patch within bounds of map
+    xEdge = constrain(xEdge, 0, YEG_SIZE - MAP_DISP_WIDTH);
+    yEdge = constrain(yEdge, 0, YEG_SIZE - MAP_DISP_HEIGHT);
+
+    // drawing the map and resetting cursor and shift positions
+    lcdYegDraw(xEdge, yEdge, 0, 0, MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
+    cursorX = xPos - xEdge;
+    cursorY = yPos - yEdge;
+    constrainCursor(&cursorX, &cursorY);
+    redrawCursor(TFT_RED);
+    shiftX = xEdge - YEG_MIDDLE_X;
+    shiftY = yEdge - YEG_MIDDLE_Y;
 }
 
 
@@ -239,7 +248,6 @@ void processTouchScreen() {
     pinMode(YP, OUTPUT);
     pinMode(XM, OUTPUT);
     int screen_x = map(touch.y, TS_MINX, TS_MAXX, tft.width() - 1, 0);
-    // int screen_y = map(touch.x, TS_MINY, TS_MAXY, tft.height() - 1, 0);
     if (touch.z < MINPRESSURE || touch.z > MAXPRESSURE
         || screen_x > MAP_DISP_WIDTH) {
             return;
@@ -250,7 +258,7 @@ void processTouchScreen() {
 
 
 /*
-    Description: reads all restaurant data from the SD card.
+    Description: reads all restaurant data from the SD card into REST_DIST.
 */
 void readRestData() {
     for (int i = 0; i < NUM_RESTAURANTS; i++) {
@@ -327,7 +335,7 @@ void menuProcess(uint16_t& selection) {
         }
     }
     // for better (less sensitive) scrolling user experience
-    delay(50);
+    delay(30);
 }
 
 
@@ -388,21 +396,18 @@ void modeZero(uint8_t slow, uint8_t fast) {
     }
 
     if (cursorX0 != cursorX || cursorY != cursorY0) {
-        // constrain cursor within the map
+        // constrain cursor and display within the map then redraw the map patch
         constrainCursor(&cursorX, &cursorY);
-        // constrain the display to the YEG map
         constrainMap(&shiftX, &shiftY);
-        // redraw
         drawMapPatch(cursorX0, cursorY0);
+        // image (not screen) position of cursor on the YEG map
+        int icol = YEG_MIDDLE_X + cursorX + shiftX;
+        int irow = YEG_MIDDLE_Y + cursorY + shiftY;
 
         // PAD accounts for integer division by 2 (i.e., cursor has odd
         // sidelength)
         uint8_t PAD = 0;
         if (CURSOR_SIZE & 1) PAD = 1;
-
-        // position of current cursor on map
-        int icol = YEG_MIDDLE_X + cursorX + shiftX;
-        int irow = YEG_MIDDLE_Y + cursorY + shiftY;
 
         // draws once cursor reaches border (except at physical map border)
         if (icol - (CURSOR_SIZE >> 1) != 0 && irow - (CURSOR_SIZE >> 1) != 0
@@ -531,7 +536,7 @@ void constrainMap(int* shiftX, int* shiftY) {
         cursorY0 (uint16_t): the original cursor's Y position.
 */
 void redrawMap() {
-    // storing appropriate irow and icol positions
+    // image (not screen) position of cursor on the YEG map
     int icol = YEG_MIDDLE_X + cursorX + shiftX;
     int irow = YEG_MIDDLE_Y + cursorY + shiftY;
     // PAD accounts for integer division by 2 (i.e., cursor has odd sidelength)
