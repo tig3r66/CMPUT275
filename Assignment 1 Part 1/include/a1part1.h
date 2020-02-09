@@ -96,7 +96,7 @@ void insertion_sort(RestDist[], int);
 
 // processes touch screen input
 void processTouchScreen();
-void drawCloseRests(uint8_t, uint16_t, uint16_t);
+void drawCloseRests(uint8_t, uint16_t);
 
 // tft display-related functions
 void redrawMap();
@@ -106,10 +106,11 @@ void redrawCursor(uint16_t);
 void constrainCursor(int*, int*);
 void constrainMap(int*, int*);
 void helperMove(int*, const char*);
-void centreOverRest(uint16_t);
+void redrawOverRest(uint16_t);
 
 // memory retrieval functions
 void getRestaurantFast(uint16_t, restaurant*);
+void getRestaurant(uint16_t, restaurant*);
 void readRestData();
 
 // helps with scrolling through restaurants
@@ -126,7 +127,7 @@ int16_t lat_to_y(int32_t);
 
 // =============================== TEMPLATE CODE ===============================
 template <class T>
-void custom_swap(T &x, T &y) {
+void swap(T &x, T &y) {
     T temp;
     temp = x;
     x = y;

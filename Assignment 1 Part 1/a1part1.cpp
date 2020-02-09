@@ -118,10 +118,7 @@ void lcd_setup() {
     // setting cursor to middle of YEG map then reading restaurant data
     cursorX = (MAP_DISP_WIDTH) >> 1;
     cursorY = DISPLAY_HEIGHT >> 1;
-
-    // reading and sorting data
     readRestData();
-    insertion_sort(REST_DIST, NUM_RESTAURANTS);
 
     lcdYegDraw(YEG_MIDDLE_X, YEG_MIDDLE_Y, 0, 0, MAP_DISP_WIDTH,
         DISPLAY_HEIGHT);
@@ -203,7 +200,7 @@ void modeOne() {
         menuProcess(&selection);
         if (!(digitalRead(JOY_SEL))) {
             tft.fillRect(MAP_DISP_WIDTH, 0, PADX, MAP_DISP_HEIGHT, TFT_BLACK);
-            centreOverRest(selection);
+            redrawOverRest(selection);
             buttonPushed = true;
         }
     }
@@ -222,7 +219,7 @@ void modeOne() {
 void insertion_sort(RestDist array[], int n) {
     for (int i = 1; i < n; i++) {
         for (int j = i-1; j >= 0 && array[j].dist > array[j+1].dist; j--) {
-            custom_swap(array[j], array[j+1]);
+            swap(array[j], array[j+1]);
         }
     }
 }
@@ -241,7 +238,9 @@ void processTouchScreen() {
         || screen_x > MAP_DISP_WIDTH) {
             return;
     } else if (screen_x < MAP_DISP_WIDTH) {
-        drawCloseRests(3, MAP_DISP_WIDTH + MAP_DISP_HEIGHT, TFT_BLUE);
+        int32_t start = millis();
+        drawCloseRests(3, TFT_BLUE);
+        Serial.println((millis() - start));
     }
 }
 
@@ -251,21 +250,33 @@ void processTouchScreen() {
 
     Arguments:
         radius (int): the desired radius of the drawn dot.
-        distance (int): the restaurants at a desired distance from the cursor.
         colour (uint16_t): the colour of the dot drawn.
 */
-void drawCloseRests(uint8_t radius, uint16_t distance, uint16_t colour) {
+void drawCloseRests(uint8_t radius, uint16_t colour) {
     for (int i = 0; i < NUM_RESTAURANTS; i++) {
         restaurant tempRest;
-        getRestaurantFast(REST_DIST[i].index, &tempRest);
+        getRestaurant(REST_DIST[i].index, &tempRest);
         int16_t scol = lon_to_x(tempRest.lon) - (YEG_MIDDLE_X + shiftX);
         int16_t srow = lat_to_y(tempRest.lat) - (YEG_MIDDLE_Y + shiftY);
 
         if (scol < MAP_DISP_WIDTH && srow < MAP_DISP_HEIGHT && srow >= 0
-            && scol >= 0 && REST_DIST[i].dist <= distance) {
+            && scol >= 0) {
                 tft.fillCircle(scol, srow, radius, colour);
         }
     }
+}
+
+
+void getRestaurant(uint16_t restIndex, restaurant* restPtr) {
+    uint32_t blockNum = REST_START_BLOCK + restIndex / 8;
+    if (blockNum != PREV_BLOCK_NUM) {
+        while (!card.readBlock(blockNum,
+            reinterpret_cast<uint8_t*>(TEMP_BLOCK))) {
+                Serial.println("Read block failed, trying again.");
+        }
+    }
+    *restPtr = TEMP_BLOCK[restIndex % 8];
+    PREV_BLOCK_NUM = blockNum;
 }
 
 
@@ -276,7 +287,7 @@ void drawCloseRests(uint8_t radius, uint16_t distance, uint16_t colour) {
     Arguments:
         selection (uint16_t): the index of the selected restaurant.
 */
-void centreOverRest(uint16_t selection) {
+void redrawOverRest(uint16_t selection) {
     // storing latitude and longitude info for the selected restaurant
     restaurant temp;
     getRestaurantFast(REST_DIST[selection].index, &temp);
@@ -564,11 +575,12 @@ void getRestaurantFast(uint16_t restIndex, restaurant* restPtr) {
 
 
 /*
-    Description: reads all restaurant data from the SD card into REST_DIST.
+    Description: reads all restaurant data from the SD card.
 */
 void readRestData() {
+    restaurant temp;
     for (int i = 0; i < NUM_RESTAURANTS; i++) {
-        getRestaurantFast(i, TEMP_BLOCK);
+        getRestaurantFast(i, &temp);
     }
 }
 
