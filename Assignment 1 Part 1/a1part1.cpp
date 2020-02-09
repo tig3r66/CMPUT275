@@ -1,6 +1,7 @@
 //  =======================================
 //  Name: Edward (Eddie) Guo
-//  ID: [redacted]
+//  ID: 1576381
+//  Partner: Jason Kim
 //  CMPUT 275, Winter 2020
 //
 //  Assignment 1 Part 1: Restaurant Finder
@@ -187,7 +188,7 @@ void getRestaurant(uint16_t restIndex, restaurant* restPtr) {
     Notes:
         Need to change this function so it sorts based on the RestDist struct.
 */
-void insertion_sort(RestDist array[], int n) {
+void insertionSort(RestDist array[], int n) {
     for (int i = 1; i < n; i++) {
         for (int j = i-1; j >= 0 && array[j].dist > array[j+1].dist; j--) {
             custom_swap(array[j], array[j+1]);
@@ -203,7 +204,7 @@ void insertion_sort(RestDist array[], int n) {
 */
 void modeOne() {
     readRestData();
-    insertion_sort(REST_DIST, NUM_RESTAURANTS);
+    insertionSort(REST_DIST, NUM_RESTAURANTS);
     printRestList();
 
     // processing menu
