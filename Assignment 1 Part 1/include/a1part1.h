@@ -1,3 +1,11 @@
+//  =======================================
+//  Name: Edward (Eddie) Guo
+//  ID: 1576381
+//  CMPUT 275, Winter 2020
+//
+//  Assignment 1 Part 1: Restaurant Finder
+//  =======================================
+
 #ifndef _A1PART1_H_
 #define _A1PART1_H_
 
@@ -83,51 +91,259 @@ struct RestDist {
 
 
 // =========================== FUNCTION DECLARATIONS ===========================
-// setup functions
+// ============================== SETUP FUNCTIONS ==============================
+/*
+    Description: initializes important components of Arduino, TFT display, and
+    SD card.
+*/
 void setup();
+
+/*
+    Description: intializes TFT display. Portrait display, draws the centre of
+    the Edmonton map with the rightmost 60 pixels black, and sets the initial
+    cursor position to the middle of the map.
+*/
 void lcd_setup();
 
-// processed when joystick is pressed
+
+// MAIN MODES
+/*
+    Description: allows the user to select a restaurant from the 21 closest
+    restaurants to the cursor. Once selected, the map of Edmonton is redrawn
+    with the restaurant centered as much as possible on the TFT display.
+*/
 void modeOne();
 
-// tft display-related functions
-void redrawCursor(uint16_t);
+/*
+    Description: translates joystick inputs to movement of the cursor on the TFT
+    screen. Constrains the cursor to within the map portion of the screen, and
+    sets variable speed.
+
+    Arguments:
+        slow (uint8_t): the minimum cursor speed (pixels/loop).
+        fast (uint8_t): the maximum cursor speed (pixels/loop).
+*/
 void modeZero(uint8_t, uint8_t);
+
+
+// =========================== TFT-RELATED FUNCTIONS ===========================
+/*
+    Description: draws a square cursor at the current cursor position.
+
+    Arguments:
+        colour (uint16_t): the colour of the cursor.
+*/
+void redrawCursor(uint16_t);
+
+/*
+    Description: redraws the shifted map of Edmonton depending on the cursor
+    nudge direction.
+
+    Arguments:
+        cursorX0 (uint16_t): the original cursor's X position.
+        cursorY0 (uint16_t): the original cursor's Y position.
+*/
 void redrawMap();
+
+/*
+    Description: draws a small map patch from the old cursor position up to the
+    new cursor position (i.e., only redraws a rectangle if the cursor did not
+    move too much).
+
+    Arguments:
+        cursorX0 (uint16_t): the original cursor's X position.
+        cursorY0 (uint16_t): the original cursor's Y position.
+*/
 void drawMapPatch(int, int);
+
+/*
+    Description: helper function for drawMapPatch(). Essentially the
+    lcd_image_draw() except it assumes the image's memory address is &yegImage
+    and the TFT object's memory address is &tft.
+
+    Arguments:
+        icol (int): image column.
+        irow (int): image row.
+        scol (int): screen column.
+        srow (int): screen row.
+        width (int): width of the patch to draw.
+        height (int): height of the patch to draw.
+*/
 void lcdYegDraw(int, int, int, int, int, int);
+
+/*
+    Description: constrains the cursor within the boundaries of the image
+    displayed on the TFT display. This function assumes the cursor is a square.
+
+    Arguments:
+        cursorX (int*): pointer to the cursor's X position.
+        cursorY (int*): pointer to the cursor's Y position.
+*/
 void constrainCursor(int*, int*);
+
+/*
+    Description: constrains the global shift in X and Y position to within the
+    physical boundaries of the YEG map.
+
+    Arguments:
+        shiftX (int*): pointer to the X shift.
+        shiftY (int*): pointer to the Y shift.
+*/
 void constrainMap(int*, int*);
+
+/*
+    Description: helper function for redrawMap() which aids with map boundary
+    clamping and map shifting.
+
+    Arguments:
+        shiftLen (int*): the X or Y shift to store for future map shifts.
+        mainDir (const char*): user passes in the parameter of movement.
+*/
 void helperMove(int*, const char*);
+
+/*
+    Description: initial drawing of the names of the closest 21 restaurants to
+    the cursor. Highlights the first entry.
+*/
 void printRestList();
+
+/*
+    Description: redraws the map of Edmonton centered as much as possible over
+    the selected restaurant.
+
+    Arguments:
+        selection (uint16_t): the index of the selected restaurant.
+*/
 void redrawOverRest(uint16_t);
 
-// retrieving restaurant from memeory
+
+// ======================== MEMORY RETRIEVAL FUNCTIONS ========================
+/*
+    Description: fast implementation of getRestaurant(). Reads data from an SD
+    card into the global restaurant struct TEMP_BLOCK then stores this
+    information into a smaller global struct REST_DIST. Reads a block once
+    for consecutive restaurants on the same block.
+
+    Arguments:
+        restIndex (uint16_t): the restaurant to be read.
+        restPtr (restaurant*): pointer to the restaurant struct.
+*/
 void getRestaurantFast(uint16_t, restaurant*);
+
+/*
+    Description: fast implementation of getRestaurant(). Reads a block once for
+    consecutive restaurants on the same block.
+
+    Arguments:
+        restIndex (uint16_t): the restaurant to be read.
+        restPtr (restaurant*): pointer to the restaurant struct.
+*/
 void getRestaurant(uint16_t, restaurant*);
 
-// converts between x/y map position and lat/lon (and vice versa)
-int32_t x_to_lon(int16_t);
-int32_t y_to_lat(int16_t);
-int16_t lon_to_x(int32_t);
-int16_t lat_to_y(int32_t);
-
-// sorting algorithms
-void insertion_sort(RestDist[], int);
-void sortOnCursor();
-
-// helps with scrolling through restaurants
-void menuProcess(uint16_t*);
-void redrawText(int, int);
-
-// processes touch screen input
-void processTouchScreen();
-void drawCloseRests(uint8_t, uint16_t, uint16_t);
-
-// read
+/*
+    Description: reads all restaurant data from the SD card.
+*/
 void readRestData();
 
 
+// ============ LONGITUDE/LATITUDE CONVERSION TO X/Y MAP POSITIONS ============
+/*
+    Description: converts x position on YEG map to longitudinal data for the
+    real-world coordinates.
+
+    Arguments:
+        x (int16_t): the x position.
+    Returns:
+        map(x, 0, MAP_WIDTH, LON_WEST, LON_EAST) (int32_t): the longitude.
+*/
+int32_t x_to_lon(int16_t);
+
+/*
+    Description: converts x position on YEG map to latitudinal data for the
+    real-world coordinates.
+
+    Arguments:
+        y (int16_t): the y position.
+    Returns:
+        map(y, 0, MAP_WIDTH, LON_WEST, LON_EAST) (int32_t): the latitude.
+*/
+int32_t y_to_lat(int16_t);
+
+/*
+    Description: converts longitudinal data for the real-world YEG locations to
+    the x position on the YEG map.
+
+    Arguments:
+        lon (int32_t): the longitude.
+    Returns:
+        map(lon, LON_WEST, LON_EAST, 0, MAP_WIDTH) (int16_t): the x position.
+*/
+int16_t lon_to_x(int32_t);
+
+/*
+    Description: converts latitudinal data for the real-world YEG locations to
+    the x position on the YEG map.
+
+    Arguments:
+        lat (int32_t): the latitude.
+    Returns:
+        map(lat, LAT_NORTH, LAT_SOUTH, 0, MAP_HEIGHT) (int16_t): the y position.
+*/
+int16_t lat_to_y(int32_t);
+
+
+// ============================ SORTING ALGORITHMS ============================
+/*
+    Description: implementation of insertion sort.
+
+    Arguments:
+        array[] (int): pointer to an array.
+        n (int): the number of items in the array.
+    Notes:
+        Need to change this function so it sorts based on the RestDist struct.
+*/
+void insertionSort(RestDist[], int);
+
+
+// ============================ SCROLLING FUNCTIONS ============================
+/*
+    Description: processes the joystick movements to move the selection
+    highlight either up or down.
+
+    Arguments:
+        *selection (uint16_t): pointre to the selected restaurant's index.
+*/
+void menuProcess(uint16_t*);
+
+/*
+    Description: highlights the selected restaurant and unhighlights the
+    previous restaurant.
+
+    Arguments:
+        current (int): the currently selected restaurant.
+        prev (int): the previously selected restaurant.
+*/
+void redrawText(int, int);
+
+// ======================= TOUCH SCREEN INPUT FUNCTIONS =======================
+/*
+    Description: processes touches on the TFT display. When the user touches the
+    map, the closest restaurants to the cursor are drawn as blue dots.
+*/
+void processTouchScreen();
+
+/*
+    Description: draws dots over restaurants that are closest to the cursor.
+
+    Arguments:
+        radius (int): the desired radius of the drawn dot.
+        distance (int): the restaurants at a desired distance from the cursor.
+        colour (uint16_t): the colour of the dot drawn.
+*/
+void drawCloseRests(uint8_t, uint16_t, uint16_t);
+
+
+// =============================== TEMPLATE CODE ===============================
 template <typename T>
 void custom_swap(T &x, T &y) {
     T temp = x;
