@@ -123,12 +123,11 @@ void lcd_setup() {
     redrawCursor(TFT_RED);
 }
 
-
 /*
     Description: fast implementation of getRestaurant(). Reads data from an SD
-        card into the global restaurant struct TEMP_BLOCK then stores this
-        information into a smaller global struct REST_DIST. Reads a block once
-        for consecutive restaurants on the same block.
+    card into the global restaurant struct TEMP_BLOCK then stores this
+    information into a smaller global struct REST_DIST. Reads a block once
+    for consecutive restaurants on the same block.
 
     Arguments:
         restIndex (uint16_t): the restaurant to be read.
@@ -156,6 +155,27 @@ void getRestaurantFast(uint16_t restIndex, restaurant* restPtr) {
     int manDist = abs(icol - lon_to_x(restPtr->lon))
         + abs(irow - lat_to_y(restPtr->lat));
     REST_DIST[restIndex].dist = manDist;
+}
+
+
+/*
+    Description: fast implementation of getRestaurant(). Reads a block once for
+    consecutive restaurants on the same block.
+
+    Arguments:
+        restIndex (uint16_t): the restaurant to be read.
+        restPtr (restaurant*): pointer to the restaurant struct.
+*/
+void getRestaurant(uint16_t restIndex, restaurant* restPtr) {
+    uint32_t blockNum = REST_START_BLOCK + restIndex / 8;
+    if (blockNum != PREV_BLOCK_NUM) {
+        while (!card.readBlock(blockNum,
+            reinterpret_cast<uint8_t*>(TEMP_BLOCK))) {
+                Serial.println("Read block failed, trying again.");
+        }
+    }
+    *restPtr = TEMP_BLOCK[restIndex % 8];
+    PREV_BLOCK_NUM = blockNum;
 }
 
 
@@ -216,8 +236,8 @@ void redrawOverRest(uint16_t selection) {
     // map dimensions
     int16_t xPos = lon_to_x(temp.lon);
     int16_t yPos = lat_to_y(temp.lat);
-    xPos = constrain(xPos, CURSOR_SIZE, YEG_SIZE - CURSOR_SIZE);
-    yPos = constrain(yPos, CURSOR_SIZE, YEG_SIZE - CURSOR_SIZE);
+    xPos = constrain(xPos, 0, YEG_SIZE - CURSOR_SIZE);
+    yPos = constrain(yPos, 0, YEG_SIZE - CURSOR_SIZE);
 
     // x corner of patch
     int16_t xEdge = xPos - (MAP_DISP_WIDTH >> 1);
@@ -248,12 +268,13 @@ void processTouchScreen() {
     pinMode(YP, OUTPUT);
     pinMode(XM, OUTPUT);
     int screen_x = map(touch.y, TS_MINX, TS_MAXX, tft.width() - 1, 0);
-    // int screen_y = map(touch.x, TS_MINY, TS_MAXY, tft.height() - 1, 0);
     if (touch.z < MINPRESSURE || touch.z > MAXPRESSURE
         || screen_x > MAP_DISP_WIDTH) {
             return;
     } else if (screen_x < MAP_DISP_WIDTH) {
+        int start = millis();
         drawCloseRests(3, MAP_DISP_WIDTH + MAP_DISP_HEIGHT, TFT_BLUE);
+        Serial.println(millis() - start);
     }
 }
 
@@ -279,7 +300,7 @@ void readRestData() {
 void drawCloseRests(uint8_t radius, uint16_t distance, uint16_t colour) {
     for (int i = 0; i < NUM_RESTAURANTS; i++) {
         restaurant tempRest;
-        getRestaurantFast(REST_DIST[i].index, &tempRest);
+        getRestaurant(REST_DIST[i].index, &tempRest);
         int16_t scol = lon_to_x(tempRest.lon) - YEG_MIDDLE_X - shiftX;
         int16_t srow = lat_to_y(tempRest.lat) - YEG_MIDDLE_Y - shiftY;
 
@@ -410,11 +431,11 @@ void modeZero(uint8_t slow, uint8_t fast) {
         if (CURSOR_SIZE & 1) PAD = 1;
 
         // draws once cursor reaches border (except at physical map border)
-        if ((icol != 0 && irow != 0 && icol != (YEG_SIZE+PAD)
-            && irow != YEG_SIZE+PAD)
+        if ((icol != 0 && irow != 0 && icol != (YEG_SIZE + PAD)
+            && irow != YEG_SIZE + PAD)
             || (icol != 0 && irow == 0) || (icol == 0 && irow != 0)
-            || (icol != YEG_SIZE - PAD && irow == YEG_SIZE - PAD)
-            || (icol != YEG_SIZE - PAD && irow == YEG_SIZE - PAD)
+            || (icol != SHIFTED_BORDER && irow == SHIFTED_BORDER)
+            || (icol != SHIFTED_BORDER && irow == SHIFTED_BORDER)
         ) {
             redrawMap();
         }
@@ -571,13 +592,13 @@ void redrawMap() {
             MAP_DISP_HEIGHT);
         helperMove(&shiftY, "up");
     } else if (cursorX == MAP_DISP_WIDTH - (CURSOR_SIZE >> 1) - PAD
-        && scrnX != YEG_SIZE - PAD) {
+        && scrnX != SHIFTED_BORDER) {
             // right side of sign reached
             lcdYegDraw(rightShift, irow - cursorY, 0, 0, MAP_DISP_WIDTH,
                 MAP_DISP_HEIGHT);
             helperMove(&shiftX, "right");
     } else if (cursorY == MAP_DISP_HEIGHT - (CURSOR_SIZE >> 1) - PAD
-        && scrnY != YEG_SIZE - PAD) {
+        && scrnY != SHIFTED_BORDER) {
             // bottom of screen reached
             lcdYegDraw(icol - cursorX, downShift, 0, 0,
                 MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
