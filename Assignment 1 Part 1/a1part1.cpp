@@ -296,14 +296,15 @@ void readRestData() {
         colour (uint16_t): the colour of the dot drawn.
 */
 void drawCloseRests(uint8_t radius, uint16_t distance, uint16_t colour) {
+    int sidePad = (CURSOR_SIZE >> 1);
     for (int i = 0; i < NUM_RESTAURANTS; i++) {
         restaurant tempRest;
         getRestaurant(REST_DIST[i].index, &tempRest);
         int16_t scol = lon_to_x(tempRest.lon) - YEG_MIDDLE_X - shiftX;
         int16_t srow = lat_to_y(tempRest.lat) - YEG_MIDDLE_Y - shiftY;
 
-        if (scol < MAP_DISP_WIDTH && srow < MAP_DISP_HEIGHT && srow >= 0
-            && scol >= 0 && REST_DIST[i].dist <= distance) {
+        if (scol < MAP_DISP_WIDTH - sidePad && srow < MAP_DISP_HEIGHT - sidePad
+            && srow >= 0 && scol >= 0 && REST_DIST[i].dist <= distance) {
                 tft.fillCircle(scol, srow, radius, colour);
         }
     }

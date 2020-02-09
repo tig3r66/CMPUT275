@@ -42,8 +42,3 @@ Running Instructions
 
     2. In the directory containing the files main.cpp and Makefile, use
     the command "make upload" to upload the code to the Arduino.
-
------
-Notes
------
-    * A blinking cursor is normal when the the cursor moves across the screen.

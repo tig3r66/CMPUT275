@@ -36,6 +36,7 @@
 #define YEG_MIDDLE_X ((YEG_SIZE - (MAP_DISP_WIDTH)) >> 1)
 #define YEG_MIDDLE_Y ((YEG_SIZE - DISPLAY_HEIGHT) >> 1)
 #define PADX 60
+#define SHIFTED_BORDER 2039
 
 // dimensions of the part allocated to the map display
 #define MAP_DISP_WIDTH (DISPLAY_WIDTH - 60)
@@ -103,6 +104,7 @@ void redrawOverRest(uint16_t);
 
 // retrieving restaurant from memeory
 void getRestaurantFast(uint16_t, restaurant*);
+void getRestaurant(uint16_t, restaurant*);
 
 // converts between x/y map position and lat/lon (and vice versa)
 int32_t x_to_lon(int16_t);
@@ -126,10 +128,9 @@ void drawCloseRests(uint8_t, uint16_t, uint16_t);
 void readRestData();
 
 
-template <class T>
-void swap(T &x, T &y) {
-    T temp;
-    temp = x;
+template <typename T>
+void custom_swap(T &x, T &y) {
+    T temp = x;
     x = y;
     y = temp;
 }
