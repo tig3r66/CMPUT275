@@ -335,7 +335,7 @@ void menuProcess(uint16_t* selection) {
         }
     }
     // for better (less sensitive) scrolling user experience
-    delay(30);
+    delay(25);
 }
 
 
@@ -400,9 +400,9 @@ void modeZero(uint8_t slow, uint8_t fast) {
         constrainCursor(&cursorX, &cursorY);
         constrainMap(&shiftX, &shiftY);
         drawMapPatch(cursorX0, cursorY0);
-        // image (not screen) position of cursor on the YEG map
-        int icol = YEG_MIDDLE_X + cursorX + shiftX;
-        int irow = YEG_MIDDLE_Y + cursorY + shiftY;
+        // screen (not image) position of cursor on the YEG map
+        int icol = YEG_MIDDLE_X + cursorX + shiftX - (CURSOR_SIZE >> 1);
+        int irow = YEG_MIDDLE_Y + cursorY + shiftY - (CURSOR_SIZE >> 1);
 
         // PAD accounts for integer division by 2 (i.e., cursor has odd
         // sidelength)
@@ -410,10 +410,13 @@ void modeZero(uint8_t slow, uint8_t fast) {
         if (CURSOR_SIZE & 1) PAD = 1;
 
         // draws once cursor reaches border (except at physical map border)
-        if (icol - (CURSOR_SIZE >> 1) != 0 && irow - (CURSOR_SIZE >> 1) != 0
-            && icol != (YEG_SIZE - (CURSOR_SIZE >> 1) + PAD)
-            && irow != YEG_SIZE - (CURSOR_SIZE >> 1) + PAD) {
-                redrawMap();
+        if ((icol != 0 && irow != 0 && icol != (YEG_SIZE+PAD)
+            && irow != YEG_SIZE+PAD)
+            || (icol != 0 && irow == 0) || (icol == 0 && irow != 0)
+            || (icol != YEG_SIZE - PAD && irow == YEG_SIZE - PAD)
+            || (icol != YEG_SIZE - PAD && irow == YEG_SIZE - PAD)
+        ) {
+            redrawMap();
         }
         redrawCursor(TFT_RED);
     }
@@ -552,27 +555,33 @@ void redrawMap() {
     int downShift = constrain(irow - cursorY + MAP_DISP_HEIGHT, 0,
         YEG_SIZE - MAP_DISP_HEIGHT);
 
+    // screen (not image) position of cursor on the YEG map
+    int scrnX = YEG_MIDDLE_X + cursorX + shiftX - (CURSOR_SIZE >> 1);
+    int scrnY = YEG_MIDDLE_Y + cursorY + shiftY - (CURSOR_SIZE >> 1);
+
     // (CURSOR_SIZE << 1) leaves buffer for user at the previous map location
-    if (cursorX == (CURSOR_SIZE >> 1)) {
+    if (cursorX == (CURSOR_SIZE >> 1) && scrnX != 0) {
         // left side of screen reached
         lcdYegDraw(leftShift, irow - cursorY, 0, 0, MAP_DISP_WIDTH,
             MAP_DISP_HEIGHT);
         helperMove(&shiftX, "left");
-    } else if (cursorY == (CURSOR_SIZE >> 1)) {
+    } else if (cursorY == (CURSOR_SIZE >> 1) && scrnY != 0) {
         // top of screen reached
         lcdYegDraw(icol - cursorX, upShift, 0, 0, MAP_DISP_WIDTH,
             MAP_DISP_HEIGHT);
         helperMove(&shiftY, "up");
-    } else if (cursorX == MAP_DISP_WIDTH - (CURSOR_SIZE >> 1) - PAD) {
-        // right side of sign reached
-        lcdYegDraw(rightShift, irow - cursorY, 0, 0, MAP_DISP_WIDTH,
-            MAP_DISP_HEIGHT);
-        helperMove(&shiftX, "right");
-    } else if (cursorY == MAP_DISP_HEIGHT - (CURSOR_SIZE >> 1) - PAD) {
-        // bottom of screen reached
-        lcdYegDraw(icol - cursorX, downShift, 0, 0,
-            MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
-        helperMove(&shiftY, "down");
+    } else if (cursorX == MAP_DISP_WIDTH - (CURSOR_SIZE >> 1) - PAD
+        && scrnX != YEG_SIZE - PAD) {
+            // right side of sign reached
+            lcdYegDraw(rightShift, irow - cursorY, 0, 0, MAP_DISP_WIDTH,
+                MAP_DISP_HEIGHT);
+            helperMove(&shiftX, "right");
+    } else if (cursorY == MAP_DISP_HEIGHT - (CURSOR_SIZE >> 1) - PAD
+        && scrnY != YEG_SIZE - PAD) {
+            // bottom of screen reached
+            lcdYegDraw(icol - cursorX, downShift, 0, 0,
+                MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
+            helperMove(&shiftY, "down");
     }
 }
 
