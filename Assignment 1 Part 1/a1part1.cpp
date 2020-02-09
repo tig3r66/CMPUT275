@@ -28,7 +28,7 @@ lcd_image_t yegImage = { "yeg-big.lcd", YEG_SIZE, YEG_SIZE };
 // variables holding SD card read information
 restaurant TEMP_BLOCK[8];
 RestDist REST_DIST[NUM_RESTAURANTS];
-uint16_t PREV_BLOCK_NUM = 0;
+uint32_t PREV_BLOCK_NUM = 0;
 
 // cursor position variable
 int cursorX, cursorY;
