@@ -1,10 +1,10 @@
-//  ========================================
+//  =======================================
 //  Name: Edward (Eddie) Guo
 //  ID: 1576381
 //  CMPUT 275, Winter 2020
 //
-//  Weekly Exercise 1: Display and Joystick
-//  ========================================
+//  Assignment 1 Part 1: Restaurant Finder
+//  =======================================
 
 #include <Arduino.h>
 #include <Adafruit_GFX.h>
@@ -13,8 +13,9 @@
 #include <SD.h>
 #include <TouchScreen.h>
 #include <stdlib.h>
-#include "../include/lcd_image.h"
-#include "../include/main.h"
+#include "include/lcd_image.h"
+#include "include/a1part1.h"
+
 
 MCUFRIEND_kbv tft;
 Sd2Card card;
@@ -23,11 +24,10 @@ TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 
 lcd_image_t yegImage = { "yeg-big.lcd", YEG_SIZE, YEG_SIZE };
 
-
 // variables holding SD card read information
 restaurant TEMP_BLOCK[8];
 RestDist REST_DIST[NUM_RESTAURANTS];
-unsigned long PREV_BLOCK_NUM = 0;
+uint16_t PREV_BLOCK_NUM = 0;
 
 // cursor position variable
 int cursorX, cursorY;
@@ -47,20 +47,18 @@ int shiftX = 0, shiftY = 0;
 */
 int main() {
     setup();
-    readRestData();
     lcd_setup();
 
     // for the display mode
     uint8_t MODE = 0;
-
     while (true) {
         if (MODE == 0) {
-            // joystick button pressed
-            if (!digitalRead(JOY_SEL)) MODE = 1;
             // if user touches screen, draw closest restaurants
             processTouchScreen();
             // min and max cursor speeds are 0 and CURSOR_SIZE pixels/cycle
             modeZero(0, CURSOR_SIZE);
+            // joystick button pressed
+            if (!digitalRead(JOY_SEL)) MODE = 1;
         } else if (MODE == 1) {
             tft.fillScreen(TFT_BLACK);
             // loops until the joystick button is pressed
@@ -89,15 +87,15 @@ void setup() {
 
     Serial.print("Initializing SD card...");
     if (!SD.begin(SD_CS)) {
-        Serial.println("failed! Is it inserted properly?");
+        Serial.println("failed!");
         while (true) {}
     }
     Serial.println("OK!");
 
     // SD card initialization for raw reads
-    Serial.print("Initializing SPI communication for raw reads...");
+    Serial.print("Initializing SPI communication...");
     if (!card.init(SPI_HALF_SPEED, SD_CS)) {
-        Serial.println("failed! Is the card inserted properly?");
+        Serial.println("failed!");
         while (true) {}
     } else {
         Serial.println("OK!");
@@ -117,249 +115,17 @@ void lcd_setup() {
     tft.setTextWrap(false);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
 
-    lcdYegDraw(YEG_MIDDLE_X, YEG_MIDDLE_Y, 0, 0, MAP_DISP_WIDTH,
-        DISPLAY_HEIGHT);
-    // setting cursor to middle of YEG map
+    // setting cursor to middle of YEG map then reading restaurant data
     cursorX = (MAP_DISP_WIDTH) >> 1;
     cursorY = DISPLAY_HEIGHT >> 1;
-    redrawCursor(TFT_RED);
-}
 
-
-/*
-    Description: fast implementation of getRestaurant(). Reads data from an SD
-        card into the global restaurant struct TEMP_BLOCK then stores this
-        information into a smaller global struct REST_DIST. Reads a block once
-        for consecutive restaurants on the same block.
-
-    Arguments:
-        restIndex (uint16_t): the restaurant to be read.
-        restPtr (restaurant*): pointer to the restaurant struct.
-*/
-void getRestaurantFast(uint16_t restIndex, restaurant* restPtr) {
-    uint32_t blockNum = REST_START_BLOCK + restIndex / 8;
-    if (blockNum != PREV_BLOCK_NUM) {
-        while (!card.readBlock(blockNum, (uint8_t*) TEMP_BLOCK)) {
-            Serial.println("Read block failed, trying again.");
-        }
-    }
-    *restPtr = TEMP_BLOCK[restIndex % 8];
-    PREV_BLOCK_NUM = blockNum;
-
-    // storing TEMP_BLOCK information in a smaller global struct
-    REST_DIST[restIndex].index = restIndex;
-
-    // image (not screen) position of cursor on the YEG map
-    int icol = YEG_MIDDLE_X + cursorX + shiftX;
-    int irow = YEG_MIDDLE_Y + cursorY + shiftY;
-
-    // calculating Manhattan distance and storing into global REST_DIST struct
-    int manDist = abs(icol - lon_to_x(restPtr->lon))
-        + abs(irow - lat_to_y(restPtr->lat));
-    REST_DIST[restIndex].dist = manDist;
-}
-
-
-/*
-    Description: implementation of insertion sort.
-
-    Arguments:
-        array[] (int): pointer to an array.
-        n (int): the number of items in the array.
-    Notes:
-        Need to change this function so it sorts based on the RestDist struct.
-*/
-void insertion_sort(RestDist array[], int n) {
-    for (int i = 1; i < n; i++) {
-        for (int j = i-1; j >= 0 && array[j].dist > array[j+1].dist; j--) {
-            custom_swap(array[j], array[j+1]);
-        }
-    }
-}
-
-
-/*
-    Description: allows the user to select a restaurant from the 21 closest
-    restaurants to the cursor. Once selected, the map of Edmonton is redrawn
-    with the restaurant centered as much as possible on the TFT display.
-*/
-void modeOne() {
+    // reading and sorting data
     readRestData();
     insertion_sort(REST_DIST, NUM_RESTAURANTS);
-    printRestList();
 
-    // processing menu
-    uint16_t selection = 0;
-    while (true) {
-        menuProcess(selection);
-        if (!(digitalRead(JOY_SEL))) {
-            tft.fillRect(MAP_DISP_WIDTH, 0, PADX, MAP_DISP_HEIGHT, TFT_BLACK);
-            centreOverRest(selection);
-            return;
-        }
-    }
-}
-
-
-/*
-    Description: redraws the map of Edmonton centered as much as possible over
-    the selected restaurant.
-
-    Arguments:
-        selection (uint16_t): the index of the selected restaurant.
-*/
-void centreOverRest(uint16_t selection) {
-    // storing latitude and longitude info for the selected restaurant
-    restaurant temp;
-    getRestaurantFast(REST_DIST[selection].index, &temp);
-
-    // getting and constraining the x and y coordinates of the restaurant to the
-    // map dimensions
-    int16_t xPos = lon_to_x(temp.lon);
-    int16_t yPos = lat_to_y(temp.lat);
-    xPos = constrain(xPos, CURSOR_SIZE, YEG_SIZE - CURSOR_SIZE);
-    yPos = constrain(yPos, CURSOR_SIZE, YEG_SIZE - CURSOR_SIZE);
-
-    // x corner of patch
-    int16_t xEdge = xPos - (MAP_DISP_WIDTH >> 1);
-    // y corner of patch
-    int16_t yEdge = yPos - (MAP_DISP_HEIGHT >> 1);
-    // keeping corners of patch within bounds of map
-    xEdge = constrain(xEdge, 0, YEG_SIZE - MAP_DISP_WIDTH);
-    yEdge = constrain(yEdge, 0, YEG_SIZE - MAP_DISP_HEIGHT);
-
-    // drawing the map and resetting cursor and shift positions
-    lcdYegDraw(xEdge, yEdge, 0, 0, MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
-    cursorX = xPos - xEdge;
-    cursorY = yPos - yEdge;
-    constrainCursor(&cursorX, &cursorY);
+    lcdYegDraw(YEG_MIDDLE_X, YEG_MIDDLE_Y, 0, 0, MAP_DISP_WIDTH,
+        DISPLAY_HEIGHT);
     redrawCursor(TFT_RED);
-    shiftX = xEdge - YEG_MIDDLE_X;
-    shiftY = yEdge - YEG_MIDDLE_Y;
-}
-
-
-/*
-    Description: processes touches on the TFT display. When the user touches the
-    map, the closest restaurants to the cursor are drawn as blue dots.
-*/
-void processTouchScreen() {
-    TSPoint touch = ts.getPoint();
-    pinMode(YP, OUTPUT);
-    pinMode(XM, OUTPUT);
-    int screen_x = map(touch.y, TS_MINX, TS_MAXX, tft.width() - 1, 0);
-    if (touch.z < MINPRESSURE || touch.z > MAXPRESSURE
-        || screen_x > MAP_DISP_WIDTH) {
-            return;
-    } else if (screen_x < MAP_DISP_WIDTH) {
-        drawCloseRests(3, MAP_DISP_WIDTH + MAP_DISP_HEIGHT, TFT_BLUE);
-    }
-}
-
-
-/*
-    Description: reads all restaurant data from the SD card into REST_DIST.
-*/
-void readRestData() {
-    for (int i = 0; i < NUM_RESTAURANTS; i++) {
-        getRestaurantFast(i, TEMP_BLOCK);
-    }
-}
-
-
-/*
-    Description: draws dots over restaurants that are closest to the cursor.
-
-    Arguments:
-        radius (int): the desired radius of the drawn dot.
-        distance (int): the restaurants at a desired distance from the cursor.
-        colour (uint16_t): the colour of the dot drawn.
-*/
-void drawCloseRests(uint8_t radius, uint16_t distance, uint16_t colour) {
-    for (int i = 0; i < NUM_RESTAURANTS; i++) {
-        restaurant tempRest;
-        getRestaurantFast(REST_DIST[i].index, &tempRest);
-        int16_t scol = lon_to_x(tempRest.lon) - (YEG_MIDDLE_X + shiftX);
-        int16_t srow = lat_to_y(tempRest.lat) - (YEG_MIDDLE_Y + shiftY);
-
-        if (scol < MAP_DISP_WIDTH && srow < MAP_DISP_HEIGHT && srow >= 0
-            && scol >= 0 && REST_DIST[i].dist <= distance) {
-                tft.fillCircle(scol, srow, radius, colour);
-        }
-    }
-}
-
-
-/*
-    Description: initial drawing of the names of the closest 21 restaurants to
-    the cursor. Highlights the first entry.
-*/
-void printRestList() {
-    tft.setCursor(0, 0);
-    for (uint8_t i = 0; i < MAX_LIST; i++) {
-        restaurant rest;
-        getRestaurantFast(REST_DIST[i].index, &rest);
-        if (i == 0) {
-            tft.setTextColor(TFT_BLACK, TFT_WHITE);
-            tft.print(rest.name);
-        } else {
-            tft.setTextColor(TFT_WHITE, TFT_BLACK);
-            tft.print(rest.name);
-        }
-        tft.setCursor(0, (i+1) * FONT_SIZE);
-    }
-}
-
-
-/*
-    Description: processes the joystick movements to move the selection
-    highlight either up or down.
-
-    Arguments:
-        &selection (uint16_t): the memory address of the selected restaurant's
-            index.
-*/
-void menuProcess(uint16_t& selection) {
-    uint16_t joyY = analogRead(JOY_VERT);
-    if (joyY < (JOY_CENTER - JOY_DEADZONE)) {
-        // scroll one up
-        if (selection > 0) {
-            selection--;
-            redrawText(selection, selection+1); 
-        }
-    } else if (joyY > (JOY_CENTER + JOY_DEADZONE)) {
-        // scroll one down
-        if (selection < MAX_LIST - 1) {
-            selection++;
-            redrawText(selection, selection-1);
-        }
-    }
-    // for better (less sensitive) scrolling user experience
-    delay(30);
-}
-
-
-/*
-    Description: highlights the selected restaurant and unhighlights the
-    previous restaurant.
-
-    Arguments:
-        current (int): the currently selected restaurant.
-        prev (int): the previously selected restaurant.
-*/
-void redrawText(int current, int prev) {
-    // drawing over prev and reprinting it
-    restaurant tempRest;
-    getRestaurantFast(REST_DIST[prev].index, &tempRest);
-    tft.setTextColor(TFT_WHITE, TFT_BLACK);
-    tft.setCursor(0, prev * FONT_SIZE);
-    tft.print(tempRest.name);
-
-    // get current name and print it
-    getRestaurantFast(REST_DIST[current].index, &tempRest);
-    tft.setTextColor(TFT_BLACK, TFT_WHITE);
-    tft.setCursor(0, current * FONT_SIZE);
-    tft.print(tempRest.name);
 }
 
 
@@ -417,6 +183,127 @@ void modeZero(uint8_t slow, uint8_t fast) {
         }
         redrawCursor(TFT_RED);
     }
+}
+
+
+/*
+    Description: allows the user to select a restaurant from the 21 closest
+    restaurants to the cursor. Once selected, the map of Edmonton is redrawn
+    with the restaurant centered as much as possible on the TFT display.
+*/
+void modeOne() {
+    readRestData();
+    insertion_sort(REST_DIST, NUM_RESTAURANTS);
+    printRestList();
+
+    // processing menu
+    uint16_t selection = 0;
+    bool buttonPushed = false;
+    while (!buttonPushed) {
+        menuProcess(&selection);
+        if (!(digitalRead(JOY_SEL))) {
+            tft.fillRect(MAP_DISP_WIDTH, 0, PADX, MAP_DISP_HEIGHT, TFT_BLACK);
+            centreOverRest(selection);
+            buttonPushed = true;
+        }
+    }
+}
+
+
+/*
+    Description: implementation of insertion sort.
+
+    Arguments:
+        array[] (int): pointer to an array.
+        n (int): the number of items in the array.
+    Notes:
+        Need to change this function so it sorts based on the RestDist struct.
+*/
+void insertion_sort(RestDist array[], int n) {
+    for (int i = 1; i < n; i++) {
+        for (int j = i-1; j >= 0 && array[j].dist > array[j+1].dist; j--) {
+            custom_swap(array[j], array[j+1]);
+        }
+    }
+}
+
+
+/*
+    Description: processes touches on the TFT display. When the user touches the
+    map, the closest restaurants to the cursor are drawn as blue dots.
+*/
+void processTouchScreen() {
+    TSPoint touch = ts.getPoint();
+    pinMode(YP, OUTPUT);
+    pinMode(XM, OUTPUT);
+    int screen_x = map(touch.y, TS_MINX, TS_MAXX, tft.width() - 1, 0);
+    if (touch.z < MINPRESSURE || touch.z > MAXPRESSURE
+        || screen_x > MAP_DISP_WIDTH) {
+            return;
+    } else if (screen_x < MAP_DISP_WIDTH) {
+        drawCloseRests(3, MAP_DISP_WIDTH + MAP_DISP_HEIGHT, TFT_BLUE);
+    }
+}
+
+
+/*
+    Description: draws dots over restaurants that are closest to the cursor.
+
+    Arguments:
+        radius (int): the desired radius of the drawn dot.
+        distance (int): the restaurants at a desired distance from the cursor.
+        colour (uint16_t): the colour of the dot drawn.
+*/
+void drawCloseRests(uint8_t radius, uint16_t distance, uint16_t colour) {
+    for (int i = 0; i < NUM_RESTAURANTS; i++) {
+        restaurant tempRest;
+        getRestaurantFast(REST_DIST[i].index, &tempRest);
+        int16_t scol = lon_to_x(tempRest.lon) - (YEG_MIDDLE_X + shiftX);
+        int16_t srow = lat_to_y(tempRest.lat) - (YEG_MIDDLE_Y + shiftY);
+
+        if (scol < MAP_DISP_WIDTH && srow < MAP_DISP_HEIGHT && srow >= 0
+            && scol >= 0 && REST_DIST[i].dist <= distance) {
+                tft.fillCircle(scol, srow, radius, colour);
+        }
+    }
+}
+
+
+/*
+    Description: redraws the map of Edmonton centered as much as possible over
+    the selected restaurant.
+
+    Arguments:
+        selection (uint16_t): the index of the selected restaurant.
+*/
+void centreOverRest(uint16_t selection) {
+    // storing latitude and longitude info for the selected restaurant
+    restaurant temp;
+    getRestaurantFast(REST_DIST[selection].index, &temp);
+
+    // getting and constraining the x and y coordinates of the restaurant to the
+    // map dimensions
+    int16_t xPos = lon_to_x(temp.lon);
+    int16_t yPos = lat_to_y(temp.lat);
+    xPos = constrain(xPos, CURSOR_SIZE, YEG_SIZE - CURSOR_SIZE);
+    yPos = constrain(yPos, CURSOR_SIZE, YEG_SIZE - CURSOR_SIZE);
+
+    // x corner of patch
+    int16_t xEdge = xPos - (MAP_DISP_WIDTH >> 1);
+    // y corner of patch
+    int16_t yEdge = yPos - (MAP_DISP_HEIGHT >> 1);
+    // keeping corners of patch within bounds of map
+    xEdge = constrain(xEdge, 0, YEG_SIZE - MAP_DISP_WIDTH);
+    yEdge = constrain(yEdge, 0, YEG_SIZE - MAP_DISP_HEIGHT);
+
+    // drawing the map and resetting cursor and shift positions
+    lcdYegDraw(xEdge, yEdge, 0, 0, MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
+    cursorX = xPos - xEdge;
+    cursorY = yPos - yEdge;
+    constrainCursor(&cursorX, &cursorY);
+    redrawCursor(TFT_RED);
+    shiftX = xEdge - YEG_MIDDLE_X;
+    shiftY = yEdge - YEG_MIDDLE_Y;
 }
 
 
@@ -617,6 +504,123 @@ void helperMove(int* shiftLen, const char* mainDir) {
 */
 void lcdYegDraw(int icol, int irow, int scol, int srow, int width, int height) {
     lcd_image_draw(&yegImage, &tft, icol, irow, scol, srow, width, height);
+}
+
+
+/*
+    Description: initial drawing of the names of the closest 21 restaurants to
+    the cursor. Highlights the first entry.
+*/
+void printRestList() {
+    tft.setCursor(0, 0);
+    for (uint8_t i = 0; i < MAX_LIST; i++) {
+        restaurant rest;
+        getRestaurantFast(REST_DIST[i].index, &rest);
+        if (i == 0) {
+            tft.setTextColor(TFT_BLACK, TFT_WHITE);
+            tft.print(rest.name);
+        } else {
+            tft.setTextColor(TFT_WHITE, TFT_BLACK);
+            tft.print(rest.name);
+        }
+        tft.setCursor(0, (i+1) * FONT_SIZE);
+    }
+}
+
+
+/*
+    Description: fast implementation of getRestaurant(). Reads data from an SD
+        card into the global restaurant struct TEMP_BLOCK then stores this
+        information into a smaller global struct REST_DIST. Reads a block once
+        for consecutive restaurants on the same block.
+
+    Arguments:
+        restIndex (uint16_t): the restaurant to be read.
+        restPtr (restaurant*): pointer to the restaurant struct.
+*/
+void getRestaurantFast(uint16_t restIndex, restaurant* restPtr) {
+    uint32_t blockNum = REST_START_BLOCK + restIndex / 8;
+    if (blockNum != PREV_BLOCK_NUM) {
+        while (!card.readBlock(blockNum,
+            reinterpret_cast<uint8_t*>(TEMP_BLOCK))) {
+                Serial.println("Read block failed, trying again.");
+        }
+    }
+    *restPtr = TEMP_BLOCK[restIndex % 8];
+    PREV_BLOCK_NUM = blockNum;
+
+    // storing TEMP_BLOCK information in a smaller global struct
+    REST_DIST[restIndex].index = restIndex;
+
+    // image (not screen) position of cursor on the YEG map
+    int icol = YEG_MIDDLE_X + cursorX + shiftX;
+    int irow = YEG_MIDDLE_Y + cursorY + shiftY;
+
+    // calculating Manhattan distance and storing into global REST_DIST struct
+    int manDist = abs(icol - lon_to_x(restPtr->lon))
+        + abs(irow - lat_to_y(restPtr->lat));
+    REST_DIST[restIndex].dist = manDist;
+}
+
+
+/*
+    Description: reads all restaurant data from the SD card into REST_DIST.
+*/
+void readRestData() {
+    for (int i = 0; i < NUM_RESTAURANTS; i++) {
+        getRestaurantFast(i, TEMP_BLOCK);
+    }
+}
+
+
+/*
+    Description: processes the joystick movements to move the selection
+    highlight either up or down.
+
+    Arguments:
+        *selection (uint16_t): pointre to the selected restaurant's index.
+*/
+void menuProcess(uint16_t* selection) {
+    uint16_t joyY = analogRead(JOY_VERT);
+    if (joyY < (JOY_CENTER - JOY_DEADZONE)) {
+        // scroll one up
+        if (*selection > 0) {
+            (*selection)--;
+            redrawText(*selection, *selection + 1);
+        }
+    } else if (joyY > (JOY_CENTER + JOY_DEADZONE)) {
+        // scroll one down
+        if (*selection < MAX_LIST - 1) {
+            (*selection)++;
+            redrawText(*selection, *selection - 1);
+        }
+    }
+    // for better (less sensitive) scrolling user experience
+    delay(30);
+}
+
+
+/*
+    Description: highlights the selected restaurant and unhighlights the
+    previous restaurant.
+
+    Arguments:
+        current (int): the currently selected restaurant.
+        prev (int): the previously selected restaurant.
+*/
+void redrawText(int current, int prev) {
+    // drawing over prev and reprinting it
+    restaurant tempRest;
+    getRestaurantFast(REST_DIST[prev].index, &tempRest);
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.setCursor(0, prev * FONT_SIZE);
+    tft.print(tempRest.name);
+
+    // get current name and print it
+    getRestaurantFast(REST_DIST[current].index, &tempRest);
+    tft.setTextColor(TFT_BLACK, TFT_WHITE);
+    tft.setCursor(0, current * FONT_SIZE);
+    tft.print(tempRest.name);
 }
 
 

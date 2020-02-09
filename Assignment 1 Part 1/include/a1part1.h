@@ -1,6 +1,7 @@
 #ifndef _MAIN_H_
 #define _MAIN_H_
 
+
 // ================================= CONSTANTS =================================
 // joystick pins to connect
 #define SD_CS 10
@@ -86,22 +87,35 @@ struct RestDist {
 void setup();
 void lcd_setup();
 
-// processed when joystick is pressed
+// main modes
+void modeZero(uint8_t, uint8_t);
 void modeOne();
 
+// sorting algorithms
+void insertion_sort(RestDist[], int);
+
+// processes touch screen input
+void processTouchScreen();
+void drawCloseRests(uint8_t, uint16_t, uint16_t);
+
 // tft display-related functions
-void redrawCursor(uint16_t);
-void modeZero(uint8_t, uint8_t);
 void redrawMap();
 void drawMapPatch(int, int);
 void lcdYegDraw(int, int, int, int, int, int);
+void redrawCursor(uint16_t);
 void constrainCursor(int*, int*);
 void constrainMap(int*, int*);
 void helperMove(int*, const char*);
-void printRestList();
+void centreOverRest(uint16_t);
 
-// retrieving restaurant from memeory
+// memory retrieval functions
 void getRestaurantFast(uint16_t, restaurant*);
+void readRestData();
+
+// helps with scrolling through restaurants
+void menuProcess(uint16_t*);
+void redrawText(int, int);
+void printRestList();
 
 // converts between x/y map position and lat/lon (and vice versa)
 int32_t x_to_lon(int16_t);
@@ -109,22 +123,8 @@ int32_t y_to_lat(int16_t);
 int16_t lon_to_x(int32_t);
 int16_t lat_to_y(int32_t);
 
-// sorting algorithms
-void insertion_sort(RestDist[], int);
-void sortOnCursor();
 
-// helps with scrolling through restaurants
-void menuProcess(uint16_t&);
-void redrawText(int, int);
-
-// processes touch screen input
-void processTouchScreen();
-void drawCloseRests(uint8_t, uint16_t, uint16_t);
-
-// read
-void readRestData();
-
-
+// =============================== TEMPLATE CODE ===============================
 template <class T>
 void custom_swap(T &x, T &y) {
     T temp;
