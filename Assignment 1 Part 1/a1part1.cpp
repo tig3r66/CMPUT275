@@ -27,7 +27,7 @@ lcd_image_t yegImage = { "yeg-big.lcd", YEG_SIZE, YEG_SIZE };
 // variables holding SD card read information
 restaurant TEMP_BLOCK[8];
 RestDist REST_DIST[NUM_RESTAURANTS];
-unsigned long PREV_BLOCK_NUM = 0;
+uint16_t PREV_BLOCK_NUM = 0;
 
 // cursor position variable
 int cursorX, cursorY;
@@ -46,7 +46,6 @@ int shiftX = 0, shiftY = 0;
 */
 int main() {
     setup();
-    readRestData();
     lcd_setup();
 
     // for the display mode
@@ -58,7 +57,7 @@ int main() {
             // if user touches screen, draw closest restaurants
             processTouchScreen();
             // min and max cursor speeds are 0 and CURSOR_SIZE pixels/cycle
-            modeZero(0, CURSOR_SIZE); 
+            modeZero(0, CURSOR_SIZE);
         } else if (MODE == 1) {
             tft.fillScreen(TFT_BLACK);
             // loops until the joystick button is pressed
@@ -191,7 +190,7 @@ void getRestaurant(uint16_t restIndex, restaurant* restPtr) {
 void insertion_sort(RestDist array[], int n) {
     for (int i = 1; i < n; i++) {
         for (int j = i-1; j >= 0 && array[j].dist > array[j+1].dist; j--) {
-            swap(array[j], array[j+1]);
+            custom_swap(array[j], array[j+1]);
         }
     }
 }
@@ -272,9 +271,8 @@ void processTouchScreen() {
         || screen_x > MAP_DISP_WIDTH) {
             return;
     } else if (screen_x < MAP_DISP_WIDTH) {
-        int start = millis();
+        readRestData();
         drawCloseRests(3, MAP_DISP_WIDTH + MAP_DISP_HEIGHT, TFT_BLUE);
-        Serial.println(millis() - start);
     }
 }
 
