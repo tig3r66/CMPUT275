@@ -3,14 +3,18 @@ ID: [redacted]
 Partner: Jason Kim
 CMPUT 275, Winter 2020
 
-Assignment 1 Part 1
+Assignment 1 Part 1: Restaurant Finder
 
 --------------
 Included Files
 --------------
-    * main.cpp
+    * a1part1.cpp
+    * lcd_image.cpp
     * Makefile
     * README
+    * include/
+        * a1part1.h
+        * lcd_image.h
 
 -----------
 Accessories
@@ -40,5 +44,5 @@ Running Instructions
     a computer using an A-B style USB cable. Ensure that the Arduino is using
     the proper serial port (/dev/ttyACMO0).
 
-    2. In the directory containing the files main.cpp and Makefile, use
+    2. In the directory containing the files a1part1.cpp and Makefile, use
     the command "make upload" to upload the code to the Arduino.
