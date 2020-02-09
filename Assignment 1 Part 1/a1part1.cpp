@@ -236,8 +236,8 @@ void redrawOverRest(uint16_t selection) {
     // map dimensions
     int16_t xPos = lon_to_x(temp.lon);
     int16_t yPos = lat_to_y(temp.lat);
-    xPos = constrain(xPos, 0, YEG_SIZE - CURSOR_SIZE);
-    yPos = constrain(yPos, 0, YEG_SIZE - CURSOR_SIZE);
+    xPos = constrain(xPos, 0, YEG_SIZE);
+    yPos = constrain(yPos, 0, YEG_SIZE);
 
     // x corner of patch
     int16_t xEdge = xPos - (MAP_DISP_WIDTH >> 1);
@@ -297,7 +297,7 @@ void readRestData() {
         colour (uint16_t): the colour of the dot drawn.
 */
 void drawCloseRests(uint8_t radius, uint16_t distance, uint16_t colour) {
-    int sidePad = (CURSOR_SIZE >> 1);
+    int sidePad = 3;
     for (int i = 0; i < NUM_RESTAURANTS; i++) {
         restaurant tempRest;
         getRestaurant(REST_DIST[i].index, &tempRest);
