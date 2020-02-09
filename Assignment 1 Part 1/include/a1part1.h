@@ -1,5 +1,5 @@
-#ifndef _MAIN_H_
-#define _MAIN_H_
+#ifndef _A1PART1_H_
+#define _A1PART1_H_
 
 // ================================= CONSTANTS =================================
 // joystick pins to connect
@@ -97,8 +97,9 @@ void drawMapPatch(int, int);
 void lcdYegDraw(int, int, int, int, int, int);
 void constrainCursor(int*, int*);
 void constrainMap(int*, int*);
-void helperMove(bool*, int*, const char*);
+void helperMove(int*, const char*);
 void printRestList();
+void redrawOverRest(uint16_t);
 
 // retrieving restaurant from memeory
 void getRestaurantFast(uint16_t, restaurant*);
@@ -114,7 +115,7 @@ void insertion_sort(RestDist[], int);
 void sortOnCursor();
 
 // helps with scrolling through restaurants
-void menuProcess(uint16_t&);
+void menuProcess(uint16_t*);
 void redrawText(int, int);
 
 // processes touch screen input
@@ -126,7 +127,7 @@ void readRestData();
 
 
 template <class T>
-void custom_swap(T &x, T &y) {
+void swap(T &x, T &y) {
     T temp;
     temp = x;
     x = y;

@@ -1,10 +1,10 @@
-//  ========================================
+//  =======================================
 //  Name: Edward (Eddie) Guo
-//  ID: 1576381
+//  ID: [redacted]
 //  CMPUT 275, Winter 2020
 //
-//  Weekly Exercise 1: Display and Joystick
-//  ========================================
+//  Assignment 1 Part 1: Restaurant Finder
+//  =======================================
 
 #include <Arduino.h>
 #include <Adafruit_GFX.h>
@@ -13,8 +13,9 @@
 #include <SD.h>
 #include <TouchScreen.h>
 #include <stdlib.h>
-#include "../include/lcd_image.h"
-#include "../include/main.h"
+#include "include/lcd_image.h"
+#include "include/a1part1.h"
+
 
 MCUFRIEND_kbv tft;
 Sd2Card card;
@@ -23,7 +24,6 @@ TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 
 lcd_image_t yegImage = { "yeg-big.lcd", YEG_SIZE, YEG_SIZE };
 
-
 // variables holding SD card read information
 restaurant TEMP_BLOCK[8];
 RestDist REST_DIST[NUM_RESTAURANTS];
@@ -31,13 +31,8 @@ unsigned long PREV_BLOCK_NUM = 0;
 
 // cursor position variable
 int cursorX, cursorY;
-
 // storing overall map shifts for total map redraws
 int shiftX = 0, shiftY = 0;
-bool HIT_UP = false, HIT_DOWN = false, HIT_LEFT = false, HIT_RIGHT = false;
-
-// for the display mode
-uint8_t MODE = 0; 
 
 
 /*
@@ -54,6 +49,8 @@ int main() {
     readRestData();
     lcd_setup();
 
+    // for the display mode
+    uint8_t MODE = 0;
     while (true) {
         if (MODE == 0) {
             // joystick button pressed
@@ -90,15 +87,15 @@ void setup() {
 
     Serial.print("Initializing SD card...");
     if (!SD.begin(SD_CS)) {
-        Serial.println("failed! Is it inserted properly?");
+        Serial.println("failed!");
         while (true) {}
     }
     Serial.println("OK!");
 
     // SD card initialization for raw reads
-    Serial.print("Initializing SPI communication for raw reads...");
+    Serial.print("Initializing SPI communication...");
     if (!card.init(SPI_HALF_SPEED, SD_CS)) {
-        Serial.println("failed! Is the card inserted properly?");
+        Serial.println("failed!");
         while (true) {}
     } else {
         Serial.println("OK!");
@@ -140,8 +137,9 @@ void lcd_setup() {
 void getRestaurantFast(uint16_t restIndex, restaurant* restPtr) {
     uint32_t blockNum = REST_START_BLOCK + restIndex / 8;
     if (blockNum != PREV_BLOCK_NUM) {
-        while (!card.readBlock(blockNum, (uint8_t*) TEMP_BLOCK)) {
-            Serial.println("Read block failed, trying again.");
+        while (!card.readBlock(blockNum,
+            reinterpret_cast<uint8_t*>(TEMP_BLOCK))) {
+                Serial.println("Read block failed, trying again.");
         }
     }
     *restPtr = TEMP_BLOCK[restIndex % 8];
@@ -150,7 +148,7 @@ void getRestaurantFast(uint16_t restIndex, restaurant* restPtr) {
     // storing TEMP_BLOCK information in a smaller global struct
     REST_DIST[restIndex].index = restIndex;
 
-    // position of current cursor on map
+    // image (not screen) position of cursor on the YEG map
     int icol = YEG_MIDDLE_X + cursorX + shiftX;
     int irow = YEG_MIDDLE_Y + cursorY + shiftY;
 
@@ -173,13 +171,17 @@ void getRestaurantFast(uint16_t restIndex, restaurant* restPtr) {
 void insertion_sort(RestDist array[], int n) {
     for (int i = 1; i < n; i++) {
         for (int j = i-1; j >= 0 && array[j].dist > array[j+1].dist; j--) {
-            custom_swap(array[j], array[j+1]);
+            swap(array[j], array[j+1]);
         }
     }
 }
 
 
-// FIX THIS
+/*
+    Description: allows the user to select a restaurant from the 21 closest
+    restaurants to the cursor. Once selected, the map of Edmonton is redrawn
+    with the restaurant centered as much as possible on the TFT display.
+*/
 void modeOne() {
     readRestData();
     insertion_sort(REST_DIST, NUM_RESTAURANTS);
@@ -188,38 +190,53 @@ void modeOne() {
     // processing menu
     uint16_t selection = 0;
     while (true) {
-        menuProcess(selection);
-        if (!(digitalRead(JOY_SEL))) { // FIX THIS
+        menuProcess(&selection);
+        if (!(digitalRead(JOY_SEL))) {
             tft.fillRect(MAP_DISP_WIDTH, 0, PADX, MAP_DISP_HEIGHT, TFT_BLACK);
-
-            // storing latitude and longitude info for the selected restaurant
-            restaurant temp;
-            getRestaurantFast(selection, &temp);
-            uint16_t xPos = lon_to_x(temp.lon); // x pos on map
-            uint16_t yPos = lat_to_y(temp.lat); // y pos on map
-            // constrain x and y to map
-            xPos = constrain(xPos, 0, YEG_SIZE);
-            yPos = constrain(yPos, 0, YEG_SIZE);
-            // if selected rest within map
-            uint16_t xEdge = xPos - MAP_DISP_WIDTH; // x corner of patch
-            uint16_t yEdge = yPos - MAP_DISP_HEIGHT; // y corner of patch
-            //keeping corners of patch within bounds of map
-            xEdge = constrain(xEdge, 0, YEG_SIZE - MAP_DISP_WIDTH); // 0 to 2048 - patch width
-            yEdge = constrain(yEdge, 0, YEG_SIZE - MAP_DISP_HEIGHT); // 0 to 2048 - patch height
-            lcdYegDraw(xEdge, yEdge, 0, 0, MAP_DISP_WIDTH, MAP_DISP_HEIGHT); // draw patch
-            Serial.println("reach");
-            // reset cursor postions
-            cursorX = xPos - xEdge;
-            cursorY = yPos - yEdge;
-            constrainCursor(&cursorX, &cursorY); // ensuring cursor isnt in illegal pos
-            redrawCursor(TFT_RED);
-            // reset shifts
-            shiftX = xEdge - YEG_MIDDLE_X;
-            shiftY = yEdge - YEG_MIDDLE_Y; 
-            break;
+            redrawOverRest(selection);
+            return;
         }
     }
 }
+
+
+/*
+    Description: redraws the map of Edmonton centered as much as possible over
+    the selected restaurant.
+
+    Arguments:
+        selection (uint16_t): the index of the selected restaurant.
+*/
+void redrawOverRest(uint16_t selection) {
+    // storing latitude and longitude info for the selected restaurant
+    restaurant temp;
+    getRestaurantFast(REST_DIST[selection].index, &temp);
+
+    // getting and constraining the x and y coordinates of the restaurant to the
+    // map dimensions
+    int16_t xPos = lon_to_x(temp.lon);
+    int16_t yPos = lat_to_y(temp.lat);
+    xPos = constrain(xPos, CURSOR_SIZE, YEG_SIZE - CURSOR_SIZE);
+    yPos = constrain(yPos, CURSOR_SIZE, YEG_SIZE - CURSOR_SIZE);
+
+    // x corner of patch
+    int16_t xEdge = xPos - (MAP_DISP_WIDTH >> 1);
+    // y corner of patch
+    int16_t yEdge = yPos - (MAP_DISP_HEIGHT >> 1);
+    // keeping corners of patch within bounds of map
+    xEdge = constrain(xEdge, 0, YEG_SIZE - MAP_DISP_WIDTH);
+    yEdge = constrain(yEdge, 0, YEG_SIZE - MAP_DISP_HEIGHT);
+
+    // drawing the map and resetting cursor and shift positions
+    lcdYegDraw(xEdge, yEdge, 0, 0, MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
+    cursorX = xPos - xEdge;
+    cursorY = yPos - yEdge;
+    constrainCursor(&cursorX, &cursorY);
+    redrawCursor(TFT_RED);
+    shiftX = xEdge - YEG_MIDDLE_X;
+    shiftY = yEdge - YEG_MIDDLE_Y;
+}
+
 
 
 /*
@@ -263,11 +280,11 @@ void drawCloseRests(uint8_t radius, uint16_t distance, uint16_t colour) {
     for (int i = 0; i < NUM_RESTAURANTS; i++) {
         restaurant tempRest;
         getRestaurantFast(REST_DIST[i].index, &tempRest);
-        int16_t scol = lon_to_x(tempRest.lon) - (YEG_MIDDLE_X + shiftX);
-        int16_t srow = lat_to_y(tempRest.lat) - (YEG_MIDDLE_Y + shiftY);
+        int16_t scol = lon_to_x(tempRest.lon) - YEG_MIDDLE_X - shiftX;
+        int16_t srow = lat_to_y(tempRest.lat) - YEG_MIDDLE_Y - shiftY;
 
         if (scol < MAP_DISP_WIDTH && srow < MAP_DISP_HEIGHT && srow >= 0
-            && scol >= 0) {
+            && scol >= 0 && REST_DIST[i].dist <= distance) {
                 tft.fillCircle(scol, srow, radius, colour);
         }
     }
@@ -300,26 +317,25 @@ void printRestList() {
     highlight either up or down.
 
     Arguments:
-        &selection (uint16_t): the memory address of the selected restaurant's
-            index.
+        *selection (uint16_t): pointre to the selected restaurant's index.
 */
-void menuProcess(uint16_t& selection) {
+void menuProcess(uint16_t* selection) {
     uint16_t joyY = analogRead(JOY_VERT);
     if (joyY < (JOY_CENTER - JOY_DEADZONE)) {
         // scroll one up
-        if (selection > 0) {
-            selection--;
-            redrawText(selection, selection+1); 
+        if (*selection > 0) {
+            (*selection)--;
+            redrawText(*selection, *selection + 1);
         }
     } else if (joyY > (JOY_CENTER + JOY_DEADZONE)) {
         // scroll one down
-        if (selection < MAX_LIST - 1) {
-            selection++;
-            redrawText(selection, selection-1);
+        if (*selection < MAX_LIST - 1) {
+            (*selection)++;
+            redrawText(*selection, *selection - 1);
         }
     }
     // for better (less sensitive) scrolling user experience
-    delay(50);
+    delay(30);
 }
 
 
@@ -380,14 +396,25 @@ void modeZero(uint8_t slow, uint8_t fast) {
     }
 
     if (cursorX0 != cursorX || cursorY != cursorY0) {
-        // constrain cursor within the map
+        // constrain cursor and display within the map then redraw the map patch
         constrainCursor(&cursorX, &cursorY);
-        // constrain the display to the YEG map
         constrainMap(&shiftX, &shiftY);
-        // redraw
         drawMapPatch(cursorX0, cursorY0);
+        // image (not screen) position of cursor on the YEG map
+        int icol = YEG_MIDDLE_X + cursorX + shiftX;
+        int irow = YEG_MIDDLE_Y + cursorY + shiftY;
+
+        // PAD accounts for integer division by 2 (i.e., cursor has odd
+        // sidelength)
+        uint8_t PAD = 0;
+        if (CURSOR_SIZE & 1) PAD = 1;
+
         // draws once cursor reaches border (except at physical map border)
-        redrawMap();
+        if (icol - (CURSOR_SIZE >> 1) != 0 && irow - (CURSOR_SIZE >> 1) != 0
+            && icol != (YEG_SIZE - (CURSOR_SIZE >> 1) + PAD)
+            && irow != YEG_SIZE - (CURSOR_SIZE >> 1) + PAD) {
+                redrawMap();
+        }
         redrawCursor(TFT_RED);
     }
 }
@@ -493,9 +520,9 @@ void drawMapPatch(int cursorX0, int cursorY0) {
         shiftY (int*): pointer to the Y shift.
 */
 void constrainMap(int* shiftX, int* shiftY) {
-    *shiftX = constrain(*shiftX, -YEG_MIDDLE_X,
+    *shiftX = constrain(*shiftX, - YEG_MIDDLE_X,
         YEG_SIZE - YEG_MIDDLE_X - MAP_DISP_WIDTH);
-    *shiftY = constrain(*shiftY, -YEG_MIDDLE_Y,
+    *shiftY = constrain(*shiftY, - YEG_MIDDLE_Y,
         YEG_SIZE - YEG_MIDDLE_Y - MAP_DISP_HEIGHT);
 }
 
@@ -509,7 +536,7 @@ void constrainMap(int* shiftX, int* shiftY) {
         cursorY0 (uint16_t): the original cursor's Y position.
 */
 void redrawMap() {
-    // storing appropriate irow and icol positions
+    // image (not screen) position of cursor on the YEG map
     int icol = YEG_MIDDLE_X + cursorX + shiftX;
     int irow = YEG_MIDDLE_Y + cursorY + shiftY;
     // PAD accounts for integer division by 2 (i.e., cursor has odd sidelength)
@@ -526,32 +553,26 @@ void redrawMap() {
         YEG_SIZE - MAP_DISP_HEIGHT);
 
     // (CURSOR_SIZE << 1) leaves buffer for user at the previous map location
-    if (cursorX == (CURSOR_SIZE >> 1) && !HIT_LEFT) {
+    if (cursorX == (CURSOR_SIZE >> 1)) {
         // left side of screen reached
         lcdYegDraw(leftShift, irow - cursorY, 0, 0, MAP_DISP_WIDTH,
             MAP_DISP_HEIGHT);
-        if (leftShift == 0) HIT_LEFT = true;
-        helperMove(&HIT_RIGHT, &shiftX, "left");
-    } else if (cursorY == (CURSOR_SIZE >> 1) && !HIT_UP) {
+        helperMove(&shiftX, "left");
+    } else if (cursorY == (CURSOR_SIZE >> 1)) {
         // top of screen reached
         lcdYegDraw(icol - cursorX, upShift, 0, 0, MAP_DISP_WIDTH,
             MAP_DISP_HEIGHT);
-        if (upShift == 0) HIT_UP = true;
-        helperMove(&HIT_DOWN, &shiftY, "up");
-    } else if (cursorX == MAP_DISP_WIDTH - (CURSOR_SIZE >> 1) - PAD
-        && !HIT_RIGHT) {
-            // right side of sign reached
-            lcdYegDraw(rightShift, irow - cursorY, 0, 0, MAP_DISP_WIDTH,
-                MAP_DISP_HEIGHT);
-            if (rightShift == YEG_SIZE - MAP_DISP_WIDTH) HIT_RIGHT = true;
-            helperMove(&HIT_LEFT, &shiftX, "right");
-    } else if (cursorY == MAP_DISP_HEIGHT - (CURSOR_SIZE >> 1) - PAD
-        && !HIT_DOWN) {
-            // bottom of screen reached
-            lcdYegDraw(icol - cursorX, downShift, 0, 0,
-                MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
-            if (downShift == YEG_SIZE - MAP_DISP_HEIGHT) HIT_DOWN = true;
-            helperMove(&HIT_UP, &shiftY, "down");
+        helperMove(&shiftY, "up");
+    } else if (cursorX == MAP_DISP_WIDTH - (CURSOR_SIZE >> 1) - PAD) {
+        // right side of sign reached
+        lcdYegDraw(rightShift, irow - cursorY, 0, 0, MAP_DISP_WIDTH,
+            MAP_DISP_HEIGHT);
+        helperMove(&shiftX, "right");
+    } else if (cursorY == MAP_DISP_HEIGHT - (CURSOR_SIZE >> 1) - PAD) {
+        // bottom of screen reached
+        lcdYegDraw(icol - cursorX, downShift, 0, 0,
+            MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
+        helperMove(&shiftY, "down");
     }
 }
 
@@ -561,12 +582,10 @@ void redrawMap() {
     clamping and map shifting.
 
     Arguments:
-        oppDir (bool*): pointer to the opposite direction of map shift.
         shiftLen (int*): the X or Y shift to store for future map shifts.
         mainDir (const char*): user passes in the parameter of movement.
 */
-void helperMove(bool* oppDir, int* shiftLen, const char* mainDir) {
-    *oppDir = false;
+void helperMove(int* shiftLen, const char* mainDir) {
     if (strcmp(mainDir, "left") == 0) {
         *shiftLen -= MAP_DISP_WIDTH;
         cursorX += MAP_DISP_WIDTH - (CURSOR_SIZE << 1);
