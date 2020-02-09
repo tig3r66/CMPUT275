@@ -1,6 +1,6 @@
 //  =======================================
 //  Name: Edward (Eddie) Guo
-//  ID: 1576381
+//  ID: [redacted]
 //  CMPUT 275, Winter 2020
 //
 //  Assignment 1 Part 1: Restaurant Finder
@@ -8,6 +8,7 @@
 
 #ifndef _A1PART1_H_
 #define _A1PART1_H_
+
 
 // ================================= CONSTANTS =================================
 // joystick pins to connect
@@ -344,6 +345,13 @@ void drawCloseRests(uint8_t, uint16_t, uint16_t);
 
 
 // =============================== TEMPLATE CODE ===============================
+/*
+    Description: swaps two items x and y.
+
+    Arguments:
+        x (T&): the first item to swap.
+        y (T&): the second item to swap.
+*/
 template <typename T>
 void custom_swap(T &x, T &y) {
     T temp = x;
