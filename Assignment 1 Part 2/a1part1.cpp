@@ -205,7 +205,9 @@ void insertionSort(RestDist array[], int n) {
 void modeOne() {
     readRestData();
     insertionSort(REST_DIST, NUM_RESTAURANTS);
-    printRestList();
+
+    int n = 0; // page on (0 as default)
+    printRestList(n, 0); 
 
     // processing menu
     uint16_t selection = 0;
@@ -216,6 +218,19 @@ void modeOne() {
             redrawOverRest(selection);
             return;
         }
+        if (selection > MAX_LIST) {
+        	n++;
+        	tft.fillScreen(TFT_BLACK);
+        	printRestList(n, 0);
+        	selection = 0;
+        }
+        if (selection < 0 && n > 0) {
+        	n--;
+        	tft.fillScreen(TFT_BLACK);
+        	printRestList(n, MAX_LIST - 1);
+        	selection = MAX_LIST - 1;
+        }
+        selection = constrain(selection, 0, MAX_LIST - 1); // failsafe to ensure selection is not illegal value
     }
 }
 
@@ -315,13 +330,14 @@ void drawCloseRests(uint8_t radius, uint16_t distance, uint16_t colour) {
 /*
     Description: initial drawing of the names of the closest 21 restaurants to
     the cursor. Highlights the first entry.
+    // n = page number t = starting selection
 */
-void printRestList() {
+void printRestList(int n, int t) {
     tft.setCursor(0, 0);
-    for (uint8_t i = 0; i < MAX_LIST; i++) {
+    for (uint8_t i = n * MAX_LIST; i < MAX_LIST * (n+1); i++) {
         restaurant rest;
         getRestaurantFast(REST_DIST[i].index, &rest);
-        if (i == 0) {
+        if (i % 21 == t) {
             tft.setTextColor(TFT_BLACK, TFT_WHITE);
             tft.print(rest.name);
         } else {
@@ -348,11 +364,18 @@ void menuProcess(uint16_t* selection) {
             (*selection)--;
             redrawText(*selection, *selection + 1);
         }
+        else {
+        	(*selection)--;
+        }
+
     } else if (joyY > (JOY_CENTER + JOY_DEADZONE)) {
         // scroll one down
         if (*selection < MAX_LIST - 1) {
             (*selection)++;
             redrawText(*selection, *selection - 1);
+        }
+        else {
+        	(*selection)++;
         }
     }
     // for better (less sensitive) scrolling user experience
