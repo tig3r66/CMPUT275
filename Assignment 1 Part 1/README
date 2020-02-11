@@ -46,3 +46,15 @@ Running Instructions
 
     2. In the directory containing the files a1part1.cpp and Makefile, use
     the command "make upload" to upload the code to the Arduino.
+
+-----
+Notes
+-----
+    * a1part1.cpp contains the main program.
+    * a1part1.h declares necessary Arduino pins, constants (ex: TFT screen
+        dimensions), structs, function prototypes, template code for swapping
+        two items in an array, and documentation.
+    * lcd_image.h declares the lcd_image_draw() function, which draws an image
+        from SD card memory onto the TFT display.
+    * lcd_image.cpp contains the implementation of the lcd_image_draw()
+        function.
