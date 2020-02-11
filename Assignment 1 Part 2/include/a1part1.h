@@ -206,7 +206,7 @@ void helperMove(int*, const char*);
     Description: initial drawing of the names of the closest 21 restaurants to
     the cursor. Highlights the first entry.
 */
-void printRestList();
+void printRestList(int, int);
 
 /*
     Description: redraws the map of Edmonton centered as much as possible over
@@ -314,7 +314,7 @@ void insertionSort(RestDist[], int);
     Arguments:
         *selection (uint16_t): pointre to the selected restaurant's index.
 */
-void menuProcess(uint16_t*);
+void menuProcess(uint16_t*, int*);
 
 /*
     Description: highlights the selected restaurant and unhighlights the

@@ -212,25 +212,12 @@ void modeOne() {
     // processing menu
     uint16_t selection = 0;
     while (true) {
-        menuProcess(&selection);
+        menuProcess(&selection, &n);
         if (!(digitalRead(JOY_SEL))) {
             tft.fillRect(MAP_DISP_WIDTH, 0, PADX, MAP_DISP_HEIGHT, TFT_BLACK);
-            redrawOverRest(selection);
+            redrawOverRest(selection + 21 * n);
             return;
         }
-        if (selection > MAX_LIST) {
-        	n++;
-        	tft.fillScreen(TFT_BLACK);
-        	printRestList(n, 0);
-        	selection = 0;
-        }
-        if (selection < 0 && n > 0) {
-        	n--;
-        	tft.fillScreen(TFT_BLACK);
-        	printRestList(n, MAX_LIST - 1);
-        	selection = MAX_LIST - 1;
-        }
-        selection = constrain(selection, 0, MAX_LIST - 1); // failsafe to ensure selection is not illegal value
     }
 }
 
@@ -334,7 +321,8 @@ void drawCloseRests(uint8_t radius, uint16_t distance, uint16_t colour) {
 */
 void printRestList(int n, int t) {
     tft.setCursor(0, 0);
-    for (uint8_t i = n * MAX_LIST; i < MAX_LIST * (n+1); i++) {
+    uint8_t max = constrain((n+1) * MAX_LIST, 0, NUM_RESTAURANTS); 
+    for (uint8_t i = n * MAX_LIST; i < max; i++) {
         restaurant rest;
         getRestaurantFast(REST_DIST[i].index, &rest);
         if (i % 21 == t) {
@@ -356,26 +344,35 @@ void printRestList(int n, int t) {
     Arguments:
         *selection (uint16_t): pointer to the selected restaurant's index.
 */
-void menuProcess(uint16_t* selection) {
+void menuProcess(uint16_t* selection, int* n) {
     uint16_t joyY = analogRead(JOY_VERT);
     if (joyY < (JOY_CENTER - JOY_DEADZONE)) {
         // scroll one up
         if (*selection > 0) {
             (*selection)--;
-            redrawText(*selection, *selection + 1);
+            redrawText(*selection + (*n * (MAX_LIST)), 
+                (*selection + 1) * (*n * (MAX_LIST)));
         }
-        else {
-        	(*selection)--;
-        }
+        else if (*selection == 0 && *n > 0) {
+            (*n)--;
+            *selection = MAX_LIST - 1;
+            tft.fillScreen(TFT_BLACK);
+            printRestList(*n, MAX_LIST - 1);
+        } 
+
 
     } else if (joyY > (JOY_CENTER + JOY_DEADZONE)) {
         // scroll one down
         if (*selection < MAX_LIST - 1) {
             (*selection)++;
-            redrawText(*selection, *selection - 1);
+            redrawText(*selection + (*n * (MAX_LIST)), 
+                (*selection - 1) * (*n * (MAX_LIST)));
         }
-        else {
-        	(*selection)++;
+        else if (*selection == MAX_LIST - 1) {
+            (*n)++;
+            *selection = 0;
+            tft.fillScreen(TFT_BLACK);
+            printRestList(*n, 0);
         }
     }
     // for better (less sensitive) scrolling user experience
@@ -396,13 +393,13 @@ void redrawText(int current, int prev) {
     restaurant tempRest;
     getRestaurantFast(REST_DIST[prev].index, &tempRest);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
-    tft.setCursor(0, prev * FONT_SIZE);
+    tft.setCursor(0, prev % 21 * FONT_SIZE);
     tft.print(tempRest.name);
 
     // get current name and print it
     getRestaurantFast(REST_DIST[current].index, &tempRest);
     tft.setTextColor(TFT_BLACK, TFT_WHITE);
-    tft.setCursor(0, current * FONT_SIZE);
+    tft.setCursor(0, current % 21 * FONT_SIZE);
     tft.print(tempRest.name);
 }
 
