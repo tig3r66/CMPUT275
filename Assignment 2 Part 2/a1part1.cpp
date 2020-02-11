@@ -1,6 +1,6 @@
 //  =======================================
 //  Name: Edward (Eddie) Guo
-//  ID: [redacted]
+//  ID: 1576381
 //  Partner: Jason Kim
 //  CMPUT 275, Winter 2020
 //
@@ -338,7 +338,7 @@ void printRestList() {
     highlight either up or down.
 
     Arguments:
-        *selection (uint16_t): pointre to the selected restaurant's index.
+        *selection (uint16_t): pointer to the selected restaurant's index.
 */
 void menuProcess(uint16_t* selection) {
     uint16_t joyY = analogRead(JOY_VERT);
