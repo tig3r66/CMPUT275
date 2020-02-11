@@ -3,7 +3,7 @@
 //  ID: 1576381
 //  CMPUT 275, Winter 2020
 //
-//  Assignment 1 Part 1: Restaurant Finder
+//  Assignment 1 Part 2: Restaurant Finder
 //  =======================================
 
 #ifndef _A1PART1_H_
