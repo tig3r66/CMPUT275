@@ -60,6 +60,7 @@
 
 // font size
 #define FONT_SIZE 15
+#define FONT_SIZEX 10
 
 //number of restuarants listed
 #define MAX_LIST 21

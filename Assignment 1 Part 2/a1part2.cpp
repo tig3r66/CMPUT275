@@ -59,7 +59,7 @@ int main() {
             // joystick button pressed
             if (!digitalRead(JOY_SEL)) MODE = 1;
             // if user touches screen, draw closest restaurants
-            processTouchScreen(RATING);
+            processTouchScreen(&RATING);
             // min and max cursor speeds are 0 and CURSOR_SIZE pixels/cycle
             modeZero(0, CURSOR_SIZE);
         } else if (MODE == 1) {
@@ -120,6 +120,14 @@ void lcd_setup() {
 
     lcdYegDraw(YEG_MIDDLE_X, YEG_MIDDLE_Y, 0, 0, MAP_DISP_WIDTH,
         DISPLAY_HEIGHT);
+    // set buttons
+    tft.drawRect(MAP_DISP_WIDTH, 0, DISPLAY_WIDTH, MAP_DISP_HEIGHT, TFT_WHITE)
+    tft.drawFastHLine(MAP_DISP_WIDTH, MAP_DISP_HEIGHT >> 1, PADX, TFT_WHITE);
+    // top button
+    tft.drawChar(MAP_DISP_WIDTH+(PADX >> 1), MAP_DISP_HEIGHT >> 2, '1', 
+        TFT_WHITE, TFT_BLACK, 2);
+    // bottom button
+
     // setting cursor to middle of YEG map
     cursorX = (MAP_DISP_WIDTH) >> 1;
     cursorY = DISPLAY_HEIGHT >> 1;
@@ -306,17 +314,28 @@ void redrawOverRest(uint16_t selection) {
     Description: processes touches on the TFT display. When the user touches the
     map, the closest restaurants to the cursor are drawn as blue dots.
 */
-void processTouchScreen(int rating) {
+void processTouchScreen(int* rating) {
     TSPoint touch = ts.getPoint();
     pinMode(YP, OUTPUT);
     pinMode(XM, OUTPUT);
     int screen_x = map(touch.y, TS_MINX, TS_MAXX, tft.width() - 1, 0);
+    int screen_y = map(touch.x, TS_MINY, TS_MAXY, TFT_HEIGHT-1, 0);
     if (touch.z < MINPRESSURE || touch.z > MAXPRESSURE
         || screen_x > MAP_DISP_WIDTH) {
             return;
     } else if (screen_x < MAP_DISP_WIDTH) {
         readRestData();
-        drawCloseRests(3, MAP_DISP_WIDTH + MAP_DISP_HEIGHT, TFT_BLUE, rating);
+        drawCloseRests(3, MAP_DISP_WIDTH + MAP_DISP_HEIGHT, TFT_BLUE, *rating);
+    }
+    else if (screen_x > MAP_DISP_WIDTH && screen_y < (MAP_DISP_HEIGHT >> 1)
+    && screen_y > 0) {
+        (*rating)++;
+        *rating = constrain(*rating % 6, 1, 5);
+        
+    }
+    else if (screen_x > MAP_DISP_WIDTH && screen_y < MAP_DISP_HEIGHT
+        && screen_y > (MAP_DISP_HEIGHT >> 1)) {
+        // change sort
     }
 }
 
