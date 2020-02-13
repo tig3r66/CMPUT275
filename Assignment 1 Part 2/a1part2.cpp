@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include "include/lcd_image.h"
 #include "include/a1part1.h"
+#include "include/yegcoords.h"
 
 
 MCUFRIEND_kbv tft;
@@ -51,8 +52,6 @@ int main() {
 
     // for the display mode
     uint8_t MODE = 0;
-    // rating filter 
-    int RATING = 1;
     while (true) {
         if (MODE == 0) {
             // joystick button pressed
@@ -64,7 +63,7 @@ int main() {
         } else if (MODE == 1) {
             tft.fillScreen(TFT_BLACK);
             // loops until the joystick button is pressed
-            modeOne(RATING);
+            modeOne();
             MODE = 0;
         }
     }
@@ -198,6 +197,7 @@ void insertionSort(RestDist array[], int n) {
     }
 }
 
+
 /*
     This function takes last element as pivot, places the pivot element at its
     correct position in sorted array, and places all smaller (smaller than
@@ -238,16 +238,14 @@ void quickSort(RestDist array[], int low, int high) {
     restaurants to the cursor. Once selected, the map of Edmonton is redrawn
     with the restaurant centered as much as possible on the TFT display.
 */
-void modeOne(int RATING) {
+void modeOne() {
     readRestData();
     insertionSort(REST_DIST, NUM_RESTAURANTS);
 
-    int ending[21];
-
-    printRestList(RATING, 0, 0, ending); // inital print of menu
+    int n = 0; // page on (0 as default)
+    printRestList(n, 0); 
 
     // processing menu
-    int n = 0;
     uint16_t selection = 0;
     while (true) {
         menuProcess(&selection, &n);
@@ -355,33 +353,24 @@ void drawCloseRests(uint8_t radius, uint16_t distance, uint16_t colour) {
 /*
     Description: initial drawing of the names of the closest 21 restaurants to
     the cursor. Highlights the first entry.
-    // rating filter = rating j = starting index
-    // def selected selection = selected
+    // n = page number t = starting selection
 */
-void printRestList(int rating, int j, int selected, int[] menuIndices) {
+void printRestList(int n, int t) {
     tft.setCursor(0, 0);
-    int i = 0; // counter
-    while (i < 21 || j < NUM_RESTAURANTS) {
+    uint8_t max = constrain((n+1) * MAX_LIST, 0, NUM_RESTAURANTS); 
+    for (uint8_t i = n * MAX_LIST; i < max; i++) {
         restaurant rest;
-        getRestaurantFast(REST_DIST[j].index, &rest);
-        int convertedRating = constrain(((rest.rating + 1) / 2), 1, 5);
-        tft.setCursor(0, i*FONT_SIZE);
-        if (rest.rating >= RATING && selected != i) {
+        getRestaurantFast(REST_DIST[i].index, &rest);
+        if (i % 21 == t) {
+            tft.setTextColor(TFT_BLACK, TFT_WHITE);
+            tft.print(rest.name);
+        } else {
             tft.setTextColor(TFT_WHITE, TFT_BLACK);
             tft.print(rest.name);
-            tft.print('\n');
-            i++;
         }
-        else if (rest.rating >= RATING && selected == i) {
-            tft.setTextColor(TFT_BLACK, TFT_WHITE);
-            tft.print('\n');
-            i++;
-        }
-        menuIndices[i] = j;
-        j++;
+        tft.setCursor(0, (i+1) * FONT_SIZE);
     }
 }
-
 
 
 /*
@@ -714,60 +703,4 @@ void helperMove(int* shiftLen, const char* mainDir) {
 */
 void lcdYegDraw(int icol, int irow, int scol, int srow, int width, int height) {
     lcd_image_draw(&yegImage, &tft, icol, irow, scol, srow, width, height);
-}
-
-
-/*
-    Description: converts x position on YEG map to longitudinal data for the
-    real-world coordinates.
-
-    Arguments:
-        x (int16_t): the x position.
-    Returns:
-        map(x, 0, MAP_WIDTH, LON_WEST, LON_EAST) (int32_t): the longitude.
-*/
-int32_t x_to_lon(int16_t x) {
-    return map(x, 0, MAP_WIDTH, LON_WEST, LON_EAST);
-}
-
-
-/*
-    Description: converts x position on YEG map to latitudinal data for the
-    real-world coordinates.
-
-    Arguments:
-        y (int16_t): the y position.
-    Returns:
-        map(y, 0, MAP_WIDTH, LON_WEST, LON_EAST) (int32_t): the latitude.
-*/
-int32_t y_to_lat(int16_t y) {
-    return map(y, 0, MAP_HEIGHT, LAT_NORTH, LAT_SOUTH);
-}
-
-
-/*
-    Description: converts longitudinal data for the real-world YEG locations to
-    the x position on the YEG map.
-
-    Arguments:
-        lon (int32_t): the longitude.
-    Returns:
-        map(lon, LON_WEST, LON_EAST, 0, MAP_WIDTH) (int16_t): the x position.
-*/
-int16_t lon_to_x(int32_t lon) {
-    return map(lon, LON_WEST, LON_EAST, 0, MAP_WIDTH);
-}
-
-
-/*
-    Description: converts latitudinal data for the real-world YEG locations to
-    the x position on the YEG map.
-
-    Arguments:
-        lat (int32_t): the latitude.
-    Returns:
-        map(lat, LAT_NORTH, LAT_SOUTH, 0, MAP_HEIGHT) (int16_t): the y position.
-*/
-int16_t lat_to_y(int32_t lat) {
-    return map(lat, LAT_NORTH, LAT_SOUTH, 0, MAP_HEIGHT);
 }

@@ -51,14 +51,6 @@
 #define MAP_DISP_WIDTH (DISPLAY_WIDTH - 60)
 #define MAP_DISP_HEIGHT DISPLAY_HEIGHT
 
-// more map constants
-#define MAP_WIDTH 2048
-#define MAP_HEIGHT 2048
-#define LAT_NORTH 5361858l
-#define LAT_SOUTH 5340953l
-#define LON_WEST -11368652l
-#define LON_EAST -11333496l
-
 // joystick movement
 #define JOY_CENTER 512
 #define JOY_DEADZONE 64
