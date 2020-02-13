@@ -113,7 +113,7 @@ void lcd_setup();
     restaurants to the cursor. Once selected, the map of Edmonton is redrawn
     with the restaurant centered as much as possible on the TFT display.
 */
-void modeOne();
+void modeOne(int);
 
 /*
     Description: translates joystick inputs to movement of the cursor on the TFT
@@ -206,7 +206,7 @@ void helperMove(int*, const char*);
     Description: initial drawing of the names of the closest 21 restaurants to
     the cursor. Highlights the first entry.
 */
-void printRestList(int, int);
+void printRestList(int, int, int, int[]);
 
 /*
     Description: redraws the map of Edmonton centered as much as possible over
