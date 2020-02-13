@@ -260,7 +260,7 @@ void insertionSort(RestDist[], int);
     Arguments:
         *selection (uint16_t): pointre to the selected restaurant's index.
 */
-void menuProcess(uint16_t*, int*);
+void menuProcess(uint16_t*, int*, int[], int*, int);
 
 /*
     Description: highlights the selected restaurant and unhighlights the
@@ -277,7 +277,7 @@ void redrawText(int, int);
     Description: processes touches on the TFT display. When the user touches the
     map, the closest restaurants to the cursor are drawn as blue dots.
 */
-void processTouchScreen();
+void processTouchScreen(int);
 
 /*
     Description: draws dots over restaurants that are closest to the cursor.
@@ -287,7 +287,7 @@ void processTouchScreen();
         distance (int): the restaurants at a desired distance from the cursor.
         colour (uint16_t): the colour of the dot drawn.
 */
-void drawCloseRests(uint8_t, uint16_t, uint16_t);
+void drawCloseRests(uint8_t, uint16_t, uint16_t, int);
 
 
 // =============================== TEMPLATE CODE ===============================

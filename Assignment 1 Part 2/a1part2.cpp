@@ -15,7 +15,7 @@
 #include <TouchScreen.h>
 #include <stdlib.h>
 #include "include/lcd_image.h"
-#include "include/a1part1.h"
+#include "include/a1part2.h"
 #include "include/yegcoords.h"
 
 
@@ -59,7 +59,7 @@ int main() {
             // joystick button pressed
             if (!digitalRead(JOY_SEL)) MODE = 1;
             // if user touches screen, draw closest restaurants
-            processTouchScreen();
+            processTouchScreen(RATING);
             // min and max cursor speeds are 0 and CURSOR_SIZE pixels/cycle
             modeZero(0, CURSOR_SIZE);
         } else if (MODE == 1) {
@@ -199,7 +199,6 @@ void insertionSort(RestDist array[], int n) {
     }
 }
 
-
 /*
     This function takes last element as pivot, places the pivot element at its
     correct position in sorted array, and places all smaller (smaller than
@@ -240,7 +239,28 @@ void quickSort(RestDist array[], int low, int high) {
     restaurants to the cursor. Once selected, the map of Edmonton is redrawn
     with the restaurant centered as much as possible on the TFT display.
 */
+void modeOne(int RATING) {
+    readRestData();
+    insertionSort(REST_DIST, NUM_RESTAURANTS);
 
+    int menuIndices[21];
+
+    printRestList(RATING, 0, 0, menuIndices); // inital print of menu
+
+    // processing menu
+    int n = 0;
+    uint16_t selection = 0;
+    int prev = 0;
+
+    while (true) {
+        menuProcess(&selection, &n, menuIndices, &prev, RATING);
+        if (!(digitalRead(JOY_SEL))) {
+            tft.fillRect(MAP_DISP_WIDTH, 0, PADX, MAP_DISP_HEIGHT, TFT_BLACK);
+            redrawOverRest(menuIndices[selection]);
+            return;
+        }
+    }
+}
 
 
 /*
@@ -286,7 +306,7 @@ void redrawOverRest(uint16_t selection) {
     Description: processes touches on the TFT display. When the user touches the
     map, the closest restaurants to the cursor are drawn as blue dots.
 */
-void processTouchScreen() {
+void processTouchScreen(int rating) {
     TSPoint touch = ts.getPoint();
     pinMode(YP, OUTPUT);
     pinMode(XM, OUTPUT);
@@ -296,7 +316,7 @@ void processTouchScreen() {
             return;
     } else if (screen_x < MAP_DISP_WIDTH) {
         readRestData();
-        drawCloseRests(3, MAP_DISP_WIDTH + MAP_DISP_HEIGHT, TFT_BLUE);
+        drawCloseRests(3, MAP_DISP_WIDTH + MAP_DISP_HEIGHT, TFT_BLUE, rating);
     }
 }
 
@@ -319,16 +339,18 @@ void readRestData() {
         distance (int): the restaurants at a desired distance from the cursor.
         colour (uint16_t): the colour of the dot drawn.
 */
-void drawCloseRests(uint8_t radius, uint16_t distance, uint16_t colour) {
+void drawCloseRests(uint8_t radius, uint16_t distance, uint16_t colour, int rating) {
     int sidePad = 3;
     for (int i = 0; i < NUM_RESTAURANTS; i++) {
         restaurant tempRest;
         getRestaurant(REST_DIST[i].index, &tempRest);
         int16_t scol = lon_to_x(tempRest.lon) - YEG_MIDDLE_X - shiftX;
         int16_t srow = lat_to_y(tempRest.lat) - YEG_MIDDLE_Y - shiftY;
+        int convertedRating = constrain(((tempRest.rating + 1) / 2), 1, 5);
 
         if (scol < MAP_DISP_WIDTH - sidePad && srow < MAP_DISP_HEIGHT - sidePad
-            && srow >= 0 && scol >= 0 && REST_DIST[i].dist <= distance) {
+            && srow >= 0 && scol >= 0 && REST_DIST[i].dist <= distance 
+            && convertedRating >= rating) {
                 tft.fillCircle(scol, srow, radius, colour);
         }
     }
@@ -338,9 +360,10 @@ void drawCloseRests(uint8_t radius, uint16_t distance, uint16_t colour) {
 /*
     Description: initial drawing of the names of the closest 21 restaurants to
     the cursor. Highlights the first entry.
-    // n = page number t = starting selection
+    // rating filter = rating j = starting index
+    // def selected selection = selected
 */
-void printRestList(int rating, int j, int selected, int[] menuIndices) {
+void printRestList(int rating, int j, int selected, int menuIndices[]) {
     tft.setCursor(0, 0);
     int i = 0; // counter
     while (i < 21 || j < NUM_RESTAURANTS) {
@@ -348,13 +371,13 @@ void printRestList(int rating, int j, int selected, int[] menuIndices) {
         getRestaurantFast(REST_DIST[j].index, &rest);
         int convertedRating = constrain(((rest.rating + 1) / 2), 1, 5);
         tft.setCursor(0, i*FONT_SIZE);
-        if (rest.rating >= RATING && selected != i) {
+        if (convertedRating >= rating && selected != i) {
             tft.setTextColor(TFT_WHITE, TFT_BLACK);
             tft.print(rest.name);
             tft.print('\n');
             i++;
         }
-        else if (rest.rating >= RATING && selected == i) {
+        else if (convertedRating >= rating && selected == i) {
             tft.setTextColor(TFT_BLACK, TFT_WHITE);
             tft.print('\n');
             i++;
@@ -365,6 +388,7 @@ void printRestList(int rating, int j, int selected, int[] menuIndices) {
 }
 
 
+
 /*
     Description: processes the joystick movements to move the selection
     highlight either up or down.
@@ -372,20 +396,19 @@ void printRestList(int rating, int j, int selected, int[] menuIndices) {
     Arguments:
         *selection (uint16_t): pointer to the selected restaurant's index.
 */
-void menuProcess(uint16_t* selection, int* n) {
+void menuProcess(uint16_t* selection, int* n, int menuIndices[], int* prev, int rating) {
     uint16_t joyY = analogRead(JOY_VERT);
     if (joyY < (JOY_CENTER - JOY_DEADZONE)) {
         // scroll one up
         if (*selection > 0) {
             (*selection)--;
-            redrawText(*selection + (*n * (MAX_LIST)), 
-                (*selection + 1) * (*n * (MAX_LIST)));
+            redrawText(menuIndices[*selection], menuIndices[*selection+1]);
         }
         else if (*selection == 0 && *n > 0) {
             (*n)--;
             *selection = MAX_LIST - 1;
-            tft.fillScreen(TFT_BLACK);
-            printRestList(*n, MAX_LIST - 1);
+            printRestList(rating, prev, MAX_LIST - 1, menuIndices);
+
         } 
 
 
@@ -393,19 +416,22 @@ void menuProcess(uint16_t* selection, int* n) {
         // scroll one down
         if (*selection < MAX_LIST - 1) {
             (*selection)++;
-            redrawText(*selection + (*n * (MAX_LIST)), 
-                (*selection - 1) * (*n * (MAX_LIST)));
+            redrawText(menuIndices[*selection], menuIndices[*selection-1]);
         }
         else if (*selection == MAX_LIST - 1) {
             (*n)++;
+            int newStart = menuIndices[*selection] + 1;
             *selection = 0;
             tft.fillScreen(TFT_BLACK);
-            printRestList(*n, 0);
+            *prev = menuIndices[0];
+            printRestList(rating, newStart, 0, menuIndices);
+            
         }
     }
     // for better (less sensitive) scrolling user experience
     delay(25);
 }
+
 
 /*
     Description: highlights the selected restaurant and unhighlights the

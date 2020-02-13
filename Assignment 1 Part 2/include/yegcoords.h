@@ -9,6 +9,8 @@
 #ifndef _YEGCOORDS_H_
 #define _YEGCOORDS_H_
 
+#include <Arduino.h>
+
 
 // ================================= CONSTANTS =================================
 #define MAP_WIDTH 2048
