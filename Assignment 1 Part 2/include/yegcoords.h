@@ -29,5 +29,4 @@ int32_t x_to_lon(int16_t x);
 int16_t lon_to_x(int32_t lon);
 int16_t lat_to_y(int32_t lat);
 
-
 #endif

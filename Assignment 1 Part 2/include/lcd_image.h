@@ -14,7 +14,6 @@
 #ifndef _LCD_IMAGE_H
 #define _LCD_IMAGE_H
 
-
 typedef struct {
     char file_name[50];
     uint16_t ncols;
@@ -36,6 +35,5 @@ void lcd_image_draw(const lcd_image_t *img, MCUFRIEND_kbv *tft,
     uint16_t icol, uint16_t irow,
     uint16_t scol, uint16_t srow,
     uint16_t width, uint16_t height);
-
 
 #endif

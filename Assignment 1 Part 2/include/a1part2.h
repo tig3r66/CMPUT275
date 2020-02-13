@@ -9,7 +9,6 @@
 #ifndef _A1PART1_H_
 #define _A1PART1_H_
 
-
 // ================================= CONSTANTS =================================
 // joystick pins to connect
 #define SD_CS 10
@@ -305,6 +304,5 @@ void custom_swap(T &x, T &y) {
     x = y;
     y = temp;
 }
-
 
 #endif
