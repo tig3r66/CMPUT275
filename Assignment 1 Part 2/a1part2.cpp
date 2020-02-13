@@ -198,6 +198,41 @@ void insertionSort(RestDist array[], int n) {
 
 
 /*
+    This function takes last element as pivot, places the pivot element at its
+    correct position in sorted array, and places all smaller (smaller than
+    pivot) to left of pivot and all greater elements to right of pivot
+*/
+int pivot(RestDist array[], int low, int high) {
+    int pivot = array[high].dist;
+    int i = low - 1;
+
+    for (int j = low; j <= high - 1; j++) {
+        if (array[j].dist <= pivot) {
+            i++;
+            custom_swap(array[i], array[j]);
+        }
+    }
+    custom_swap(array[i + 1], array[high]);
+    return (i + 1);
+}
+
+/*
+    The main function that implements QuickSort
+    array[] --> Array to be sorted,
+    low --> Starting index,
+    high --> Ending index
+*/
+void quickSort(RestDist array[], int low, int high) {
+    if (low < high) {
+        int pi = pivot(array, low, high);
+        // pivot around pi
+        quickSort(array, low, pi - 1);
+        quickSort(array, pi + 1, high);
+    }
+}
+
+
+/*
     Description: allows the user to select a restaurant from the 21 closest
     restaurants to the cursor. Once selected, the map of Edmonton is redrawn
     with the restaurant centered as much as possible on the TFT display.
