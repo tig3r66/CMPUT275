@@ -52,6 +52,8 @@ int main() {
 
     // for the display mode
     uint8_t MODE = 0;
+    // rating filter 
+    int RATING = 1;
     while (true) {
         if (MODE == 0) {
             // joystick button pressed
@@ -63,7 +65,7 @@ int main() {
         } else if (MODE == 1) {
             tft.fillScreen(TFT_BLACK);
             // loops until the joystick button is pressed
-            modeOne();
+            modeOne(RATING);
             MODE = 0;
         }
     }
@@ -238,24 +240,7 @@ void quickSort(RestDist array[], int low, int high) {
     restaurants to the cursor. Once selected, the map of Edmonton is redrawn
     with the restaurant centered as much as possible on the TFT display.
 */
-void modeOne() {
-    readRestData();
-    insertionSort(REST_DIST, NUM_RESTAURANTS);
 
-    int n = 0; // page on (0 as default)
-    printRestList(n, 0); 
-
-    // processing menu
-    uint16_t selection = 0;
-    while (true) {
-        menuProcess(&selection, &n);
-        if (!(digitalRead(JOY_SEL))) {
-            tft.fillRect(MAP_DISP_WIDTH, 0, PADX, MAP_DISP_HEIGHT, TFT_BLACK);
-            redrawOverRest(selection + 21 * n);
-            return;
-        }
-    }
-}
 
 
 /*
@@ -355,20 +340,27 @@ void drawCloseRests(uint8_t radius, uint16_t distance, uint16_t colour) {
     the cursor. Highlights the first entry.
     // n = page number t = starting selection
 */
-void printRestList(int n, int t) {
+void printRestList(int rating, int j, int selected, int[] menuIndices) {
     tft.setCursor(0, 0);
-    uint8_t max = constrain((n+1) * MAX_LIST, 0, NUM_RESTAURANTS); 
-    for (uint8_t i = n * MAX_LIST; i < max; i++) {
+    int i = 0; // counter
+    while (i < 21 || j < NUM_RESTAURANTS) {
         restaurant rest;
-        getRestaurantFast(REST_DIST[i].index, &rest);
-        if (i % 21 == t) {
-            tft.setTextColor(TFT_BLACK, TFT_WHITE);
-            tft.print(rest.name);
-        } else {
+        getRestaurantFast(REST_DIST[j].index, &rest);
+        int convertedRating = constrain(((rest.rating + 1) / 2), 1, 5);
+        tft.setCursor(0, i*FONT_SIZE);
+        if (rest.rating >= RATING && selected != i) {
             tft.setTextColor(TFT_WHITE, TFT_BLACK);
             tft.print(rest.name);
+            tft.print('\n');
+            i++;
         }
-        tft.setCursor(0, (i+1) * FONT_SIZE);
+        else if (rest.rating >= RATING && selected == i) {
+            tft.setTextColor(TFT_BLACK, TFT_WHITE);
+            tft.print('\n');
+            i++;
+        }
+        menuIndices[i] = j;
+        j++;
     }
 }
 
@@ -414,7 +406,6 @@ void menuProcess(uint16_t* selection, int* n) {
     // for better (less sensitive) scrolling user experience
     delay(25);
 }
-
 
 /*
     Description: highlights the selected restaurant and unhighlights the
