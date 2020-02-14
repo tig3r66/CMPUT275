@@ -1,0 +1,62 @@
+Name: Edward (Eddie) Guo
+ID: 1576381
+Partner: Jason Kim
+CMPUT 275, Winter 2020
+
+Assignment 1 Part 2: Restaurant Finder
+
+--------------
+Included Files
+--------------
+    * a1part1.cpp
+    * lcd_image.cpp
+    * yeg_rest_coords.cpp
+    * Makefile
+    * README
+    * include/
+        * a1part1.h
+        * lcd_image.h
+        * yeg_rest_coords.h
+
+-----------
+Accessories
+-----------
+    * Arduino Mega 2560 Board X1
+    * USB cable type A/B X1
+    * 3.5" TFT LCD 480x320 HD color screen module for Arduino UNO & MEGA 2560
+        board with touch panel X1
+    * Dual axis XY Joystick with push switch for Arduino X1
+    * Breadboard X1
+    * Male jumper wire X7
+    * Male-to-female jumper wire X5
+
+--------------------
+Wiring Instructions
+--------------------
+    * Arduino Analog Pin A8 <--> BB <--> Joystick VRy
+    * Arduino Analog Pin A9 <--> BB <--> Joystick VRx
+    * Arduino Digital pin 53 <--> BB <--> Joystick Pin SW
+    * Arduino GND <--> BB GND <--> BB GND <--> Joystick GND
+    * Arduino +5V Pin <--> BB +5V <--> BB +5V <--> Joystick +5V
+
+---------------------
+Running Instructions
+---------------------
+    1. Connect the Arduino with the appropriate componenets (ex: TFT display) to
+    a computer using an A-B style USB cable. Ensure that the Arduino is using
+    the proper serial port (/dev/ttyACMO0).
+
+    2. In the directory containing the files a1part1.cpp and Makefile, use
+    the command "make upload" to upload the code to the Arduino.
+
+-----
+Notes
+-----
+    * a1part1.cpp contains the main program.
+    * a1part1.h declares necessary Arduino pins, constants (ex: TFT screen
+        dimensions), structs, function prototypes, template code for swapping
+        two items in an array, and documentation.
+    * lcd_image.h declares the lcd_image_draw() function, which draws an image
+        from SD card memory onto the TFT display.
+    * lcd_image.cpp contains the implementation of the lcd_image_draw()
+        function.
