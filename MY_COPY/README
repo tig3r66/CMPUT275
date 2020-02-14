@@ -8,15 +8,24 @@ Assignment 1 Part 2: Restaurant Finder
 --------------
 Included Files
 --------------
-    * a1part1.cpp
+Source
+    * a1part2.cpp
     * lcd_image.cpp
+    * yeg_draw.cpp
     * yeg_rest_coords.cpp
+    * yeg_sort.cpp
+
+Include
+    * include/
+        * a1part2.h
+        * lcd_image.h
+        * yeg_draw.h
+        * yeg_rest_coords.h
+        * yeg_sort.h
+
+Miscellaneous
     * Makefile
     * README
-    * include/
-        * a1part1.h
-        * lcd_image.h
-        * yeg_rest_coords.h
 
 -----------
 Accessories
@@ -46,17 +55,18 @@ Running Instructions
     a computer using an A-B style USB cable. Ensure that the Arduino is using
     the proper serial port (/dev/ttyACMO0).
 
-    2. In the directory containing the files a1part1.cpp and Makefile, use
+    2. In the directory containing the files a1part2.cpp and Makefile, use
     the command "make upload" to upload the code to the Arduino.
 
 -----
 Notes
 -----
-    * a1part1.cpp contains the main program.
-    * a1part1.h declares necessary Arduino pins, constants (ex: TFT screen
-        dimensions), structs, function prototypes, template code for swapping
-        two items in an array, and documentation.
-    * lcd_image.h declares the lcd_image_draw() function, which draws an image
-        from SD card memory onto the TFT display.
-    * lcd_image.cpp contains the implementation of the lcd_image_draw()
-        function.
+    * a1part2.cpp is the main program.
+    * Helper files:
+        * lcd_image - routine for drawing an image patch from the SD card to the
+            LCD display.
+        * yeg_draw - implements map redrawing and helper functions.
+        * yeg_rest_coords - converts between x and y positions on the YEG map to
+            latitude and longitude, and vice versa.
+        * yeg_sort - implements of insertion sort and quicksort along with
+            helper functions.
