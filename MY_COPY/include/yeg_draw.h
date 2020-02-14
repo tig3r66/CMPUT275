@@ -18,7 +18,7 @@
 #include <Arduino.h>
 #include <MCUFRIEND_kbv.h>
 
-#include "a1part1.h"
+#include "a1part2.h"
 #include "yeg_rest_coords.h"
 
 

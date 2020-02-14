@@ -15,13 +15,24 @@
 #define _SORTING_H_
 
 #include <Arduino.h>
-#include "a1part1.h"
+#include "a1part2.h"
 
 // =========================== FUNCTION DECLARATIONS ===========================
 /*
     Description: implementation of insertion sort.
 */
 void insertionSort(RestDist array[], int n);
+
+/*
+    Description: implementation of quick sort.
+*/
+void quickSort(RestDist array[], int low, int high);
+
+/*
+    Description: helper partitioning function for quickSort(). Uses the last
+    element in the array as a pivot.
+*/
+int pivot(RestDist array[], int low, int high);
 
 
 // =============================== TEMPLATE CODE ===============================

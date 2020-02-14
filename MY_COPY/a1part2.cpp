@@ -19,7 +19,7 @@
 #include "include/yeg_rest_coords.h"
 #include "include/yeg_sort.h"
 #include "include/yeg_draw.h"
-#include "include/a1part1.h"
+#include "include/a1part2.h"
 
 
 MCUFRIEND_kbv tft;
@@ -195,7 +195,8 @@ void modeZero(uint8_t slow, uint8_t fast) {
 */
 void modeOne() {
     readRestData();
-    insertionSort(REST_DIST, NUM_RESTAURANTS);
+    // insertionSort(REST_DIST, NUM_RESTAURANTS);
+    quickSort(REST_DIST, 0, NUM_RESTAURANTS);
     printRestList();
 
     // processing menu

@@ -18,18 +18,6 @@
 #include <MCUFRIEND_kbv.h>
 
 
-// ======================= EXTERN VARIABLES AND OBJECTS =======================
-// for map redrawing
-extern MCUFRIEND_kbv tft;
-// cursor position variable
-extern int cursorX, cursorY;
-// storing overall map shifts for total map redraws
-extern int shiftX, shiftY;
-
-// variables holding SD card read information
-extern RestDist REST_DIST[NUM_RESTAURANTS];
-
-
 // ================================== STRUCTS ==================================
 // holds restaurant data read from SD card
 struct restaurant {
@@ -100,6 +88,18 @@ struct RestDist {
 
 //number of restuarants listed
 #define MAX_LIST 21
+
+
+// ======================= EXTERN VARIABLES AND OBJECTS =======================
+// for map redrawing
+extern MCUFRIEND_kbv tft;
+// cursor position variable
+extern int cursorX, cursorY;
+// storing overall map shifts for total map redraws
+extern int shiftX, shiftY;
+
+// variables holding SD card read information
+extern RestDist REST_DIST[NUM_RESTAURANTS];
 
 
 // =========================== FUNCTION DECLARATIONS ===========================
