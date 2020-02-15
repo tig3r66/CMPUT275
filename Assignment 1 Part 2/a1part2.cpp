@@ -121,7 +121,7 @@ void lcd_setup() {
     lcdYegDraw(YEG_MIDDLE_X, YEG_MIDDLE_Y, 0, 0, MAP_DISP_WIDTH,
         DISPLAY_HEIGHT);
     // set buttons
-    tft.drawRect(MAP_DISP_WIDTH, 0, DISPLAY_WIDTH, MAP_DISP_HEIGHT, TFT_WHITE)
+    tft.drawRect(MAP_DISP_WIDTH, 0, DISPLAY_WIDTH, MAP_DISP_HEIGHT, TFT_WHITE);
     tft.drawFastHLine(MAP_DISP_WIDTH, MAP_DISP_HEIGHT >> 1, PADX, TFT_WHITE);
     // top button
     tft.drawChar(MAP_DISP_WIDTH+(PADX >> 1), MAP_DISP_HEIGHT >> 2, '1', 
@@ -252,16 +252,16 @@ void modeOne(int RATING) {
     insertionSort(REST_DIST, NUM_RESTAURANTS);
 
     int menuIndices[21];
+    int prev[50]; // temp sol
 
     printRestList(RATING, 0, 0, menuIndices); // inital print of menu
 
     // processing menu
     int n = 0;
     uint16_t selection = 0;
-    int prev = 0;
 
     while (true) {
-        menuProcess(&selection, &n, menuIndices, &prev, RATING);
+        menuProcess(&selection, &n, menuIndices, prev, RATING);
         if (!(digitalRead(JOY_SEL))) {
             tft.fillRect(MAP_DISP_WIDTH, 0, PADX, MAP_DISP_HEIGHT, TFT_BLACK);
             redrawOverRest(menuIndices[selection]);
@@ -319,7 +319,7 @@ void processTouchScreen(int* rating) {
     pinMode(YP, OUTPUT);
     pinMode(XM, OUTPUT);
     int screen_x = map(touch.y, TS_MINX, TS_MAXX, tft.width() - 1, 0);
-    int screen_y = map(touch.x, TS_MINY, TS_MAXY, TFT_HEIGHT-1, 0);
+    int screen_y = map(touch.x, TS_MINY, TS_MAXY, tft.height()-1, 0);
     if (touch.z < MINPRESSURE || touch.z > MAXPRESSURE
         || screen_x > MAP_DISP_WIDTH) {
             return;
@@ -415,7 +415,7 @@ void printRestList(int rating, int j, int selected, int menuIndices[]) {
     Arguments:
         *selection (uint16_t): pointer to the selected restaurant's index.
 */
-void menuProcess(uint16_t* selection, int* n, int menuIndices[], int* prev, int rating) {
+void menuProcess(uint16_t* selection, int* n, int menuIndices[], int prev[], int rating) {
     uint16_t joyY = analogRead(JOY_VERT);
     if (joyY < (JOY_CENTER - JOY_DEADZONE)) {
         // scroll one up
@@ -426,7 +426,7 @@ void menuProcess(uint16_t* selection, int* n, int menuIndices[], int* prev, int 
         else if (*selection == 0 && *n > 0) {
             (*n)--;
             *selection = MAX_LIST - 1;
-            printRestList(rating, prev, MAX_LIST - 1, menuIndices);
+            printRestList(rating, prev[*n-1], MAX_LIST - 1, menuIndices);
 
         } 
 
@@ -442,7 +442,7 @@ void menuProcess(uint16_t* selection, int* n, int menuIndices[], int* prev, int 
             int newStart = menuIndices[*selection] + 1;
             *selection = 0;
             tft.fillScreen(TFT_BLACK);
-            *prev = menuIndices[0];
+            prev[(*n)-1] = menuIndices[0];
             printRestList(rating, newStart, 0, menuIndices);
             
         }
