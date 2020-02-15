@@ -20,6 +20,7 @@
 
 #include "a1part2.h"
 #include "yeg_rest_coords.h"
+#include "lcd_image.h"
 
 
 // =========================== FUNCTION DECLARATIONS ===========================
@@ -64,5 +65,12 @@ void constrainCursor(int* cursorX, int* cursorY);
     physical boundaries of the YEG map.
 */
 void constrainMap(int* shiftX, int* shiftY);
+
+/*
+    Description: helper function for drawMapPatch(). Essentially the
+    lcd_image_draw() except it assumes the image's memory address is &yegImage
+    and the TFT object's memory address is &tft.
+*/
+void lcdYegDraw(int icol, int irow, int scol, int srow, int width, int height);
 
 #endif

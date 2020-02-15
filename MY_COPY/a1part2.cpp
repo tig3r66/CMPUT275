@@ -391,21 +391,3 @@ void redrawText(int current, int prev) {
     tft.setCursor(0, current * FONT_SIZE);
     tft.print(tempRest.name);
 }
-
-
-/*
-    Description: helper function for drawMapPatch(). Essentially the
-    lcd_image_draw() except it assumes the image's memory address is &yegImage
-    and the TFT object's memory address is &tft.
-
-    Arguments:
-        icol (int): image column.
-        irow (int): image row.
-        scol (int): screen column.
-        srow (int): screen row.
-        width (int): width of the patch to draw.
-        height (int): height of the patch to draw.
-*/
-void lcdYegDraw(int icol, int irow, int scol, int srow, int width, int height) {
-    lcd_image_draw(&yegImage, &tft, icol, irow, scol, srow, width, height);
-}

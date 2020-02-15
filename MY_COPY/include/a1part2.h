@@ -16,6 +16,7 @@
 #define _A1PART1_H_
 
 #include <MCUFRIEND_kbv.h>
+#include "lcd_image.h"
 
 
 // ================================== STRUCTS ==================================
@@ -101,6 +102,9 @@ extern int shiftX, shiftY;
 // variables holding SD card read information
 extern RestDist REST_DIST[NUM_RESTAURANTS];
 
+// for map redraws
+extern lcd_image_t yegImage;
+
 
 // =========================== FUNCTION DECLARATIONS ===========================
 // ============================== SETUP FUNCTIONS ==============================
@@ -135,13 +139,6 @@ void modeZero(uint8_t slow, uint8_t fast);
 
 
 // =========================== TFT-RELATED FUNCTIONS ===========================
-/*
-    Description: helper function for drawMapPatch(). Essentially the
-    lcd_image_draw() except it assumes the image's memory address is &yegImage
-    and the TFT object's memory address is &tft.
-*/
-void lcdYegDraw(int icol, int irow, int scol, int srow, int width, int height);
-
 /*
     Description: initial drawing of the names of the closest 21 restaurants to
     the cursor. Highlights the first entry.
