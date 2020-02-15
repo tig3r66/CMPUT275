@@ -124,7 +124,7 @@ void lcd_setup();
     restaurants to the cursor. Once selected, the map of Edmonton is redrawn
     with the restaurant centered as much as possible on the TFT display.
 */
-void modeOne();
+void modeOne(int RATING);
 
 /*
     Description: translates joystick inputs to movement of the cursor on the TFT
@@ -146,7 +146,7 @@ void lcdYegDraw(int icol, int irow, int scol, int srow, int width, int height);
     Description: initial drawing of the names of the closest 21 restaurants to
     the cursor. Highlights the first entry.
 */
-void printRestList();
+void printRestList(int rating, int j, int selected, int[]);
 
 
 // ======================== MEMORY RETRIEVAL FUNCTIONS ========================
@@ -175,7 +175,7 @@ void readRestData();
     Description: processes the joystick movements to move the selection
     highlight either up or down.
 */
-void menuProcess(uint16_t* selection);
+void menuProcess(uint16_t* selection, int* n, int[], int[], int rating);
 
 /*
     Description: highlights the selected restaurant and unhighlights the
@@ -188,11 +188,11 @@ void redrawText(int current, int prev);
     Description: processes touches on the TFT display. When the user touches the
     map, the closest restaurants to the cursor are drawn as blue dots.
 */
-void processTouchScreen();
+void processTouchScreen(int* rating);
 
 /*
     Description: draws dots over restaurants that are closest to the cursor.
 */
-void drawCloseRests(uint8_t radius, uint16_t distance, uint16_t colour);
+void drawCloseRests(uint8_t radius, uint16_t distance, uint16_t colour, int rating);
 
 #endif
