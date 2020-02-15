@@ -94,10 +94,9 @@ void setup() {
         Serial.println("failed!");
         while (true) {}
     }
-    Serial.println("OK!");
 
     // SD card initialization for raw reads
-    Serial.print("Initializing SPI communication...");
+    Serial.print("\nInitializing SPI communication...");
     if (!card.init(SPI_HALF_SPEED, SD_CS)) {
         Serial.println("failed!");
         while (true) {}

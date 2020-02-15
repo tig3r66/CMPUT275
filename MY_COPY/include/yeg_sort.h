@@ -7,7 +7,7 @@
 //  =======================================
 
 /*
-    Implementation of insertion sort and quicksort along with helper functions.
+    Implements of insertion sort and quicksort along with helper functions.
     Please see yeg_sort.cpp for full function documentation.
 */
 
