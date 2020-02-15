@@ -55,18 +55,20 @@ int main() {
 
     // for the display mode
     uint8_t MODE = 0;
+    // rating filter 
+    int RATING = 1;
     while (true) {
         if (MODE == 0) {
             // joystick button pressed
             if (!digitalRead(JOY_SEL)) MODE = 1;
-            // if user touches screen, draw closest restaurants
-            processTouchScreen();
+            // if user touches screen, either draw close resturants or swap sorts/rating
+            processTouchScreen(&RATING);
             // min and max cursor speeds are 0 and CURSOR_SIZE pixels/cycle
             modeZero(0, CURSOR_SIZE);
         } else if (MODE == 1) {
             tft.fillScreen(TFT_BLACK);
             // loops until the joystick button is pressed
-            modeOne();
+            modeOne(RATING);
             MODE = 0;
         }
     }
@@ -105,7 +107,6 @@ void setup() {
     }
 }
 
-
 /*
     Description: intializes TFT display. Portrait display, draws the centre of
     the Edmonton map with the rightmost 60 pixels black, and sets the initial
@@ -120,6 +121,14 @@ void lcd_setup() {
 
     lcdYegDraw(YEG_MIDDLE_X, YEG_MIDDLE_Y, 0, 0, MAP_DISP_WIDTH,
         DISPLAY_HEIGHT);
+    // set buttons
+    tft.drawRect(MAP_DISP_WIDTH, 0, DISPLAY_WIDTH, MAP_DISP_HEIGHT, TFT_WHITE);
+    tft.drawFastHLine(MAP_DISP_WIDTH, MAP_DISP_HEIGHT >> 1, PADX, TFT_WHITE);
+    // top button
+    tft.drawChar(MAP_DISP_WIDTH+(PADX >> 1), MAP_DISP_HEIGHT >> 2, '1', 
+        TFT_WHITE, TFT_BLACK, 2);
+    // bottom button
+
     // setting cursor to middle of YEG map
     cursorX = (MAP_DISP_WIDTH) >> 1;
     cursorY = DISPLAY_HEIGHT >> 1;
@@ -192,19 +201,24 @@ void modeZero(uint8_t slow, uint8_t fast) {
     restaurants to the cursor. Once selected, the map of Edmonton is redrawn
     with the restaurant centered as much as possible on the TFT display.
 */
-void modeOne() {
+void modeOne(int RATING) {
     readRestData();
-    // insertionSort(REST_DIST, NUM_RESTAURANTS);
-    quickSort(REST_DIST, 0, NUM_RESTAURANTS);
-    printRestList();
+    insertionSort(REST_DIST, NUM_RESTAURANTS);
+
+    int menuIndices[21];
+    int prev[50]; // temp sol
+
+    printRestList(RATING, 0, 0, menuIndices); // inital print of menu
 
     // processing menu
+    int n = 0;
     uint16_t selection = 0;
+
     while (true) {
-        menuProcess(&selection);
+        menuProcess(&selection, &n, menuIndices, prev, RATING);
         if (!(digitalRead(JOY_SEL))) {
             tft.fillRect(MAP_DISP_WIDTH, 0, PADX, MAP_DISP_HEIGHT, TFT_BLACK);
-            redrawOverRest(selection);
+            redrawOverRest(menuIndices[selection]);
             return;
         }
     }
@@ -215,17 +229,28 @@ void modeOne() {
     Description: processes touches on the TFT display. When the user touches the
     map, the closest restaurants to the cursor are drawn as blue dots.
 */
-void processTouchScreen() {
+void processTouchScreen(int* rating) {
     TSPoint touch = ts.getPoint();
     pinMode(YP, OUTPUT);
     pinMode(XM, OUTPUT);
     int screen_x = map(touch.y, TS_MINX, TS_MAXX, tft.width() - 1, 0);
+    int screen_y = map(touch.x, TS_MINY, TS_MAXY, tft.height()-1, 0);
     if (touch.z < MINPRESSURE || touch.z > MAXPRESSURE
         || screen_x > MAP_DISP_WIDTH) {
             return;
     } else if (screen_x < MAP_DISP_WIDTH) {
         readRestData();
-        drawCloseRests(3, MAP_DISP_WIDTH + MAP_DISP_HEIGHT, TFT_BLUE);
+        drawCloseRests(3, MAP_DISP_WIDTH + MAP_DISP_HEIGHT, TFT_BLUE, *rating);
+    }
+    else if (screen_x > MAP_DISP_WIDTH && screen_y < (MAP_DISP_HEIGHT >> 1)
+    && screen_y > 0) {
+        (*rating)++;
+        *rating = constrain(*rating % 6, 1, 5);
+
+    }
+    else if (screen_x > MAP_DISP_WIDTH && screen_y < MAP_DISP_HEIGHT
+        && screen_y > (MAP_DISP_HEIGHT >> 1)) {
+        // change sort
     }
 }
 
@@ -305,16 +330,18 @@ void readRestData() {
         distance (int): the restaurants at a desired distance from the cursor.
         colour (uint16_t): the colour of the dot drawn.
 */
-void drawCloseRests(uint8_t radius, uint16_t distance, uint16_t colour) {
+void drawCloseRests(uint8_t radius, uint16_t distance, uint16_t colour, int rating) {
     int sidePad = 3;
     for (int i = 0; i < NUM_RESTAURANTS; i++) {
         restaurant tempRest;
         getRestaurant(REST_DIST[i].index, &tempRest);
         int16_t scol = lon_to_x(tempRest.lon) - YEG_MIDDLE_X - shiftX;
         int16_t srow = lat_to_y(tempRest.lat) - YEG_MIDDLE_Y - shiftY;
+        int convertedRating = constrain(((tempRest.rating + 1) / 2), 1, 5);
 
         if (scol < MAP_DISP_WIDTH - sidePad && srow < MAP_DISP_HEIGHT - sidePad
-            && srow >= 0 && scol >= 0 && REST_DIST[i].dist <= distance) {
+            && srow >= 0 && scol >= 0 && REST_DIST[i].dist <= distance 
+            && convertedRating >= rating) {
                 tft.fillCircle(scol, srow, radius, colour);
         }
     }
@@ -324,20 +351,30 @@ void drawCloseRests(uint8_t radius, uint16_t distance, uint16_t colour) {
 /*
     Description: initial drawing of the names of the closest 21 restaurants to
     the cursor. Highlights the first entry.
+    // rating filter = rating j = starting index
+    // def selected selection = selected
 */
-void printRestList() {
+void printRestList(int rating, int j, int selected, int menuIndices[]) {
     tft.setCursor(0, 0);
-    for (uint8_t i = 0; i < MAX_LIST; i++) {
+    int i = 0; // counter
+    while (i < 21 || j < NUM_RESTAURANTS) {
         restaurant rest;
-        getRestaurantFast(REST_DIST[i].index, &rest);
-        if (i == 0) {
-            tft.setTextColor(TFT_BLACK, TFT_WHITE);
-            tft.print(rest.name);
-        } else {
+        getRestaurantFast(REST_DIST[j].index, &rest);
+        int convertedRating = constrain(((rest.rating + 1) / 2), 1, 5);
+        tft.setCursor(0, i*FONT_SIZE);
+        if (convertedRating >= rating && selected != i) {
             tft.setTextColor(TFT_WHITE, TFT_BLACK);
             tft.print(rest.name);
+            tft.print('\n');
+            i++;
         }
-        tft.setCursor(0, (i+1) * FONT_SIZE);
+        else if (convertedRating >= rating && selected == i) {
+            tft.setTextColor(TFT_BLACK, TFT_WHITE);
+            tft.print('\n');
+            i++;
+        }
+        menuIndices[i] = j;
+        j++;
     }
 }
 
@@ -349,19 +386,36 @@ void printRestList() {
     Arguments:
         *selection (uint16_t): pointer to the selected restaurant's index.
 */
-void menuProcess(uint16_t* selection) {
+void menuProcess(uint16_t* selection, int* n, int menuIndices[], int prev[], int rating) {
     uint16_t joyY = analogRead(JOY_VERT);
     if (joyY < (JOY_CENTER - JOY_DEADZONE)) {
         // scroll one up
         if (*selection > 0) {
             (*selection)--;
-            redrawText(*selection, *selection + 1);
+            redrawText(menuIndices[*selection], menuIndices[*selection+1]);
         }
+        else if (*selection == 0 && *n > 0) {
+            (*n)--;
+            *selection = MAX_LIST - 1;
+            printRestList(rating, prev[*n-1], MAX_LIST - 1, menuIndices);
+
+        } 
+
+
     } else if (joyY > (JOY_CENTER + JOY_DEADZONE)) {
         // scroll one down
         if (*selection < MAX_LIST - 1) {
             (*selection)++;
-            redrawText(*selection, *selection - 1);
+            redrawText(menuIndices[*selection], menuIndices[*selection-1]);
+        }
+        else if (*selection == MAX_LIST - 1) {
+            (*n)++;
+            int newStart = menuIndices[*selection] + 1;
+            *selection = 0;
+            tft.fillScreen(TFT_BLACK);
+            prev[(*n)-1] = menuIndices[0];
+            printRestList(rating, newStart, 0, menuIndices);
+            
         }
     }
     // for better (less sensitive) scrolling user experience
@@ -382,13 +436,13 @@ void redrawText(int current, int prev) {
     restaurant tempRest;
     getRestaurantFast(REST_DIST[prev].index, &tempRest);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
-    tft.setCursor(0, prev * FONT_SIZE);
+    tft.setCursor(0, prev % 21 * FONT_SIZE);
     tft.print(tempRest.name);
 
     // get current name and print it
     getRestaurantFast(REST_DIST[current].index, &tempRest);
     tft.setTextColor(TFT_BLACK, TFT_WHITE);
-    tft.setCursor(0, current * FONT_SIZE);
+    tft.setCursor(0, current % 21 * FONT_SIZE);
     tft.print(tempRest.name);
 }
 
