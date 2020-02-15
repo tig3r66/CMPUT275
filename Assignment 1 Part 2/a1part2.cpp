@@ -58,7 +58,7 @@ int main() {
         if (MODE == 0) {
             // joystick button pressed
             if (!digitalRead(JOY_SEL)) MODE = 1;
-            // if user touches screen, draw closest restaurants
+            // if user touches screen, either draw close resturants or swap sorts/rating
             processTouchScreen(&RATING);
             // min and max cursor speeds are 0 and CURSOR_SIZE pixels/cycle
             modeZero(0, CURSOR_SIZE);
@@ -331,7 +331,7 @@ void processTouchScreen(int* rating) {
     && screen_y > 0) {
         (*rating)++;
         *rating = constrain(*rating % 6, 1, 5);
-        
+
     }
     else if (screen_x > MAP_DISP_WIDTH && screen_y < MAP_DISP_HEIGHT
         && screen_y > (MAP_DISP_HEIGHT >> 1)) {
