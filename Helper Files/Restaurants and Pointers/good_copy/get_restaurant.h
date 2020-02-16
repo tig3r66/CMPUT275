@@ -1,6 +1,8 @@
 #ifndef _GET_RESTAURANT_H
 #define _GET_RESTAURANT_H
 
+#include "rest_struct.h"
+
 #define SD_CS 10
 
 // physical dimensions of the tft display (# of pixels)
