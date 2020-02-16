@@ -20,48 +20,48 @@
 */
 void redrawMap() {
     // image (not screen) position of cursor on the YEG map
-    int icol = YEG_MIDDLE_X + cursorX + shiftX;
-    int irow = YEG_MIDDLE_Y + cursorY + shiftY;
+    int icol = YEG_MIDDLE_X + yeg.cursorX + yeg.shiftX;
+    int irow = YEG_MIDDLE_Y + yeg.cursorY + yeg.shiftY;
     // PAD accounts for integer division by 2 (i.e., cursor has odd sidelength)
     uint8_t PAD = 0;
     if (CURSOR_SIZE & 1) PAD = 1;
 
-    int leftShift = constrain(icol - MAP_DISP_WIDTH - cursorX, 0,
+    int leftShift = constrain(icol - MAP_DISP_WIDTH - yeg.cursorX, 0,
         YEG_SIZE - MAP_DISP_WIDTH);
-    int upShift = constrain(irow - cursorY - MAP_DISP_HEIGHT, 0,
+    int upShift = constrain(irow - yeg.cursorY - MAP_DISP_HEIGHT, 0,
         YEG_SIZE - MAP_DISP_HEIGHT);
-    int rightShift = constrain(icol + MAP_DISP_WIDTH - cursorX, 0,
+    int rightShift = constrain(icol + MAP_DISP_WIDTH - yeg.cursorX, 0,
         YEG_SIZE - MAP_DISP_WIDTH);
-    int downShift = constrain(irow - cursorY + MAP_DISP_HEIGHT, 0,
+    int downShift = constrain(irow - yeg.cursorY + MAP_DISP_HEIGHT, 0,
         YEG_SIZE - MAP_DISP_HEIGHT);
 
     // screen (not image) position of cursor on the YEG map
-    int scrnX = YEG_MIDDLE_X + cursorX + shiftX - (CURSOR_SIZE >> 1);
-    int scrnY = YEG_MIDDLE_Y + cursorY + shiftY - (CURSOR_SIZE >> 1);
+    int scrnX = YEG_MIDDLE_X + yeg.cursorX + yeg.shiftX - (CURSOR_SIZE >> 1);
+    int scrnY = YEG_MIDDLE_Y + yeg.cursorY + yeg.shiftY - (CURSOR_SIZE >> 1);
 
     // (CURSOR_SIZE << 1) leaves buffer for user at the previous map location
-    if (cursorX == (CURSOR_SIZE >> 1) && scrnX != 0) {
+    if (yeg.cursorX == (CURSOR_SIZE >> 1) && scrnX != 0) {
         // left side of screen reached
-        lcdYegDraw(leftShift, irow - cursorY, 0, 0, MAP_DISP_WIDTH,
+        lcdYegDraw(leftShift, irow - yeg.cursorY, 0, 0, MAP_DISP_WIDTH,
             MAP_DISP_HEIGHT);
-        helperMove(&shiftX, "left");
-    } else if (cursorY == (CURSOR_SIZE >> 1) && scrnY != 0) {
+        helperMove(&yeg.shiftX, "left");
+    } else if (yeg.cursorY == (CURSOR_SIZE >> 1) && scrnY != 0) {
         // top of screen reached
-        lcdYegDraw(icol - cursorX, upShift, 0, 0, MAP_DISP_WIDTH,
+        lcdYegDraw(icol - yeg.cursorX, upShift, 0, 0, MAP_DISP_WIDTH,
             MAP_DISP_HEIGHT);
-        helperMove(&shiftY, "up");
-    } else if (cursorX == MAP_DISP_WIDTH - (CURSOR_SIZE >> 1) - PAD
+        helperMove(&yeg.shiftY, "up");
+    } else if (yeg.cursorX == MAP_DISP_WIDTH - (CURSOR_SIZE >> 1) - PAD
         && scrnX != SHIFTED_BORDER) {
             // right side of sign reached
-            lcdYegDraw(rightShift, irow - cursorY, 0, 0, MAP_DISP_WIDTH,
+            lcdYegDraw(rightShift, irow - yeg.cursorY, 0, 0, MAP_DISP_WIDTH,
                 MAP_DISP_HEIGHT);
-            helperMove(&shiftX, "right");
-    } else if (cursorY == MAP_DISP_HEIGHT - (CURSOR_SIZE >> 1) - PAD
+            helperMove(&yeg.shiftX, "right");
+    } else if (yeg.cursorY == MAP_DISP_HEIGHT - (CURSOR_SIZE >> 1) - PAD
         && scrnY != SHIFTED_BORDER) {
             // bottom of screen reached
-            lcdYegDraw(icol - cursorX, downShift, 0, 0,
+            lcdYegDraw(icol - yeg.cursorX, downShift, 0, 0,
                 MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
-            helperMove(&shiftY, "down");
+            helperMove(&yeg.shiftY, "down");
     }
 }
 
@@ -76,7 +76,7 @@ void redrawMap() {
 void redrawOverRest(uint16_t selection) {
     // storing latitude and longitude info for the selected restaurant
     restaurant temp;
-    getRestaurantFast(REST_DIST[selection].index, &temp);
+    getRestaurantFast(cache.REST_DIST[selection].index, &temp);
 
     // getting and constraining the x and y coordinates of the restaurant to the
     // map dimensions
@@ -95,12 +95,12 @@ void redrawOverRest(uint16_t selection) {
 
     // drawing the map and resetting cursor and shift positions
     lcdYegDraw(xEdge, yEdge, 0, 0, MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
-    cursorX = xPos - xEdge;
-    cursorY = yPos - yEdge;
-    constrainCursor(&cursorX, &cursorY);
+    yeg.cursorX = xPos - xEdge;
+    yeg.cursorY = yPos - yEdge;
+    constrainCursor(&yeg.cursorX, &yeg.cursorY);
     redrawCursor(TFT_RED);
-    shiftX = xEdge - YEG_MIDDLE_X;
-    shiftY = yEdge - YEG_MIDDLE_Y;
+    yeg.shiftX = xEdge - YEG_MIDDLE_X;
+    yeg.shiftY = yEdge - YEG_MIDDLE_Y;
 }
 
 
@@ -115,17 +115,19 @@ void redrawOverRest(uint16_t selection) {
 */
 void drawMapPatch(int cursorX0, int cursorY0) {
     // storing change in cursor position
-    int diffX = cursorX - cursorX0;
-    int diffY = cursorY - cursorY0;
+    int diffX = yeg.cursorX - cursorX0;
+    int diffY = yeg.cursorY - cursorY0;
     // storing appropriate irow and icol positions
-    int icolPos = YEG_MIDDLE_X + cursorX0 + (CURSOR_SIZE >> 1) + diffX + shiftX;
-    int icolNeg = YEG_MIDDLE_X + cursorX0 - (CURSOR_SIZE >> 1) + shiftX;
-    int irowPos = YEG_MIDDLE_Y + cursorY0 + (CURSOR_SIZE >> 1) + diffY + shiftY;
-    int irowNeg = YEG_MIDDLE_Y + cursorY0 - (CURSOR_SIZE >> 1) + shiftY;
+    int icolPos = YEG_MIDDLE_X + cursorX0 + (CURSOR_SIZE >> 1)
+        + diffX + yeg.shiftX;
+    int icolNeg = YEG_MIDDLE_X + cursorX0 - (CURSOR_SIZE >> 1) + yeg.shiftX;
+    int irowPos = YEG_MIDDLE_Y + cursorY0 + (CURSOR_SIZE >> 1)
+        + diffY + yeg.shiftY;
+    int irowNeg = YEG_MIDDLE_Y + cursorY0 - (CURSOR_SIZE >> 1) + yeg.shiftY;
     // storing appropriate srow and scol positions
-    int scolPos = cursorX + (CURSOR_SIZE >> 1);
+    int scolPos = yeg.cursorX + (CURSOR_SIZE >> 1);
     int scolNeg = cursorX0 - (CURSOR_SIZE >> 1);
-    int srowPos = cursorY + (CURSOR_SIZE >> 1);
+    int srowPos = yeg.cursorY + (CURSOR_SIZE >> 1);
     int srowNeg = cursorY0 - (CURSOR_SIZE >> 1);
     // PAD accounts for integer division by 2 (i.e., cursor has odd sidelength)
     uint8_t PAD = 0;
@@ -175,16 +177,16 @@ void drawMapPatch(int cursorX0, int cursorY0) {
 void helperMove(int* shiftLen, const char* mainDir) {
     if (strcmp(mainDir, "left") == 0) {
         *shiftLen -= MAP_DISP_WIDTH;
-        cursorX += MAP_DISP_WIDTH - (CURSOR_SIZE << 1);
+        yeg.cursorX += MAP_DISP_WIDTH - (CURSOR_SIZE << 1);
     } else if (strcmp(mainDir, "right") == 0) {
         *shiftLen += MAP_DISP_WIDTH;
-        cursorX -= MAP_DISP_WIDTH - (CURSOR_SIZE << 1);
+        yeg.cursorX -= MAP_DISP_WIDTH - (CURSOR_SIZE << 1);
     } else if (strcmp(mainDir, "up") == 0) {
         *shiftLen -= MAP_DISP_HEIGHT;
-        cursorY += MAP_DISP_HEIGHT - (CURSOR_SIZE << 1);
+        yeg.cursorY += MAP_DISP_HEIGHT - (CURSOR_SIZE << 1);
     } else if (strcmp(mainDir, "down") == 0) {
         *shiftLen += MAP_DISP_HEIGHT;
-        cursorY -= MAP_DISP_HEIGHT - (CURSOR_SIZE << 1);
+        yeg.cursorY -= MAP_DISP_HEIGHT - (CURSOR_SIZE << 1);
     }
 }
 
@@ -196,8 +198,8 @@ void helperMove(int* shiftLen, const char* mainDir) {
         colour (uint16_t): the colour of the cursor.
 */
 void redrawCursor(uint16_t colour) {
-    tft.fillRect(cursorX - (CURSOR_SIZE >> 1), cursorY - (CURSOR_SIZE >> 1),
-        CURSOR_SIZE, CURSOR_SIZE, colour);
+    tft.fillRect(yeg.cursorX - (CURSOR_SIZE >> 1),
+        yeg.cursorY - (CURSOR_SIZE >> 1), CURSOR_SIZE, CURSOR_SIZE, colour);
 }
 
 

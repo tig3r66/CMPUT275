@@ -29,15 +29,11 @@ TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 
 lcd_image_t yegImage = { "yeg-big.lcd", YEG_SIZE, YEG_SIZE };
 
-// variables holding SD card read information
-restaurant TEMP_BLOCK[8];
-RestDist REST_DIST[NUM_RESTAURANTS];
-uint32_t PREV_BLOCK_NUM = 0;
+// struct holding SD card read information
+RestCache cache;
 
 // cursor position variable
-int cursorX, cursorY;
-// storing overall map shifts for total map redraws
-int shiftX = 0, shiftY = 0;
+MapView yeg;
 
 
 /*
@@ -96,7 +92,7 @@ void setup() {
     }
 
     // SD card initialization for raw reads
-    Serial.print("\nInitializing SPI communication...");
+    Serial.print("\n\rInitializing SPI communication...");
     if (!card.init(SPI_HALF_SPEED, SD_CS)) {
         Serial.println("failed!");
         while (true) {}
@@ -121,8 +117,8 @@ void lcd_setup() {
     lcdYegDraw(YEG_MIDDLE_X, YEG_MIDDLE_Y, 0, 0, MAP_DISP_WIDTH,
         DISPLAY_HEIGHT);
     // setting cursor to middle of YEG map
-    cursorX = (MAP_DISP_WIDTH) >> 1;
-    cursorY = DISPLAY_HEIGHT >> 1;
+    yeg.cursorX = (MAP_DISP_WIDTH) >> 1;
+    yeg.cursorY = DISPLAY_HEIGHT >> 1;
     redrawCursor(TFT_RED);
 }
 
@@ -143,30 +139,30 @@ void modeZero(uint8_t slow, uint8_t fast) {
     uint16_t EPSILON_NEG = JOY_CENTER - JOY_DEADZONE;
     uint16_t MAX_STICK = (1 << 10) - 1;
     // store current cursor position
-    int cursorX0 = cursorX, cursorY0 = cursorY;
+    int cursorX0 = yeg.cursorX, cursorY0 = yeg.cursorY;
 
     // x movement
     if (xVal > EPSILON_POS) {
-        cursorX -= map(xVal, EPSILON_POS, MAX_STICK, slow, fast);
+        yeg.cursorX -= map(xVal, EPSILON_POS, MAX_STICK, slow, fast);
     } else if (xVal < EPSILON_NEG) {
-        cursorX += map(xVal, 0, EPSILON_NEG, fast, slow);
+        yeg.cursorX += map(xVal, 0, EPSILON_NEG, fast, slow);
     }
 
     // y movement
     if (yVal < EPSILON_NEG) {
-        cursorY -= map(yVal, 0, EPSILON_NEG, fast, slow);
+        yeg.cursorY -= map(yVal, 0, EPSILON_NEG, fast, slow);
     } else if (yVal > EPSILON_POS) {
-        cursorY += map(yVal, EPSILON_POS, MAX_STICK, slow, fast);
+        yeg.cursorY += map(yVal, EPSILON_POS, MAX_STICK, slow, fast);
     }
 
-    if (cursorX0 != cursorX || cursorY != cursorY0) {
+    if (cursorX0 != yeg.cursorX || yeg.cursorY != cursorY0) {
         // constrain cursor and display within the map then redraw the map patch
-        constrainCursor(&cursorX, &cursorY);
-        constrainMap(&shiftX, &shiftY);
+        constrainCursor(&yeg.cursorX, &yeg.cursorY);
+        constrainMap(&yeg.shiftX, &yeg.shiftY);
         drawMapPatch(cursorX0, cursorY0);
         // screen (not image) position of cursor on the YEG map
-        int icol = YEG_MIDDLE_X + cursorX + shiftX - (CURSOR_SIZE >> 1);
-        int irow = YEG_MIDDLE_Y + cursorY + shiftY - (CURSOR_SIZE >> 1);
+        int icol = YEG_MIDDLE_X + yeg.cursorX + yeg.shiftX - (CURSOR_SIZE >> 1);
+        int irow = YEG_MIDDLE_Y + yeg.cursorY + yeg.shiftY - (CURSOR_SIZE >> 1);
 
         // PAD accounts for integer division by 2 (i.e., cursor has odd
         // sidelength)
@@ -194,8 +190,8 @@ void modeZero(uint8_t slow, uint8_t fast) {
 */
 void modeOne() {
     readRestData();
-    // insertionSort(REST_DIST, NUM_RESTAURANTS);
-    quickSort(REST_DIST, 0, NUM_RESTAURANTS);
+    // insertionSort(cache.REST_DIST, NUM_RESTAURANTS);
+    quickSort(cache.REST_DIST, 0, NUM_RESTAURANTS-1);
     printRestList();
 
     // processing menu
@@ -232,8 +228,8 @@ void processTouchScreen() {
 
 /*
     Description: fast implementation of getRestaurant(). Reads data from an SD
-    card into the global restaurant struct TEMP_BLOCK then stores this
-    information into a smaller global struct REST_DIST. Reads a block once
+    card into the global cache struct member TEMP_BLOCK then stores this
+    information into a smaller global cache member REST_DIST. Reads a block once
     for consecutive restaurants on the same block.
 
     Arguments:
@@ -242,26 +238,26 @@ void processTouchScreen() {
 */
 void getRestaurantFast(uint16_t restIndex, restaurant* restPtr) {
     uint32_t blockNum = REST_START_BLOCK + restIndex / 8;
-    if (blockNum != PREV_BLOCK_NUM) {
+    if (blockNum != cache.PREV_BLOCK_NUM) {
         while (!card.readBlock(blockNum,
-            reinterpret_cast<uint8_t*>(TEMP_BLOCK))) {
+            reinterpret_cast<uint8_t*>(cache.TEMP_BLOCK))) {
                 Serial.println("Read block failed, trying again.");
         }
     }
-    *restPtr = TEMP_BLOCK[restIndex % 8];
-    PREV_BLOCK_NUM = blockNum;
+    *restPtr = cache.TEMP_BLOCK[restIndex % 8];
+    cache.PREV_BLOCK_NUM = blockNum;
 
-    // storing TEMP_BLOCK information in a smaller global struct
-    REST_DIST[restIndex].index = restIndex;
+    // storing TEMP_BLOCK information in a smaller struct
+    cache.REST_DIST[restIndex].index = restIndex;
 
     // image (not screen) position of cursor on the YEG map
-    int icol = YEG_MIDDLE_X + cursorX + shiftX;
-    int irow = YEG_MIDDLE_Y + cursorY + shiftY;
+    int icol = YEG_MIDDLE_X + yeg.cursorX + yeg.shiftX;
+    int irow = YEG_MIDDLE_Y + yeg.cursorY + yeg.shiftY;
 
-    // calculating Manhattan distance and storing into global REST_DIST struct
+    // calculating Manhattan distance and storing into cache member REST_DIST
     int manDist = abs(icol - lon_to_x(restPtr->lon))
         + abs(irow - lat_to_y(restPtr->lat));
-    REST_DIST[restIndex].dist = manDist;
+    cache.REST_DIST[restIndex].dist = manDist;
 }
 
 
@@ -276,14 +272,14 @@ void getRestaurantFast(uint16_t restIndex, restaurant* restPtr) {
 */
 void getRestaurant(uint16_t restIndex, restaurant* restPtr) {
     uint32_t blockNum = REST_START_BLOCK + restIndex / 8;
-    if (blockNum != PREV_BLOCK_NUM) {
+    if (blockNum != cache.PREV_BLOCK_NUM) {
         while (!card.readBlock(blockNum,
-            reinterpret_cast<uint8_t*>(TEMP_BLOCK))) {
+            reinterpret_cast<uint8_t*>(cache.TEMP_BLOCK))) {
                 Serial.println("Read block failed, trying again.");
         }
     }
-    *restPtr = TEMP_BLOCK[restIndex % 8];
-    PREV_BLOCK_NUM = blockNum;
+    *restPtr = cache.TEMP_BLOCK[restIndex % 8];
+    cache.PREV_BLOCK_NUM = blockNum;
 }
 
 
@@ -292,7 +288,7 @@ void getRestaurant(uint16_t restIndex, restaurant* restPtr) {
 */
 void readRestData() {
     for (int i = 0; i < NUM_RESTAURANTS; i++) {
-        getRestaurantFast(i, TEMP_BLOCK);
+        getRestaurantFast(i, cache.TEMP_BLOCK);
     }
 }
 
@@ -309,12 +305,12 @@ void drawCloseRests(uint8_t radius, uint16_t distance, uint16_t colour) {
     int sidePad = 3;
     for (int i = 0; i < NUM_RESTAURANTS; i++) {
         restaurant tempRest;
-        getRestaurant(REST_DIST[i].index, &tempRest);
-        int16_t scol = lon_to_x(tempRest.lon) - YEG_MIDDLE_X - shiftX;
-        int16_t srow = lat_to_y(tempRest.lat) - YEG_MIDDLE_Y - shiftY;
+        getRestaurant(cache.REST_DIST[i].index, &tempRest);
+        int16_t scol = lon_to_x(tempRest.lon) - YEG_MIDDLE_X - yeg.shiftX;
+        int16_t srow = lat_to_y(tempRest.lat) - YEG_MIDDLE_Y - yeg.shiftY;
 
         if (scol < MAP_DISP_WIDTH - sidePad && srow < MAP_DISP_HEIGHT - sidePad
-            && srow >= 0 && scol >= 0 && REST_DIST[i].dist <= distance) {
+            && srow >= 0 && scol >= 0 && cache.REST_DIST[i].dist <= distance) {
                 tft.fillCircle(scol, srow, radius, colour);
         }
     }
@@ -329,7 +325,7 @@ void printRestList() {
     tft.setCursor(0, 0);
     for (uint8_t i = 0; i < MAX_LIST; i++) {
         restaurant rest;
-        getRestaurantFast(REST_DIST[i].index, &rest);
+        getRestaurantFast(cache.REST_DIST[i].index, &rest);
         if (i == 0) {
             tft.setTextColor(TFT_BLACK, TFT_WHITE);
             tft.print(rest.name);
@@ -380,13 +376,13 @@ void menuProcess(uint16_t* selection) {
 void redrawText(int current, int prev) {
     // drawing over prev and reprinting it
     restaurant tempRest;
-    getRestaurantFast(REST_DIST[prev].index, &tempRest);
+    getRestaurantFast(cache.REST_DIST[prev].index, &tempRest);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.setCursor(0, prev * FONT_SIZE);
     tft.print(tempRest.name);
 
     // get current name and print it
-    getRestaurantFast(REST_DIST[current].index, &tempRest);
+    getRestaurantFast(cache.REST_DIST[current].index, &tempRest);
     tft.setTextColor(TFT_BLACK, TFT_WHITE);
     tft.setCursor(0, current * FONT_SIZE);
     tft.print(tempRest.name);

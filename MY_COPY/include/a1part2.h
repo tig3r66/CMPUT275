@@ -19,23 +19,6 @@
 #include "lcd_image.h"
 
 
-// ================================== STRUCTS ==================================
-// holds restaurant data read from SD card
-struct restaurant {
-    int32_t lat;
-    int32_t lon;
-    // from 0 to 10
-    uint8_t rating;
-    char name[55];
-};
-
-// holds index of restaurant and Manhattan distance of restaurant data from
-// data from the SD card
-struct RestDist {
-    uint16_t index;
-    uint16_t dist;
-};
-
 // ================================= CONSTANTS =================================
 // joystick pins to connect
 #define SD_CS 10
@@ -91,19 +74,53 @@ struct RestDist {
 #define MAX_LIST 21
 
 
+// ================================== STRUCTS ==================================
+// holds restaurant data read from SD card
+struct restaurant {
+    int32_t lat;
+    int32_t lon;
+    // from 0 to 10
+    uint8_t rating;
+    char name[55];
+};
+
+// holds index of restaurant and Manhattan distance of restaurant data from
+// data from the SD card
+struct RestDist {
+    uint16_t index;
+    uint16_t dist;
+};
+
+// DESCRIPTION LATER
+struct RestCache {
+    restaurant TEMP_BLOCK[8];
+    RestDist REST_DIST[NUM_RESTAURANTS];
+    uint32_t PREV_BLOCK_NUM = 0;
+};
+
+struct MapView {
+    int cursorX;
+    int cursorY;
+    int shiftX = 0;
+    int shiftY = 0;
+};
+
+
 // ======================= EXTERN VARIABLES AND OBJECTS =======================
 // for map redrawing
 extern MCUFRIEND_kbv tft;
-// cursor position variable
-extern int cursorX, cursorY;
-// storing overall map shifts for total map redraws
-extern int shiftX, shiftY;
+
+// for SD card information
+extern RestCache cache;
 
 // variables holding SD card read information
 extern RestDist REST_DIST[NUM_RESTAURANTS];
 
 // for map redraws
 extern lcd_image_t yegImage;
+
+// for map cursor position
+extern MapView yeg;
 
 
 // =========================== FUNCTION DECLARATIONS ===========================
@@ -149,7 +166,7 @@ void printRestList();
 // ======================== MEMORY RETRIEVAL FUNCTIONS ========================
 /*
     Description: fast implementation of getRestaurant(). Reads data from an SD
-    card into the global restaurant struct TEMP_BLOCK then stores this
+    card into the global cache struct member TEMP_BLOCK then stores this
     information into a smaller global struct REST_DIST. Reads a block once
     for consecutive restaurants on the same block.
 */
