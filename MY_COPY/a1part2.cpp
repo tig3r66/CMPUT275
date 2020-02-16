@@ -13,7 +13,6 @@
 #include <SPI.h>
 #include <SD.h>
 #include <TouchScreen.h>
-#include <stdlib.h>
 
 #include "include/lcd_image.h"
 #include "include/yeg_rest_coords.h"
