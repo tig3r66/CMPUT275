@@ -92,13 +92,14 @@ struct RestDist {
     uint16_t dist;
 };
 
-// DESCRIPTION LATER
+// temporary cache for reading restaurants from the SD card
 struct RestCache {
     restaurant TEMP_BLOCK[8];
     RestDist REST_DIST[NUM_RESTAURANTS];
     uint32_t PREV_BLOCK_NUM = 0;
 };
 
+// stores the cursor's position on the map
 struct MapView {
     int cursorX;
     int cursorY;
@@ -108,7 +109,7 @@ struct MapView {
 
 
 // ======================= EXTERN VARIABLES AND OBJECTS =======================
-// for map redrawing
+// for TFT display-related methods
 extern MCUFRIEND_kbv tft;
 
 // for SD card information
@@ -146,7 +147,7 @@ void lcd_setup();
     restaurants to the cursor. Once selected, the map of Edmonton is redrawn
     with the restaurant centered as much as possible on the TFT display.
 */
-void modeOne();
+void modeOne(uint8_t sortMode);
 
 /*
     Description: translates joystick inputs to movement of the cursor on the TFT
@@ -174,6 +175,13 @@ void printWord(const char* word);
 */
 void drawOptionButtons(uint8_t rating, uint8_t sortMode, uint8_t thickness,
     uint16_t colour);
+
+
+/*
+    Description: times quicksort and insertion sort algorithms as they sort the
+    restaurants based on Manhattan distance from the cursor position.
+*/
+void sortTimer(uint8_t sortMode);
 
 
 // ======================== MEMORY RETRIEVAL FUNCTIONS ========================

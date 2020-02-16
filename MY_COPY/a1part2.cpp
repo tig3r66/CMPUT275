@@ -51,7 +51,7 @@ int main() {
 
     // for main display mode and restaurant rating filter
     uint8_t MODE = 0, RATING = 1;
-    // 0 = quicksort, 1 = insertionsort
+    // 0 = quicksort, 1 = insertionsort, 2 = obth
     uint8_t SORT_MODE = 0;
     // initial options
     drawOptionButtons(RATING, SORT_MODE, 3, TFT_RED);
@@ -67,7 +67,8 @@ int main() {
         } else if (MODE == 1) {
             tft.fillScreen(TFT_BLACK);
             // loops until the joystick button is pressed
-            modeOne();
+            modeOne(SORT_MODE);
+            drawOptionButtons(RATING, SORT_MODE, 3, TFT_RED);
             MODE = 0;
         }
     }
@@ -192,11 +193,12 @@ void modeZero(uint8_t slow, uint8_t fast) {
     Description: allows the user to select a restaurant from the 21 closest
     restaurants to the cursor. Once selected, the map of Edmonton is redrawn
     with the restaurant centered as much as possible on the TFT display.
+
+    Arguments:
+        sortMode (uint8_t): the selected sorting algorithm.
 */
-void modeOne() {
-    readRestData();
-    // insertionSort(cache.REST_DIST, NUM_RESTAURANTS);
-    quickSort(cache.REST_DIST, 0, NUM_RESTAURANTS-1);
+void modeOne(uint8_t sortMode) {
+    sortTimer(sortMode);
     printRestList();
 
     // processing menu
@@ -208,6 +210,48 @@ void modeOne() {
             redrawOverRest(selection);
             return;
         }
+    }
+}
+
+
+/*
+    Description: times quicksort and insertion sort algorithms as they sort the
+    restaurants based on Manhattan distance from the cursor position.
+
+    Arguments:
+        sortMode (uint8_t): the selected sorting algorithm.
+*/
+void sortTimer(uint8_t sortMode) {
+    readRestData();
+    if (sortMode == 0) {
+        uint16_t start = millis();
+        quickSort(cache.REST_DIST, 0, NUM_RESTAURANTS-1);
+        uint16_t end  = millis();
+        Serial.print("Quicksort running time: ");
+        Serial.print(end - start);
+        Serial.println(" ms");
+    } else if (sortMode == 1) {
+        uint16_t start = millis();
+        insertionSort(cache.REST_DIST, NUM_RESTAURANTS);
+        uint16_t end  = millis();
+        Serial.print("Insertion sort running time: ");
+        Serial.print(end - start);
+        Serial.println(" ms");
+    } else if (sortMode == 2) {
+        uint16_t qstart = millis();
+        quickSort(cache.REST_DIST, 0, NUM_RESTAURANTS-1);
+        uint16_t qend  = millis();
+        Serial.print("Quicksort running time: ");
+        Serial.print(qend - qstart);
+        Serial.println(" ms");
+
+        readRestData();
+        uint16_t istart = millis();
+        insertionSort(cache.REST_DIST, NUM_RESTAURANTS);
+        uint16_t iend  = millis();
+        Serial.print("Insertion sort running time: ");
+        Serial.print(iend - istart);
+        Serial.println(" ms");
     }
 }
 
@@ -230,7 +274,7 @@ void processTouchScreen(uint8_t* rating, uint8_t* sortMode) {
     int screen_y = map(touch.x, TS_MINY, TS_MAXY, tft.height() - 1, 0);
 
     if (touch.z < MINPRESSURE || touch.z > MAXPRESSURE) {
-            return;
+        return;
     } else if (screen_x < MAP_DISP_WIDTH) {
         readRestData();
         drawCloseRests(3, MAP_DISP_WIDTH + MAP_DISP_HEIGHT, TFT_BLUE);
@@ -238,7 +282,7 @@ void processTouchScreen(uint8_t* rating, uint8_t* sortMode) {
         *rating = constrain((*rating + 1) % 6, 1, 5);
         drawOptionButtons(*rating, *sortMode, 3, TFT_RED);
     } else if (screen_y > (DISPLAY_HEIGHT >> 1)) {
-        *sortMode = (*sortMode + 1) % 2;
+        *sortMode = (*sortMode + 1) % 3;
         drawOptionButtons(*rating, *sortMode, 3, TFT_RED);
     }
     delay(200);
@@ -258,6 +302,7 @@ void printWord(const char* word) {
     while (word[word_length] != '\0') {
         word_length++;
     }
+
     // printing text on tft display
     for (int i = 0; i < word_length; i++) {
         tft.setCursor(MAP_DISP_WIDTH + TEXT_PAD, tft.getCursorY());
@@ -287,13 +332,15 @@ void drawOptionButtons(
             (DISPLAY_HEIGHT >> 1) + i, colour);
     }
 
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
     // printing rating
     tft.setCursor(MAP_DISP_WIDTH + TEXT_PAD, DISPLAY_HEIGHT * 9 / 40);
     tft.print(rating);
     // printing name of selected sorting algorithm
     tft.setCursor(MAP_DISP_WIDTH + TEXT_PAD, DISPLAY_HEIGHT * 25 / 40);
-    if (!sortMode) printWord("QSORT");
-    else printWord("ISORT");
+    if (sortMode == 0) printWord("QSORT");
+    else if (sortMode == 1) printWord("ISORT");
+    else if (sortMode == 2) printWord("BOTH ");
 }
 
 
