@@ -44,6 +44,11 @@ void redrawOverRest(uint16_t selection);
 void drawMapPatch(int cursorX0, int cursorY0);
 
 /*
+    Description: draws dots over restaurants that are closest to the cursor.
+*/
+void drawCloseRests(uint8_t radius, uint16_t distance, uint16_t colour);
+
+/*
     Description: helper function for redrawMap() which aids with map boundary
     clamping and map shifting.
 */
@@ -72,5 +77,17 @@ void constrainMap(int* shiftX, int* shiftY);
     and the TFT object's memory address is &tft.
 */
 void lcdYegDraw(int icol, int irow, int scol, int srow, int width, int height);
+
+/*
+    Description: given a string, prints the string characters vertically on the
+        TFT display.
+*/
+void printWord(const char* word);
+
+/*
+    Description: draws two buttons on the TFT display.
+*/
+void drawOptionButtons(uint8_t rating, uint8_t sortMode, uint8_t thickness,
+    uint16_t colour);
 
 #endif

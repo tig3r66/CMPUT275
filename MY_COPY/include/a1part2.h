@@ -164,18 +164,6 @@ void modeZero(uint8_t slow, uint8_t fast);
 */
 void printRestList();
 
-/*
-    Description: given a string, prints the string characters vertically on the
-        TFT display.
-*/
-void printWord(const char* word);
-
-/*
-    Description: draws two buttons on the TFT display.
-*/
-void drawOptionButtons(uint8_t rating, uint8_t sortMode, uint8_t thickness,
-    uint16_t colour);
-
 
 /*
     Description: times quicksort and insertion sort algorithms as they sort the
@@ -224,10 +212,5 @@ void redrawText(int current, int prev);
     map, the closest restaurants to the cursor are drawn as blue dots.
 */
 void processTouchScreen(uint8_t* rating, uint8_t* sortMode);
-
-/*
-    Description: draws dots over restaurants that are closest to the cursor.
-*/
-void drawCloseRests(uint8_t radius, uint16_t distance, uint16_t colour);
 
 #endif

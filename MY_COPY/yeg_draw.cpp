@@ -167,6 +167,30 @@ void drawMapPatch(int cursorX0, int cursorY0) {
 
 
 /*
+    Description: draws dots over restaurants that are closest to the cursor.
+
+    Arguments:
+        radius (int): the desired radius of the drawn dot.
+        distance (int): the restaurants at a desired distance from the cursor.
+        colour (uint16_t): the colour of the dot drawn.
+*/
+void drawCloseRests(uint8_t radius, uint16_t distance, uint16_t colour) {
+    int sidePad = 3;
+    for (int i = 0; i < NUM_RESTAURANTS; i++) {
+        restaurant tempRest;
+        getRestaurant(cache.REST_DIST[i].index, &tempRest);
+        int16_t scol = lon_to_x(tempRest.lon) - YEG_MIDDLE_X - yeg.shiftX;
+        int16_t srow = lat_to_y(tempRest.lat) - YEG_MIDDLE_Y - yeg.shiftY;
+
+        if (scol < MAP_DISP_WIDTH - sidePad && srow < MAP_DISP_HEIGHT - sidePad
+            && srow >= 0 && scol >= 0 && cache.REST_DIST[i].dist <= distance) {
+                tft.fillCircle(scol, srow, radius, colour);
+        }
+    }
+}
+
+
+/*
     Description: helper function for redrawMap() which aids with map boundary
     clamping and map shifting.
 
@@ -253,4 +277,59 @@ void constrainMap(int* shiftX, int* shiftY) {
 */
 void lcdYegDraw(int icol, int irow, int scol, int srow, int width, int height) {
     lcd_image_draw(&yegImage, &tft, icol, irow, scol, srow, width, height);
+}
+
+
+/*
+    Description: given a string, prints the string characters vertically on the
+        TFT display.
+
+    Arguments:
+        word (const char*): pointer to an immutable character/string.
+*/
+void printWord(const char* word) {
+    // getting string length
+    uint8_t word_length = 0;
+    while (word[word_length] != '\0') {
+        word_length++;
+    }
+
+    // printing text on tft display
+    for (int i = 0; i < word_length; i++) {
+        tft.setCursor(MAP_DISP_WIDTH + TEXT_PAD, tft.getCursorY());
+        tft.println(word[i]);
+    }
+}
+
+
+/*
+    Description: draws two buttons on the TFT display.
+
+    Arguments:
+        rating (uint8_t): desired restaurant rating.
+        sortMode (uint8_t): desired sort mode (insertion sort or quicksort).
+        thickness (uint8_t): thickness of button border.
+        colour (uint8_t): colour of button border.
+*/
+void drawOptionButtons(
+    uint8_t rating, uint8_t sortMode, uint8_t thickness, uint16_t colour
+) {
+    for (uint8_t i = 0; i < thickness; i++) {
+        tft.drawRect(MAP_DISP_WIDTH + i, i, PADX - (i << 1),
+            DISPLAY_HEIGHT - (i << 1), colour);
+    }
+    for (int8_t i = -1; i < thickness; i++) {
+        tft.drawLine(MAP_DISP_WIDTH, (DISPLAY_HEIGHT >> 1) + i, DISPLAY_WIDTH,
+            (DISPLAY_HEIGHT >> 1) + i, colour);
+    }
+
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    // printing rating
+    tft.setCursor(MAP_DISP_WIDTH + TEXT_PAD, DISPLAY_HEIGHT * 9 / 40);
+    tft.print(rating);
+    // printing name of selected sorting algorithm
+    tft.setCursor(MAP_DISP_WIDTH + TEXT_PAD, DISPLAY_HEIGHT * 25 / 40);
+    if (sortMode == 0) printWord("QSORT");
+    else if (sortMode == 1) printWord("ISORT");
+    else if (sortMode == 2) printWord("BOTH ");
 }
