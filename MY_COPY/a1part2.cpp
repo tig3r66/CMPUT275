@@ -98,7 +98,7 @@ void setup() {
     }
 
     // SD card initialization for raw reads
-    Serial.print("\nInitializing SPI communication...");
+    Serial.print("Initializing SPI communication...");
     if (!card.init(SPI_HALF_SPEED, SD_CS)) {
         Serial.println("failed!");
         while (true) {}
@@ -355,48 +355,48 @@ void drawCloseRests(uint8_t radius, uint16_t distance, uint16_t colour, uint8_t 
 */
 
 void printRestList(uint8_t rating, uint16_t j, uint16_t selected, uint16_t menuIndices[]) {
-    tft.setCursor(0, 0);
     uint8_t i = 0; // counter
     if (selected == 0) {
-        while (i < MAX_LIST || j < NUM_RESTAURANTS) {
+        while (i < MAX_LIST && j < NUM_RESTAURANTS) {
             restaurant rest;
             getRestaurantFast(REST_DIST[j].index, &rest);
-            int convertedRating = constrain(((rest.rating + 1) / 2), 1, 5);
+            uint8_t convertedRating = constrain(((rest.rating + 1) / 2), 1, 5);
             tft.setCursor(0, i*FONT_SIZE);
-            if (convertedRating >= rating && selected != i) {
+            if (convertedRating >= rating && i != 0) {
                 tft.setTextColor(TFT_WHITE, TFT_BLACK);
                 tft.print(rest.name);
                 tft.print('\n');
+                menuIndices[i] = j;
                 i++;
             }
-            else if (convertedRating >= rating && selected == i) {
+            else if (convertedRating >= rating && i == 0) {
                 tft.setTextColor(TFT_BLACK, TFT_WHITE);
                 tft.print(rest.name);
                 tft.print('\n');
+                menuIndices[i] = j;
                 i++;
             }
-            //menuIndices[i] = j;
             j++;
         }
     }
     else if (selected == MAX_LIST - 1) {
-        while (i < MAX_LIST || j >= 0) {
+        while (i < (MAX_LIST) && j >= 0) {
             restaurant rest;
             getRestaurantFast(REST_DIST[j].index, &rest);
             uint8_t convertedRating = constrain(((rest.rating + 1) / 2), 1, 5);
-            tft.setCursor(0, (20-i)*FONT_SIZE);
-            if (convertedRating >= rating && selected != i) {
+            tft.setCursor(0, (MAX_LIST-1-i)*FONT_SIZE);
+            if (convertedRating >= rating && selected != (MAX_LIST-1-i)) {
                 tft.setTextColor(TFT_WHITE, TFT_BLACK);
                 tft.print(rest.name);
+                menuIndices[MAX_LIST-1-i] = j;
                 i++;
             }
-            else if (convertedRating >= rating && selected == i) {
+            else if (convertedRating >= rating && selected == (MAX_LIST-1-i)) {
                 tft.setTextColor(TFT_BLACK, TFT_WHITE);
                 tft.print(rest.name);
-                tft.print('\n');
+                menuIndices[MAX_LIST-1-i] = j;
                 i++;
             }
-            //menuIndices[i] = j;
             j--;
         }
     }
@@ -415,29 +415,35 @@ void menuProcess(uint16_t &selection, uint8_t &n, uint16_t menuIndices[], uint8_
     if (joyY < (JOY_CENTER - JOY_DEADZONE)) {
         // scroll one up
         if (selection > 0) {
-            (selection)--;
+            selection--;
+            Serial.println(selection);
+            Serial.println(menuIndices[selection]);
             redrawText(menuIndices[selection], menuIndices[selection+1],
                 selection, selection+1);
         }
         else if (selection == 0 && n > 0) {
-            (n)--;
+            n--;
+            tft.fillScreen(TFT_BLACK);
             printRestList(rating, menuIndices[selection]-1, 
-                MAX_LIST - 1, menuIndices);
-
+                (MAX_LIST - 1), menuIndices);
+            selection = MAX_LIST - 1;
         } 
     } else if (joyY > (JOY_CENTER + JOY_DEADZONE)) {
         // scroll one down
-        if (selection < MAX_LIST - 1) {
-            (selection)++;
+        if (selection < (MAX_LIST - 1) 
+            && menuIndices[selection] < NUM_RESTAURANTS - 1) {
+            Serial.println(selection);
+            Serial.println(menuIndices[selection]);
+            selection++;
             redrawText(menuIndices[selection], menuIndices[selection-1],
                 selection, selection-1);
         }
         else if (selection == MAX_LIST - 1) {
-            (n)++;
+            n++;
             tft.fillScreen(TFT_BLACK);
             printRestList(rating, menuIndices[selection]+1,
                 0, menuIndices);
-            
+            selection = 0;  
         }
     }
     // for better (less sensitive) scrolling user experience
@@ -458,13 +464,13 @@ void redrawText(uint16_t current, uint16_t prev, uint8_t currentScreen, uint8_t 
     restaurant tempRest;
     getRestaurantFast(REST_DIST[prev].index, &tempRest);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
-    tft.setCursor(0, currentScreen * FONT_SIZE);
+    tft.setCursor(0, prevScreen * FONT_SIZE);
     tft.print(tempRest.name);
 
     // get current name and print it
     getRestaurantFast(REST_DIST[current].index, &tempRest);
     tft.setTextColor(TFT_BLACK, TFT_WHITE);
-    tft.setCursor(0, prevScreen * FONT_SIZE);
+    tft.setCursor(0, currentScreen * FONT_SIZE);
     tft.print(tempRest.name);
 }
 

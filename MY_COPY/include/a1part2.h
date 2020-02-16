@@ -146,7 +146,7 @@ void lcdYegDraw(int icol, int irow, int scol, int srow, int width, int height);
     Description: initial drawing of the names of the closest 21 restaurants to
     the cursor. Highlights the first entry.
 */
-void printRestList(uint8_t rating, uint16_t j, uint8_t selected, uint16_t[]);
+void printRestList(uint8_t rating, uint16_t j, uint16_t selected, uint16_t[]);
 
 
 // ======================== MEMORY RETRIEVAL FUNCTIONS ========================
