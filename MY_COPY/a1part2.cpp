@@ -49,14 +49,19 @@ int main() {
     setup();
     lcd_setup();
 
-    // for the display mode
-    uint8_t MODE = 0;
+    // for main display mode and restaurant rating filter
+    uint8_t MODE = 0, RATING = 1;
+    // 0 = quicksort, 1 = insertionsort
+    uint8_t SORT_MODE = 0;
+    // initial options
+    drawOptionButtons(RATING, SORT_MODE, 3, TFT_RED);
+
     while (true) {
         if (MODE == 0) {
             // joystick button pressed
             if (!digitalRead(JOY_SEL)) MODE = 1;
             // if user touches screen, draw closest restaurants
-            processTouchScreen();
+            processTouchScreen(&RATING, &SORT_MODE);
             // min and max cursor speeds are 0 and CURSOR_SIZE pixels/cycle
             modeZero(0, CURSOR_SIZE);
         } else if (MODE == 1) {
@@ -210,19 +215,85 @@ void modeOne() {
 /*
     Description: processes touches on the TFT display. When the user touches the
     map, the closest restaurants to the cursor are drawn as blue dots.
+
+    Arguments:
+        rating (uint8_t*): pointer to the restaurant rating filter.
+        sortMode (uint8_t*): pointer to the desired sorting algorithm.
 */
-void processTouchScreen() {
+void processTouchScreen(uint8_t* rating, uint8_t* sortMode) {
     TSPoint touch = ts.getPoint();
     pinMode(YP, OUTPUT);
     pinMode(XM, OUTPUT);
+
+    // touch coordinates
     int screen_x = map(touch.y, TS_MINX, TS_MAXX, tft.width() - 1, 0);
-    if (touch.z < MINPRESSURE || touch.z > MAXPRESSURE
-        || screen_x > MAP_DISP_WIDTH) {
+    int screen_y = map(touch.x, TS_MINY, TS_MAXY, tft.height() - 1, 0);
+
+    if (touch.z < MINPRESSURE || touch.z > MAXPRESSURE) {
             return;
     } else if (screen_x < MAP_DISP_WIDTH) {
         readRestData();
         drawCloseRests(3, MAP_DISP_WIDTH + MAP_DISP_HEIGHT, TFT_BLUE);
+    } else if (screen_y < (DISPLAY_HEIGHT >> 1)) {
+        *rating = constrain((*rating + 1) % 6, 1, 5);
+        drawOptionButtons(*rating, *sortMode, 3, TFT_RED);
+    } else if (screen_y > (DISPLAY_HEIGHT >> 1)) {
+        *sortMode = (*sortMode + 1) % 2;
+        drawOptionButtons(*rating, *sortMode, 3, TFT_RED);
     }
+    delay(200);
+}
+
+
+/*
+    Description: given a string, prints the string characters vertically on the
+        TFT display.
+
+    Arguments:
+        word (const char*): pointer to an immutable character/string.
+*/
+void printWord(const char* word) {
+    // getting string length
+    uint8_t word_length = 0;
+    while (word[word_length] != '\0') {
+        word_length++;
+    }
+    // printing text on tft display
+    for (int i = 0; i < word_length; i++) {
+        tft.setCursor(MAP_DISP_WIDTH + TEXT_PAD, tft.getCursorY());
+        tft.println(word[i]);
+    }
+}
+
+
+/*
+    Description: draws two buttons on the TFT display.
+
+    Arguments:
+        rating (uint8_t): desired restaurant rating.
+        sortMode (uint8_t): desired sort mode (insertion sort or quicksort).
+        thickness (uint8_t): thickness of button border.
+        colour (uint8_t): colour of button border.
+*/
+void drawOptionButtons(
+    uint8_t rating, uint8_t sortMode, uint8_t thickness, uint16_t colour
+) {
+    for (uint8_t i = 0; i < thickness; i++) {
+        tft.drawRect(MAP_DISP_WIDTH + i, i, PADX - (i << 1),
+            DISPLAY_HEIGHT - (i << 1), colour);
+    }
+    for (int8_t i = -1; i < thickness; i++) {
+        tft.drawLine(MAP_DISP_WIDTH, (DISPLAY_HEIGHT >> 1) + i, DISPLAY_WIDTH,
+            (DISPLAY_HEIGHT >> 1) + i, colour);
+    }
+
+    // printing rating
+    tft.setCursor(MAP_DISP_WIDTH + TEXT_PAD, DISPLAY_HEIGHT * 9 / 40);
+    tft.print(rating);
+    // printing name of selected sorting algorithm
+    tft.setCursor(MAP_DISP_WIDTH + TEXT_PAD, DISPLAY_HEIGHT * 25 / 40);
+    if (!sortMode) printWord("QSORT");
+    else printWord("ISORT");
 }
 
 

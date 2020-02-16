@@ -55,6 +55,7 @@
 #define YEG_MIDDLE_Y ((YEG_SIZE - DISPLAY_HEIGHT) >> 1)
 #define PADX 60
 #define SHIFTED_BORDER 2039
+#define TEXT_PAD 26
 
 // dimensions of the part allocated to the map display
 #define MAP_DISP_WIDTH (DISPLAY_WIDTH - 60)
@@ -162,6 +163,18 @@ void modeZero(uint8_t slow, uint8_t fast);
 */
 void printRestList();
 
+/*
+    Description: given a string, prints the string characters vertically on the
+        TFT display.
+*/
+void printWord(const char* word);
+
+/*
+    Description: draws two buttons on the TFT display.
+*/
+void drawOptionButtons(uint8_t rating, uint8_t sortMode, uint8_t thickness,
+    uint16_t colour);
+
 
 // ======================== MEMORY RETRIEVAL FUNCTIONS ========================
 /*
@@ -202,7 +215,7 @@ void redrawText(int current, int prev);
     Description: processes touches on the TFT display. When the user touches the
     map, the closest restaurants to the cursor are drawn as blue dots.
 */
-void processTouchScreen();
+void processTouchScreen(uint8_t* rating, uint8_t* sortMode);
 
 /*
     Description: draws dots over restaurants that are closest to the cursor.
