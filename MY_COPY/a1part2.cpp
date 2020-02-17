@@ -405,8 +405,13 @@ void scrollUp(uint16_t* selection, uint16_t* pageNum) {
         printRestList(*pageNum, *selection);
     } else {
         // wrapping around to last page (originally on first page)
-        *pageNum = (cache.READ_SIZE / MAX_LIST);
-        *selection = (cache.READ_SIZE - 1) - ((*pageNum) * MAX_LIST);
+        *pageNum = cache.READ_SIZE / MAX_LIST;
+        if ((*pageNum) * MAX_LIST == cache.READ_SIZE) {
+            (*pageNum)--;
+            *selection = MAX_LIST - 1;
+        } else {
+            *selection = (cache.READ_SIZE - 1) - ((*pageNum) * MAX_LIST);
+        }
         tft.fillScreen(TFT_BLACK);
         printRestList(*pageNum, *selection);
     }
