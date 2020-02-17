@@ -179,7 +179,7 @@ void drawCloseRests(
     uint8_t rating, uint8_t radius, uint16_t distance, uint16_t colour
 ) {
     int sidePad = 3;
-    for (int i = 0; i < cache.READ_SIZE; i++) {
+    for (uint16_t i = 0; i < cache.READ_SIZE; i++) {
         restaurant tempRest;
         getRestaurant(cache.REST_DIST[i].index, &tempRest);
         int16_t scol = lon_to_x(tempRest.lon) - YEG_MIDDLE_X - yeg.shiftX;
@@ -318,6 +318,7 @@ void printWord(const char* word) {
 void drawOptionButtons(
     uint8_t rating, uint8_t sortMode, uint8_t thickness, uint16_t colour
 ) {
+    tft.fillRect(MAP_DISP_WIDTH, 0, PADX, DISPLAY_HEIGHT, ONE_DARK);
     for (uint8_t i = 0; i < thickness; i++) {
         tft.drawRect(MAP_DISP_WIDTH + i, i, PADX - (i << 1),
             DISPLAY_HEIGHT - (i << 1), colour);
@@ -326,12 +327,28 @@ void drawOptionButtons(
         tft.drawLine(MAP_DISP_WIDTH, (DISPLAY_HEIGHT >> 1) + i, DISPLAY_WIDTH,
             (DISPLAY_HEIGHT >> 1) + i, colour);
     }
+}
 
-    tft.setTextColor(TFT_WHITE, TFT_BLACK);
-    // printing rating
+
+/*
+    Description: draws the selected restaurant rating on the TFT display.
+
+    Arguments:
+        rating (uint8_t): desired restaurant rating.
+*/
+void drawRating(uint8_t rating) {
+    tft.setTextColor(ONE_BLUE, ONE_DARK);
     tft.setCursor(MAP_DISP_WIDTH + TEXT_PAD, DISPLAY_HEIGHT * 9 / 40);
     tft.print(rating);
-    // printing name of selected sorting algorithm
+}
+
+/*
+    Description: draws the selected sort mode on the TFT display.
+
+    Arguments:
+        sortMode (uint8_t): desired sort mode (insertion sort or quicksort).
+*/
+void drawSortMode(uint8_t sortMode) {
     tft.setCursor(MAP_DISP_WIDTH + TEXT_PAD, DISPLAY_HEIGHT * 25 / 40);
     if (sortMode == 0) printWord("QSORT");
     else if (sortMode == 1) printWord("ISORT");

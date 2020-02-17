@@ -75,7 +75,9 @@
 #define MAX_LIST 21
 
 // nice blue colour for buttons
+#define ONE_PURPLE 0xC3DB
 #define ONE_BLUE 0x55B8
+#define ONE_DARK 0x0861
 
 
 // ================================== STRUCTS ==================================
@@ -169,13 +171,6 @@ void modeZero(uint8_t slow, uint8_t fast);
 void printRestList(uint16_t pageNum, uint16_t selectedRest);
 
 
-/*
-    Description: times quicksort and insertion sort algorithms as they sort the
-    restaurants based on Manhattan distance from the cursor position.
-*/
-void sortTimer(uint8_t sortMode, uint8_t rating);
-
-
 // ======================== MEMORY RETRIEVAL FUNCTIONS ========================
 /*
     Description: fast implementation of getRestaurant(). Reads data from an SD
@@ -210,6 +205,22 @@ void menuProcess(uint16_t* selection, uint16_t* pageNum);
     previous restaurant.
 */
 void redrawText(int current, int prev);
+
+/*
+    Description: helper function for highlighting the entry if scrolling up and
+    page scroll if the user tries to nudge select a restaurant past the top of
+    the screen.
+*/
+void scrollUp(uint16_t* selection, uint16_t* pageNum);
+
+
+/*
+    Description: helper function for highlighting the entry if scrolling down
+    and page scroll if the user tries to nudge select a restaurant past the
+    bottom of the screen.
+*/
+void scrollDown(uint16_t* selection, uint16_t* pageNum);
+
 
 // ======================= TOUCH SCREEN INPUT FUNCTIONS =======================
 /*

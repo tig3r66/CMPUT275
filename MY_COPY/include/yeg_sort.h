@@ -34,6 +34,24 @@ void quickSort(RestDist array[], int low, int high);
 */
 int pivot(RestDist array[], int low, int high);
 
+/*
+    Description: times quicksort and insertion sort algorithms as they sort the
+    restaurants based on Manhattan distance from the cursor position.
+*/
+void sortTimer(uint8_t sortMode, uint8_t rating);
+
+/*
+    Description: helper function that prints the running time of quicksort to
+    the serial monitor.
+*/
+void timeQSort(uint8_t sortMode, uint8_t rating);
+
+/*
+    Description: helper function that prints the running time of insertion sort
+    to the serial monitor.
+*/
+void timeISort(uint8_t sortMode, uint8_t rating);
+
 
 // =============================== TEMPLATE CODE ===============================
 /*

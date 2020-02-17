@@ -91,4 +91,14 @@ void printWord(const char* word);
 void drawOptionButtons(uint8_t rating, uint8_t sortMode, uint8_t thickness,
     uint16_t colour);
 
+/*
+    Description: draws the selected restaurant rating on the TFT display.
+*/
+void drawRating(uint8_t rating);
+
+/*
+    Description: draws the selected sort mode on the TFT display.
+*/
+void drawSortMode(uint8_t sortMode);
+
 #endif

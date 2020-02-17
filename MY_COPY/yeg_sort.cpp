@@ -55,7 +55,7 @@ void quickSort(RestDist array[], int low, int high) {
         high (int): the largest index of the array.
 */
 int pivot(RestDist array[], int low, int high) {
-    int pivot = array[high].dist;
+    uint16_t pivot = array[high].dist;
     // sorting on pivot
     int i = low - 1;
     for (int j = low; j <= high - 1; j++) {
@@ -66,4 +66,63 @@ int pivot(RestDist array[], int low, int high) {
     }
     custom_swap(array[i + 1], array[high]);
     return (i + 1);
+}
+
+
+/*
+    Description: times quicksort and insertion sort algorithms as they sort the
+    restaurants based on Manhattan distance from the cursor position.
+
+    Arguments:
+        sortMode (uint8_t): the selected sorting algorithm.
+        rating (uint8_t): the restaurant rating filter.
+*/
+void sortTimer(uint8_t sortMode, uint8_t rating) {
+    readRestData(rating);
+    if (sortMode == 0) {
+        timeQSort(sortMode, rating);
+    } else if (sortMode == 1) {
+        timeISort(sortMode, rating);
+    } else if (sortMode == 2) {
+        timeQSort(sortMode, rating);
+        // reading again for fair comparison
+        readRestData(rating);
+        timeISort(sortMode, rating);
+    }
+}
+
+
+/*
+    Description: helper function that prints the running time of quicksort to
+    the serial monitor.
+
+    Arguments:
+        sortMode (uint8_t): the selected sorting algorithm.
+        rating (uint8_t): the restaurant rating filter.
+*/
+void timeQSort(uint8_t sortMode, uint8_t rating) {
+    uint16_t start = millis();
+    quickSort(cache.REST_DIST, 0, cache.READ_SIZE-1);
+    uint16_t end  = millis();
+    Serial.print("Quicksort running time: ");
+    Serial.print(end - start);
+    Serial.println(" ms");
+}
+
+
+/*
+    Description: helper function that prints the running time of insertion sort
+    to the serial monitor.
+
+    Arguments:
+        sortMode (uint8_t): the selected sorting algorithm.
+        rating (uint8_t): the restaurant rating filter.
+*/
+void timeISort(uint8_t sortMode, uint8_t rating) {
+    uint16_t start = millis();
+    insertionSort(cache.REST_DIST, cache.READ_SIZE);
+    uint16_t end  = millis();
+    Serial.print("Insertion sort running time: ");
+    Serial.print(end - start);
+    Serial.println(" ms");
 }

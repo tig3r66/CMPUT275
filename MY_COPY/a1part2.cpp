@@ -49,10 +49,12 @@ int main() {
 
     // for main display mode and restaurant rating filter
     uint8_t MODE = 0, RATING = 1;
-    // 0 = quicksort, 1 = insertionsort, 2 = obth
+    // 0 = quicksort, 1 = insertionsort, 2 = both
     uint8_t SORT_MODE = 0;
-    // initial options
-    drawOptionButtons(RATING, SORT_MODE, 3, ONE_BLUE);
+    // drawing initial options
+    drawOptionButtons(RATING, SORT_MODE, 3, ONE_PURPLE);
+    drawRating(RATING);
+    drawSortMode(SORT_MODE);
 
     while (true) {
         if (MODE == 0) {
@@ -66,7 +68,9 @@ int main() {
             tft.fillScreen(TFT_BLACK);
             // loops until the joystick button is pressed
             modeOne(SORT_MODE, RATING);
-            drawOptionButtons(RATING, SORT_MODE, 3, ONE_BLUE);
+            drawOptionButtons(RATING, SORT_MODE, 3, ONE_PURPLE);
+            drawRating(RATING);
+            drawSortMode(SORT_MODE);
             MODE = 0;
         }
     }
@@ -123,7 +127,7 @@ void lcd_setup() {
     lcdYegDraw(YEG_MIDDLE_X, YEG_MIDDLE_Y, 0, 0, MAP_DISP_WIDTH,
         DISPLAY_HEIGHT);
     // setting cursor to middle of YEG map
-    yeg.cursorX = (MAP_DISP_WIDTH) >> 1;
+    yeg.cursorX = MAP_DISP_WIDTH >> 1;
     yeg.cursorY = DISPLAY_HEIGHT >> 1;
     redrawCursor(TFT_RED);
 }
@@ -153,7 +157,6 @@ void modeZero(uint8_t slow, uint8_t fast) {
     } else if (xVal < EPSILON_NEG) {
         yeg.cursorX += map(xVal, 0, EPSILON_NEG, fast, slow);
     }
-
     // y movement
     if (yVal < EPSILON_NEG) {
         yeg.cursorY -= map(yVal, 0, EPSILON_NEG, fast, slow);
@@ -161,6 +164,7 @@ void modeZero(uint8_t slow, uint8_t fast) {
         yeg.cursorY += map(yVal, EPSILON_POS, MAX_STICK, slow, fast);
     }
 
+    // if the cursor moved
     if (cursorX0 != yeg.cursorX || yeg.cursorY != cursorY0) {
         // constrain cursor and display within the map then redraw the map patch
         constrainCursor(&yeg.cursorX, &yeg.cursorY);
@@ -196,6 +200,7 @@ void modeZero(uint8_t slow, uint8_t fast) {
 
     Arguments:
         sortMode (uint8_t): the selected sorting algorithm.
+        rating (uint8_t): the restaurant rating filter.
 */
 void modeOne(uint8_t sortMode, uint8_t rating) {
     sortTimer(sortMode, rating);
@@ -211,48 +216,6 @@ void modeOne(uint8_t sortMode, uint8_t rating) {
             redrawOverRest(selection + pageNum * MAX_LIST);
             return;
         }
-    }
-}
-
-
-/*
-    Description: times quicksort and insertion sort algorithms as they sort the
-    restaurants based on Manhattan distance from the cursor position.
-
-    Arguments:
-        sortMode (uint8_t): the selected sorting algorithm.
-*/
-void sortTimer(uint8_t sortMode, uint8_t rating) {
-    readRestData(rating);
-    if (sortMode == 0) {
-        uint16_t start = millis();
-        quickSort(cache.REST_DIST, 0, cache.READ_SIZE-1);
-        uint16_t end  = millis();
-        Serial.print("Quicksort running time: ");
-        Serial.print(end - start);
-        Serial.println(" ms");
-    } else if (sortMode == 1) {
-        uint16_t start = millis();
-        insertionSort(cache.REST_DIST, cache.READ_SIZE);
-        uint16_t end  = millis();
-        Serial.print("Insertion sort running time: ");
-        Serial.print(end - start);
-        Serial.println(" ms");
-    } else if (sortMode == 2) {
-        uint16_t qstart = millis();
-        quickSort(cache.REST_DIST, 0, cache.READ_SIZE-1);
-        uint16_t qend  = millis();
-        Serial.print("Quicksort running time: ");
-        Serial.print(qend - qstart);
-        Serial.println(" ms");
-
-        readRestData(rating);
-        uint16_t istart = millis();
-        insertionSort(cache.REST_DIST, cache.READ_SIZE);
-        uint16_t iend  = millis();
-        Serial.print("Insertion sort running time: ");
-        Serial.print(iend - istart);
-        Serial.println(" ms");
     }
 }
 
@@ -280,11 +243,13 @@ void processTouchScreen(uint8_t* rating, uint8_t* sortMode) {
         readRestData(*rating);
         drawCloseRests(*rating, 3, MAP_DISP_WIDTH + MAP_DISP_HEIGHT, TFT_BLUE);
     } else if (screen_y < (DISPLAY_HEIGHT >> 1)) {
+        // restaurant rating mapped from a range of [1, 10] to [1, 5]
         *rating = constrain((*rating + 1) % 6, 1, 5);
-        drawOptionButtons(*rating, *sortMode, 3, ONE_BLUE);
+        drawRating(*rating);
     } else if (screen_y > (DISPLAY_HEIGHT >> 1)) {
+        // cycles through QSORT (0), ISORT (1), and BOTH (2)
         *sortMode = (*sortMode + 1) % 3;
-        drawOptionButtons(*rating, *sortMode, 3, ONE_BLUE);
+        drawSortMode(*sortMode);
     }
     delay(200);
 }
@@ -298,9 +263,13 @@ void processTouchScreen(uint8_t* rating, uint8_t* sortMode) {
 
     Arguments:
         restIndex (uint16_t): the restaurant to be read.
+        rating (uint8_t): the restaurant rating filter.
+        counter (uint16_t*): the number of restaurants to retrieve.
         restPtr (restaurant*): pointer to the restaurant struct.
 */
-void getRestaurantFast(uint16_t restIndex, uint8_t rating, uint16_t* counter, restaurant* restPtr) {
+void getRestaurantFast(
+    uint16_t restIndex, uint8_t rating, uint16_t* counter, restaurant* restPtr
+) {
     uint32_t blockNum = REST_START_BLOCK + restIndex / 8;
     if (blockNum != cache.PREV_BLOCK_NUM) {
         while (!card.readBlock(blockNum,
@@ -311,20 +280,18 @@ void getRestaurantFast(uint16_t restIndex, uint8_t rating, uint16_t* counter, re
     *restPtr = cache.TEMP_BLOCK[restIndex % 8];
     cache.PREV_BLOCK_NUM = blockNum;
     // storing TEMP_BLOCK information in a smaller struct
+    // taking the max of mapped restaurant rating, [1, 10] -> [1, 5], and 1
     if (max((((*restPtr).rating + 1) >> 1), 1) >= rating) {
         cache.REST_DIST[*counter].index = restIndex;
-
         // image (not screen) position of cursor on the YEG map
         int icol = YEG_MIDDLE_X + yeg.cursorX + yeg.shiftX;
         int irow = YEG_MIDDLE_Y + yeg.cursorY + yeg.shiftY;
-
-        // calculating Manhattan distance and storing into cache member REST_DIST
+        // storing Manhattan distance into cache member REST_DIST
         int manDist = abs(icol - lon_to_x(restPtr->lon))
-        + abs(irow - lat_to_y(restPtr->lat));
+                        + abs(irow - lat_to_y(restPtr->lat));
         cache.REST_DIST[*counter].dist = manDist;
         (*counter)++;
     }
-    
 }
 
 
@@ -352,6 +319,9 @@ void getRestaurant(uint16_t restIndex, restaurant* restPtr) {
 
 /*
     Description: reads all restaurant data from the SD card.
+
+    Arguments:
+        rating (uint8_t): the restaurant rating filter.
 */
 void readRestData(uint8_t rating) {
     uint16_t counter = 0;
@@ -401,49 +371,78 @@ void printRestList(uint16_t pageNum, uint16_t selectedRest) {
 */
 void menuProcess(uint16_t* selection, uint16_t* pageNum) {
     uint16_t joyY = analogRead(JOY_VERT);
+
     if (joyY < (JOY_CENTER - JOY_DEADZONE)) {
-        // scroll one up
-        if (*selection > 0) {
-            (*selection)--;
-            redrawText(*pageNum * MAX_LIST + *selection,*pageNum * MAX_LIST + *selection + 1);
-        } else if (*selection == 0 && *pageNum > 0) {
-            (*pageNum)--;
-            *selection = MAX_LIST - 1;
-            tft.fillScreen(TFT_BLACK);
-            printRestList(*pageNum, *selection);
-        } else {
-            uint16_t div = (cache.READ_SIZE / MAX_LIST);
-            if (div * MAX_LIST == cache.READ_SIZE) {
-                *pageNum = div - 1;
-                *selection = MAX_LIST - 1;
-                tft.fillScreen(TFT_BLACK);
-                printRestList(*pageNum, *selection);
-            } else {
-                *pageNum = div;
-                *selection = (cache.READ_SIZE - 1) - (div * MAX_LIST);
-                tft.fillScreen(TFT_BLACK);
-                printRestList(*pageNum, *selection);
-            }
-        }
+        scrollUp(selection, pageNum);
     } else if (joyY > (JOY_CENTER + JOY_DEADZONE)) {
-        // scroll one down
-        if (*selection < MAX_LIST - 1 && *selection + *pageNum * MAX_LIST < cache.READ_SIZE - 1) {
+        scrollDown(selection, pageNum);
+    }
+    // for better (less sensitive) scrolling user experience
+    delay(25);
+}
+
+
+/*
+    Description: helper function for highlighting the entry if scrolling up and
+    page scroll if the user tries to nudge select a restaurant past the top of
+    the screen.
+
+    Arguments:
+        selection (uint16_t*): pointer to the selected restaurant's index.
+        pageNum (uint16_t*): pointer to the appropriate restaurant page. 
+*/
+void scrollUp(uint16_t* selection, uint16_t* pageNum) {
+    if (*selection > 0) {
+        // highlight the entry above
+        (*selection)--;
+        redrawText((*pageNum) * MAX_LIST + (*selection),
+            (*pageNum) * MAX_LIST + (*selection) + 1);
+    } else if (*selection == 0 && *pageNum > 0) {
+        // scrolling for pages that are not the first or last
+        (*pageNum)--;
+        *selection = MAX_LIST - 1;
+        tft.fillScreen(TFT_BLACK);
+        printRestList(*pageNum, *selection);
+    } else {
+        // wrapping around to last page (originally on first page)
+        *pageNum = (cache.READ_SIZE / MAX_LIST);
+        *selection = (cache.READ_SIZE - 1) - ((*pageNum) * MAX_LIST);
+        tft.fillScreen(TFT_BLACK);
+        printRestList(*pageNum, *selection);
+    }
+}
+
+
+/*
+    Description: helper function for highlighting the entry if scrolling down
+    and page scroll if the user tries to nudge select a restaurant past the
+    bottom of the screen.
+
+    Arguments:
+        selection (uint16_t*): pointer to the selected restaurant's index.
+        pageNum (uint16_t*): pointer to the appropriate restaurant page. 
+*/
+void scrollDown(uint16_t* selection, uint16_t* pageNum) {
+    if (*selection < MAX_LIST - 1
+        && (*selection) + (*pageNum) * MAX_LIST < cache.READ_SIZE - 1) {
+            // highlight the entry below
             (*selection)++;
-            redrawText(*pageNum * MAX_LIST + *selection, *pageNum * MAX_LIST + *selection - 1);
-        } else if (*selection == MAX_LIST - 1 && *selection + *pageNum * MAX_LIST < cache.READ_SIZE - 1) {
+            redrawText((*pageNum) * MAX_LIST + (*selection),
+                (*pageNum) * MAX_LIST + *selection - 1);
+    } else if (*selection == MAX_LIST - 1
+        && (*selection) + (*pageNum) * MAX_LIST < cache.READ_SIZE - 1) {
+            // scrolling down a page that is not the last page
             (*pageNum)++;
             *selection = 0;
             tft.fillScreen(TFT_BLACK);
             printRestList(*pageNum, *selection);
-        } else {
-            *pageNum = 0;
-            *selection = 0;
-            tft.fillScreen(TFT_BLACK);
-            printRestList(*pageNum, *selection);
-        }
+    } else {
+        // wrapping around to the first page (originally on last page)
+        *pageNum = 0;
+        *selection = 0;
+        tft.fillScreen(TFT_BLACK);
+        printRestList(*pageNum, *selection);
     }
-    // for better (less sensitive) scrolling user experience
-    delay(25);
 }
 
 
