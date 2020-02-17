@@ -76,7 +76,7 @@ void redrawMap() {
 void redrawOverRest(uint16_t selection) {
     // storing latitude and longitude info for the selected restaurant
     restaurant temp;
-    getRestaurantFast(cache.REST_DIST[selection].index, &temp);
+    getRestaurant(cache.REST_DIST[selection].index, &temp);
 
     // getting and constraining the x and y coordinates of the restaurant to the
     // map dimensions
@@ -173,17 +173,21 @@ void drawMapPatch(int cursorX0, int cursorY0) {
         radius (int): the desired radius of the drawn dot.
         distance (int): the restaurants at a desired distance from the cursor.
         colour (uint16_t): the colour of the dot drawn.
+        rating (uint8_t): the rating of the restaurant (1-5).
 */
-void drawCloseRests(uint8_t radius, uint16_t distance, uint16_t colour) {
+void drawCloseRests(
+    uint8_t rating, uint8_t radius, uint16_t distance, uint16_t colour
+) {
     int sidePad = 3;
-    for (int i = 0; i < NUM_RESTAURANTS; i++) {
+    for (int i = 0; i < cache.READ_SIZE; i++) {
         restaurant tempRest;
         getRestaurant(cache.REST_DIST[i].index, &tempRest);
         int16_t scol = lon_to_x(tempRest.lon) - YEG_MIDDLE_X - yeg.shiftX;
         int16_t srow = lat_to_y(tempRest.lat) - YEG_MIDDLE_Y - yeg.shiftY;
 
         if (scol < MAP_DISP_WIDTH - sidePad && srow < MAP_DISP_HEIGHT - sidePad
-            && srow >= 0 && scol >= 0 && cache.REST_DIST[i].dist <= distance) {
+            && srow >= 0 && scol >= 0 && cache.REST_DIST[i].dist <= distance
+            && rating <= max(((tempRest.rating + 1) >> 1), 1)) {
                 tft.fillCircle(scol, srow, radius, colour);
         }
     }

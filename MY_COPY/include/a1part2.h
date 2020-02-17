@@ -71,8 +71,11 @@
 // font size
 #define FONT_SIZE 15
 
-//number of restuarants listed
+// number of restuarants listed
 #define MAX_LIST 21
+
+// nice blue colour for buttons
+#define ONE_BLUE 0x55B8
 
 
 // ================================== STRUCTS ==================================
@@ -97,6 +100,7 @@ struct RestCache {
     restaurant TEMP_BLOCK[8];
     RestDist REST_DIST[NUM_RESTAURANTS];
     uint32_t PREV_BLOCK_NUM = 0;
+    uint16_t READ_SIZE = 1066;
 };
 
 // stores the cursor's position on the map
@@ -147,7 +151,7 @@ void lcd_setup();
     restaurants to the cursor. Once selected, the map of Edmonton is redrawn
     with the restaurant centered as much as possible on the TFT display.
 */
-void modeOne(uint8_t sortMode);
+void modeOne(uint8_t sortMode, uint8_t rating);
 
 /*
     Description: translates joystick inputs to movement of the cursor on the TFT
@@ -162,14 +166,14 @@ void modeZero(uint8_t slow, uint8_t fast);
     Description: initial drawing of the names of the closest 21 restaurants to
     the cursor. Highlights the first entry.
 */
-void printRestList();
+void printRestList(uint16_t pageNum, uint16_t selectedRest);
 
 
 /*
     Description: times quicksort and insertion sort algorithms as they sort the
     restaurants based on Manhattan distance from the cursor position.
 */
-void sortTimer(uint8_t sortMode);
+void sortTimer(uint8_t sortMode, uint8_t rating);
 
 
 // ======================== MEMORY RETRIEVAL FUNCTIONS ========================
@@ -179,7 +183,8 @@ void sortTimer(uint8_t sortMode);
     information into a smaller global struct REST_DIST. Reads a block once
     for consecutive restaurants on the same block.
 */
-void getRestaurantFast(uint16_t restIndex, restaurant* restPtr);
+void getRestaurantFast(uint16_t restIndex, uint8_t rating, uint16_t* counter,
+    restaurant* restPtr);
 
 /*
     Description: fast implementation of getRestaurant(). Reads a block once for
@@ -191,14 +196,14 @@ void getRestaurant(uint16_t restIndex, restaurant* restPtr);
 /*
     Description: reads all restaurant data from the SD card.
 */
-void readRestData();
+void readRestData(uint8_t rating);
 
 // ============================ SCROLLING FUNCTIONS ============================
 /*
     Description: processes the joystick movements to move the selection
     highlight either up or down.
 */
-void menuProcess(uint16_t* selection);
+void menuProcess(uint16_t* selection, uint16_t* pageNum);
 
 /*
     Description: highlights the selected restaurant and unhighlights the

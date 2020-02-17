@@ -30,7 +30,6 @@ lcd_image_t yegImage = { "yeg-big.lcd", YEG_SIZE, YEG_SIZE };
 
 // struct holding SD card read information
 RestCache cache;
-
 // cursor position variable
 MapView yeg;
 
@@ -53,7 +52,7 @@ int main() {
     // 0 = quicksort, 1 = insertionsort, 2 = obth
     uint8_t SORT_MODE = 0;
     // initial options
-    drawOptionButtons(RATING, SORT_MODE, 3, TFT_RED);
+    drawOptionButtons(RATING, SORT_MODE, 3, ONE_BLUE);
 
     while (true) {
         if (MODE == 0) {
@@ -66,8 +65,8 @@ int main() {
         } else if (MODE == 1) {
             tft.fillScreen(TFT_BLACK);
             // loops until the joystick button is pressed
-            modeOne(SORT_MODE);
-            drawOptionButtons(RATING, SORT_MODE, 3, TFT_RED);
+            modeOne(SORT_MODE, RATING);
+            drawOptionButtons(RATING, SORT_MODE, 3, ONE_BLUE);
             MODE = 0;
         }
     }
@@ -94,10 +93,12 @@ void setup() {
     if (!SD.begin(SD_CS)) {
         Serial.println("failed!");
         while (true) {}
+    } else {
+        Serial.println("OK!");
     }
 
     // SD card initialization for raw reads
-    Serial.print("\n\rInitializing SPI communication...");
+    Serial.print("Initializing SPI communication...");
     if (!card.init(SPI_HALF_SPEED, SD_CS)) {
         Serial.println("failed!");
         while (true) {}
@@ -196,17 +197,18 @@ void modeZero(uint8_t slow, uint8_t fast) {
     Arguments:
         sortMode (uint8_t): the selected sorting algorithm.
 */
-void modeOne(uint8_t sortMode) {
-    sortTimer(sortMode);
-    printRestList();
+void modeOne(uint8_t sortMode, uint8_t rating) {
+    sortTimer(sortMode, rating);
+    printRestList(0, 0);
 
     // processing menu
     uint16_t selection = 0;
+    uint16_t pageNum = 0;
     while (true) {
-        menuProcess(&selection);
+        menuProcess(&selection, &pageNum);
         if (!(digitalRead(JOY_SEL))) {
             tft.fillRect(MAP_DISP_WIDTH, 0, PADX, MAP_DISP_HEIGHT, TFT_BLACK);
-            redrawOverRest(selection);
+            redrawOverRest(selection + pageNum * MAX_LIST);
             return;
         }
     }
@@ -220,33 +222,33 @@ void modeOne(uint8_t sortMode) {
     Arguments:
         sortMode (uint8_t): the selected sorting algorithm.
 */
-void sortTimer(uint8_t sortMode) {
-    readRestData();
+void sortTimer(uint8_t sortMode, uint8_t rating) {
+    readRestData(rating);
     if (sortMode == 0) {
         uint16_t start = millis();
-        quickSort(cache.REST_DIST, 0, NUM_RESTAURANTS-1);
+        quickSort(cache.REST_DIST, 0, cache.READ_SIZE-1);
         uint16_t end  = millis();
         Serial.print("Quicksort running time: ");
         Serial.print(end - start);
         Serial.println(" ms");
     } else if (sortMode == 1) {
         uint16_t start = millis();
-        insertionSort(cache.REST_DIST, NUM_RESTAURANTS);
+        insertionSort(cache.REST_DIST, cache.READ_SIZE);
         uint16_t end  = millis();
         Serial.print("Insertion sort running time: ");
         Serial.print(end - start);
         Serial.println(" ms");
     } else if (sortMode == 2) {
         uint16_t qstart = millis();
-        quickSort(cache.REST_DIST, 0, NUM_RESTAURANTS-1);
+        quickSort(cache.REST_DIST, 0, cache.READ_SIZE-1);
         uint16_t qend  = millis();
         Serial.print("Quicksort running time: ");
         Serial.print(qend - qstart);
         Serial.println(" ms");
 
-        readRestData();
+        readRestData(rating);
         uint16_t istart = millis();
-        insertionSort(cache.REST_DIST, NUM_RESTAURANTS);
+        insertionSort(cache.REST_DIST, cache.READ_SIZE);
         uint16_t iend  = millis();
         Serial.print("Insertion sort running time: ");
         Serial.print(iend - istart);
@@ -275,14 +277,14 @@ void processTouchScreen(uint8_t* rating, uint8_t* sortMode) {
     if (touch.z < MINPRESSURE || touch.z > MAXPRESSURE) {
         return;
     } else if (screen_x < MAP_DISP_WIDTH) {
-        readRestData();
-        drawCloseRests(3, MAP_DISP_WIDTH + MAP_DISP_HEIGHT, TFT_BLUE);
+        readRestData(*rating);
+        drawCloseRests(*rating, 3, MAP_DISP_WIDTH + MAP_DISP_HEIGHT, TFT_BLUE);
     } else if (screen_y < (DISPLAY_HEIGHT >> 1)) {
         *rating = constrain((*rating + 1) % 6, 1, 5);
-        drawOptionButtons(*rating, *sortMode, 3, TFT_RED);
+        drawOptionButtons(*rating, *sortMode, 3, ONE_BLUE);
     } else if (screen_y > (DISPLAY_HEIGHT >> 1)) {
         *sortMode = (*sortMode + 1) % 3;
-        drawOptionButtons(*rating, *sortMode, 3, TFT_RED);
+        drawOptionButtons(*rating, *sortMode, 3, ONE_BLUE);
     }
     delay(200);
 }
@@ -298,7 +300,7 @@ void processTouchScreen(uint8_t* rating, uint8_t* sortMode) {
         restIndex (uint16_t): the restaurant to be read.
         restPtr (restaurant*): pointer to the restaurant struct.
 */
-void getRestaurantFast(uint16_t restIndex, restaurant* restPtr) {
+void getRestaurantFast(uint16_t restIndex, uint8_t rating, uint16_t* counter, restaurant* restPtr) {
     uint32_t blockNum = REST_START_BLOCK + restIndex / 8;
     if (blockNum != cache.PREV_BLOCK_NUM) {
         while (!card.readBlock(blockNum,
@@ -308,18 +310,21 @@ void getRestaurantFast(uint16_t restIndex, restaurant* restPtr) {
     }
     *restPtr = cache.TEMP_BLOCK[restIndex % 8];
     cache.PREV_BLOCK_NUM = blockNum;
-
     // storing TEMP_BLOCK information in a smaller struct
-    cache.REST_DIST[restIndex].index = restIndex;
+    if (max((((*restPtr).rating + 1) >> 1), 1) >= rating) {
+        cache.REST_DIST[*counter].index = restIndex;
 
-    // image (not screen) position of cursor on the YEG map
-    int icol = YEG_MIDDLE_X + yeg.cursorX + yeg.shiftX;
-    int irow = YEG_MIDDLE_Y + yeg.cursorY + yeg.shiftY;
+        // image (not screen) position of cursor on the YEG map
+        int icol = YEG_MIDDLE_X + yeg.cursorX + yeg.shiftX;
+        int irow = YEG_MIDDLE_Y + yeg.cursorY + yeg.shiftY;
 
-    // calculating Manhattan distance and storing into cache member REST_DIST
-    int manDist = abs(icol - lon_to_x(restPtr->lon))
+        // calculating Manhattan distance and storing into cache member REST_DIST
+        int manDist = abs(icol - lon_to_x(restPtr->lon))
         + abs(irow - lat_to_y(restPtr->lat));
-    cache.REST_DIST[restIndex].dist = manDist;
+        cache.REST_DIST[*counter].dist = manDist;
+        (*counter)++;
+    }
+    
 }
 
 
@@ -348,23 +353,33 @@ void getRestaurant(uint16_t restIndex, restaurant* restPtr) {
 /*
     Description: reads all restaurant data from the SD card.
 */
-void readRestData() {
+void readRestData(uint8_t rating) {
+    uint16_t counter = 0;
     for (int i = 0; i < NUM_RESTAURANTS; i++) {
-        getRestaurantFast(i, cache.TEMP_BLOCK);
+        getRestaurantFast(i, rating, &counter, cache.TEMP_BLOCK);
     }
+    cache.READ_SIZE = counter;
 }
 
 
 /*
     Description: initial drawing of the names of the closest 21 restaurants to
     the cursor. Highlights the first entry.
+
+    Arguments:
+        pageNum (uint16_t): the page of restaurants to display.
+        selectedRest (uint16_t): the currently selected restaurant index.
 */
-void printRestList() {
+void printRestList(uint16_t pageNum, uint16_t selectedRest) {
     tft.setCursor(0, 0);
     for (uint8_t i = 0; i < MAX_LIST; i++) {
+        if (pageNum * MAX_LIST + i >= cache.READ_SIZE) {
+            return;
+        }
+
         restaurant rest;
-        getRestaurantFast(cache.REST_DIST[i].index, &rest);
-        if (i == 0) {
+        getRestaurant(cache.REST_DIST[i + (pageNum * MAX_LIST)].index, &rest);
+        if (i == selectedRest) {
             tft.setTextColor(TFT_BLACK, TFT_WHITE);
             tft.print(rest.name);
         } else {
@@ -381,21 +396,50 @@ void printRestList() {
     highlight either up or down.
 
     Arguments:
-        *selection (uint16_t): pointer to the selected restaurant's index.
+        selection (uint16_t*): pointer to the selected restaurant's index.
+        pageNum (uint16_t*): pointer to the appropriate restaurant page. 
 */
-void menuProcess(uint16_t* selection) {
+void menuProcess(uint16_t* selection, uint16_t* pageNum) {
     uint16_t joyY = analogRead(JOY_VERT);
     if (joyY < (JOY_CENTER - JOY_DEADZONE)) {
         // scroll one up
         if (*selection > 0) {
             (*selection)--;
-            redrawText(*selection, *selection + 1);
+            redrawText(*pageNum * MAX_LIST + *selection,*pageNum * MAX_LIST + *selection + 1);
+        } else if (*selection == 0 && *pageNum > 0) {
+            (*pageNum)--;
+            *selection = MAX_LIST - 1;
+            tft.fillScreen(TFT_BLACK);
+            printRestList(*pageNum, *selection);
+        } else {
+            uint16_t div = (cache.READ_SIZE / MAX_LIST);
+            if (div * MAX_LIST == cache.READ_SIZE) {
+                *pageNum = div - 1;
+                *selection = MAX_LIST - 1;
+                tft.fillScreen(TFT_BLACK);
+                printRestList(*pageNum, *selection);
+            } else {
+                *pageNum = div;
+                *selection = (cache.READ_SIZE - 1) - (div * MAX_LIST);
+                tft.fillScreen(TFT_BLACK);
+                printRestList(*pageNum, *selection);
+            }
         }
     } else if (joyY > (JOY_CENTER + JOY_DEADZONE)) {
         // scroll one down
-        if (*selection < MAX_LIST - 1) {
+        if (*selection < MAX_LIST - 1 && *selection + *pageNum * MAX_LIST < cache.READ_SIZE - 1) {
             (*selection)++;
-            redrawText(*selection, *selection - 1);
+            redrawText(*pageNum * MAX_LIST + *selection, *pageNum * MAX_LIST + *selection - 1);
+        } else if (*selection == MAX_LIST - 1 && *selection + *pageNum * MAX_LIST < cache.READ_SIZE - 1) {
+            (*pageNum)++;
+            *selection = 0;
+            tft.fillScreen(TFT_BLACK);
+            printRestList(*pageNum, *selection);
+        } else {
+            *pageNum = 0;
+            *selection = 0;
+            tft.fillScreen(TFT_BLACK);
+            printRestList(*pageNum, *selection);
         }
     }
     // for better (less sensitive) scrolling user experience
@@ -414,14 +458,14 @@ void menuProcess(uint16_t* selection) {
 void redrawText(int current, int prev) {
     // drawing over prev and reprinting it
     restaurant tempRest;
-    getRestaurantFast(cache.REST_DIST[prev].index, &tempRest);
+    getRestaurant(cache.REST_DIST[prev].index, &tempRest);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
-    tft.setCursor(0, prev * FONT_SIZE);
+    tft.setCursor(0, (prev % MAX_LIST) * FONT_SIZE);
     tft.print(tempRest.name);
 
     // get current name and print it
-    getRestaurantFast(cache.REST_DIST[current].index, &tempRest);
+    getRestaurant(cache.REST_DIST[current].index, &tempRest);
     tft.setTextColor(TFT_BLACK, TFT_WHITE);
-    tft.setCursor(0, current * FONT_SIZE);
+    tft.setCursor(0, (current % MAX_LIST) * FONT_SIZE);
     tft.print(tempRest.name);
 }

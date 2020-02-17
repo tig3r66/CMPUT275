@@ -46,7 +46,8 @@ void drawMapPatch(int cursorX0, int cursorY0);
 /*
     Description: draws dots over restaurants that are closest to the cursor.
 */
-void drawCloseRests(uint8_t radius, uint16_t distance, uint16_t colour);
+void drawCloseRests(uint8_t rating, uint8_t radius, uint16_t distance,
+    uint16_t colour);
 
 /*
     Description: helper function for redrawMap() which aids with map boundary
