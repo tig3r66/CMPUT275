@@ -52,9 +52,7 @@ int main() {
     // 0 = quicksort, 1 = insertionsort, 2 = both
     uint8_t SORT_MODE = 0;
     // drawing initial options
-    drawOptionButtons(RATING, SORT_MODE, 3, ONE_PURPLE);
-    drawRating(RATING);
-    drawSortMode(SORT_MODE);
+    drawSideBar(RATING, SORT_MODE, 3, ONE_PURPLE);
 
     while (true) {
         if (MODE == 0) {
@@ -68,9 +66,7 @@ int main() {
             tft.fillScreen(TFT_BLACK);
             // loops until the joystick button is pressed
             modeOne(SORT_MODE, RATING);
-            drawOptionButtons(RATING, SORT_MODE, 3, ONE_PURPLE);
-            drawRating(RATING);
-            drawSortMode(SORT_MODE);
+            drawSideBar(RATING, SORT_MODE, 3, ONE_PURPLE);
             MODE = 0;
         }
     }
@@ -371,7 +367,6 @@ void printRestList(uint16_t pageNum, uint16_t selectedRest) {
 */
 void menuProcess(uint16_t* selection, uint16_t* pageNum) {
     uint16_t joyY = analogRead(JOY_VERT);
-
     if (joyY < (JOY_CENTER - JOY_DEADZONE)) {
         scrollUp(selection, pageNum);
     } else if (joyY > (JOY_CENTER + JOY_DEADZONE)) {

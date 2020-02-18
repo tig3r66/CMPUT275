@@ -307,6 +307,24 @@ void printWord(const char* word) {
 
 
 /*
+    Description: draws all side bar items on the TFT display.
+
+    Arguments:
+        rating (uint8_t): desired restaurant rating.
+        sortMode (uint8_t): desired sort mode (insertion sort or quicksort).
+        thickness (uint8_t): thickness of button border.
+        colour (uint8_t): colour of button border.
+*/
+void drawSideBar(
+    uint8_t rating, uint8_t sortMode, uint8_t thickness, uint16_t colour
+) {
+    drawOptionButtons(rating, sortMode, thickness, colour);
+    drawRating(rating);
+    drawSortMode(sortMode);
+}
+
+
+/*
     Description: draws two buttons on the TFT display.
 
     Arguments:

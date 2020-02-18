@@ -86,6 +86,12 @@ void lcdYegDraw(int icol, int irow, int scol, int srow, int width, int height);
 void printWord(const char* word);
 
 /*
+    Description: draws all side bar items on the TFT display.
+*/
+void drawSideBar( uint8_t rating, uint8_t sortMode, uint8_t thickness,
+    uint16_t colour);
+
+/*
     Description: draws two buttons on the TFT display.
 */
 void drawOptionButtons(uint8_t rating, uint8_t sortMode, uint8_t thickness,
