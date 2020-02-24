@@ -9,7 +9,7 @@ The course uses a problem-based approach to motivate the concepts and illustrate
 
 **REPOSITORY DESCRIPTION**
 
-Contains projects and assignments from a computing science course at the University of Alberta called Introduction to Tangible Computing II. Please take all uploaded code with a grain of salt as errata may be present and code may not be optimized.
+This repository contains projects and assignments from a computing science course at the University of Alberta called Introduction to Tangible Computing II. Please take all uploaded code with a grain of salt as errata may be present and code may not be optimized.
 
 ## License
 This repository is licensed under the MIT license. See [LICENSE](./LICENSE) for further detail.
