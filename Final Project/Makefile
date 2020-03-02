@@ -40,7 +40,7 @@ CXXFLAGS        += $(shell $(PYTHON_BIN) $(CURDIR)/include/numpy_flags.py)
 WITHOUT_NUMPY   := $(findstring $(CXXFLAGS), WITHOUT_NUMPY)
 
 # Compile these executables
-SRC := minimal live_plot
+SRC := main
 # Examples requiring numpy support to compile
 # SRC_NUMPY  := surface
 # SRC        := minimal basic modern animation nonblock xkcd quiver bar fill_inbetween fill update subplot2grid \
@@ -56,7 +56,7 @@ src: $(TARGETS)
 # Assume every *.cpp file is a separate example
 $(TARGETS): build/%: src/%.cpp
 	mkdir -p build
-	$(CXX) -o $@ $< $(CXXFLAGS) $(LDFLAGS)
+	$(CXX) -o $@ $< $(CXXFLAGS) $(LDFLAGS) -DWITHOUT_NUMPY
 
 clean:
 	@rm -f $(TARGETS)
