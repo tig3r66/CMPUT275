@@ -1,25 +1,22 @@
 import sys
 import random
-import matplotlib.pyplot as plt
+import worker_threads as wt
 from collections import deque
+
+# for data streaming
+import pylsl
+
+# for UI
+from PyQt5 import QtCore, QtWidgets
+from mpl_canvas import MplCanvas
+
+# for data plotting
+import matplotlib.pyplot as plt
 plt.style.use('seaborn')
 
 
-from PyQt5 import QtCore, QtWidgets
-
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
-
-
-class MplCanvas(FigureCanvas):
-
-    def __init__(self, parent=None, width=5, height=4, dpi=100):
-        self.fig = Figure(figsize=(width, height), dpi=dpi)
-        self.axes = self.fig.add_subplot(111)
-        super(MplCanvas, self).__init__(self.fig)
-
-
 class MainWindow(QtWidgets.QMainWindow):
+
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
 
@@ -32,16 +29,25 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Storing a reference to the plotted line
         self._plot_ref = None
-        self.update_eegplot()
         self.show()
+
+        # multithreading
+        self.threadpool = QtCore.QThreadPool()
 
         # Setup a timer to trigger the redraw
         self.timer = QtCore.QTimer()
         self.timer.setInterval(100)
-        self.timer.timeout.connect(self.update_eegplot)
+        self.timer.timeout.connect(self.eeg_worker)
         self.timer.start()
 
+
     def setup_ui(self):
+        self.setStyleSheet(
+            'QMainWindow {'
+            '   color: white;'
+            '   background-color: white;'
+            '}'
+        )
         # main window
         self.setWindowTitle('EEG Visualizer')
         self._main = QtWidgets.QWidget()
@@ -55,6 +61,7 @@ class MainWindow(QtWidgets.QMainWindow):
         layout.addWidget(self.eeg_canvas, 0, 0)
         layout.addWidget(self.fft_canvas, 0, 1)
 
+
     def setup_eeg_window(self):
         self.eeg_canvas = MplCanvas(self, width=9, height=3, dpi=100)
         self.eeg_canvas.axes.set_ylim(-150, 150)
@@ -63,6 +70,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.eeg_canvas.axes.get_yaxis().set_visible(False)
         self.eeg_canvas.fig.tight_layout()
 
+
     def setup_fft_window(self):
         self.fft_canvas = MplCanvas(self, width=6, height=3, dpi=100)
         self.fft_canvas.axes.set_title('FFT Plot')
@@ -70,17 +78,23 @@ class MainWindow(QtWidgets.QMainWindow):
         self.fft_canvas.axes.get_yaxis().set_visible(False)
         self.fft_canvas.fig.tight_layout()
 
+
     def update_eegplot(self):
         self.ydata.popleft()
         self.ydata.append(random.uniform(-64, 64))
 
         if self._plot_ref is None:
-            self._plot_ref, = self.eeg_canvas.axes.plot(self.xdata, self.ydata, 'k')
+            self._plot_ref, = self.eeg_canvas.axes.plot(self.xdata,
+                self.ydata, 'k')
         else:
             self._plot_ref.set_ydata(self.ydata)
 
         # trigger the canvas to update and redraw
         self.eeg_canvas.draw()
+
+    def eeg_worker(self):
+        worker = wt.Worker(self.update_eegplot)
+        self.threadpool.start(worker)
 
 
 if __name__ == '__main__':
