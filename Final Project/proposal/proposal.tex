@@ -1,0 +1,50 @@
+\documentclass{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{fancyhdr, hyperref}
+\fancyhead[L]{\textbf{CMPUT 275 -- Tangible Computing} \hfill \textbf{Winter 2020}}
+
+\hypersetup{
+	colorlinks,
+	citecolor=black,
+	filecolor=black,
+	linkcolor=blue,
+	urlcolor=blue
+}
+
+\title{\Large \textbf{CMPUT 275 Final Project Proposal \vspace{-2em}}}
+\date{\today}
+
+
+\begin{document}
+
+\maketitle
+\thispagestyle{fancy}
+
+% Important Information
+\flushleft
+\textbf{Project Title:} EEG Visualizer\\
+\textbf{Group Members:} Eddie Guo, Jason Kim
+
+% Description
+\section*{Description}
+In this project, we plan on visualizing live-time mock EEG data streamed over a local network (using \href{https://labstreaminglayer.readthedocs.io}{Lab Streaming Layer, LSL}) on the desktop. A UI will be implemented, and the user will be able to view a live graph of a single-channel EEG signal alongside a live Fourier transformed plot. If time permits, we will also implement a live bar chart of the relative strength of the band power of the received signals\footnote{See \href{https://raphaelvallat.com/bandpower.html}{here} for more details on interpreting EEG data.} (alpha, beta, delta, gamma, theta).\\[1em]
+
+The main focus of this project will be to implement a fast Fourier transform (fft) and to plot live data. We also hope to add support for saving input, scrollable graphs, configurable colour themes, and multiple EEG channels.
+
+% Milestones
+\section*{Milestones}
+\begin{enumerate}
+    \item \textbf{By March 13:} Implement the fft algorithm. We plan on implementing the Cooley-Tukey fft algorithm. First, we will write the radix-2 decimation-in-time algorithm. Then, we will attempt the chirp Z-transform (aka Bluestein's fft algorithm). We expect that the latter fft algorithm will be mathematically challenging to understand and difficult to implement (but extremely cool to do!).
+    \item \textbf{By March 20:} Build the GUI. Here, we will use Matplotlib (and maybe Seaborn) to animate the graphs. All incoming data will be scaled to the appropriate time range. All data will be sent and received via LSL at 128 Hz. This is so that we can accurately plot within acceptable sampling errors.\footnote{See \href{https://en.wikipedia.org/wiki/Nyquist–Shannon_sampling_theorem}{Nyquist-Shannon sampling theorem}.}
+    \item \textbf{By March 27:} Expand on the GUI (perhaps using PyQt5), perform unit tests on the fft algorithms, and refactor the code. We predict that the tasks from the previous week may bleed into this week due to little bugs in application logic. We will consider multi-threading to speed up our application.
+\end{enumerate}
+
+% Bonus Milestones (Time Permitting)
+\section*{Bonus Milestones (Time Permitting)}
+\begin{itemize}
+    \item Add a homepage which allows users to choose which plots they want (raw EEG data, fft plot, bar chart of band power).
+    \item Add multiple EEG streams. We will stick to one EEG stream initially to prevent excessive busywork.
+    \item Contigent on the previous bonus milestone, we will add buttons which allow the user to toggle individual EEG streams. We may also translate the fft algorithm to C++ code and call it using a wrapper in Python. We may alternatively use Cython to create a shared library.
+\end{itemize}
+
+\end{document}

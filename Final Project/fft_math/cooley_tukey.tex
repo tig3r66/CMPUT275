@@ -1,0 +1,127 @@
+\documentclass{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{fancyhdr, hyperref, amsmath, amsfonts, parskip, multicol, listings, xcolor}
+\fancyhead[L]{\textbf{CMPUT 275 -- Tangible Computing} \hfill \textbf{Winter 2020}}
+
+\hypersetup{
+	colorlinks,
+	citecolor=black,
+	filecolor=black,
+	linkcolor=blue,
+	urlcolor=blue
+}
+
+% settings up listings environment
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false, 
+    tabsize=2
+}
+
+\lstset{style=mystyle}
+
+\title{\Large \textbf{Final Project: EEG Visualizer -- FFT Algorithms}}
+\author{Eddie Guo}
+\date{\today}
+
+
+\begin{document}
+
+\maketitle
+\thispagestyle{fancy}
+
+\section*{Discrete Fourier Transform}
+The Fourier transform can be written in a few forms with forward and inverse transforms:
+
+\begin{multicols}{2}
+    \textbf{Hertz Frequency}
+    \begin{align*}
+        X(f) &= \int\limits_{-\infty}^{\infty} x(t) e^{-i 2\pi ft} dt\\
+        x(t) &= \int\limits_{-\infty}^{\infty} X(f) e^{i 2\pi ft} df
+    \end{align*}
+
+    \textbf{Radian Frequency}
+    \begin{align*}
+        X(\omega) &= \frac{1}{\sqrt{2\pi}} \int\limits_{-\infty}^{\infty} x(t) e^{-i \omega t} dt\\
+        x(t) &= \frac{1}{\sqrt{2\pi}} \int\limits_{-\infty}^{\infty} X(\omega) e^{i \omega t} d\omega
+    \end{align*}
+\end{multicols}
+
+The discrete Fourier transform (DFT) is more useful to us as programmers. The na\"{i}ve method is an $O(n^2)$ computation which also has a forward and inverse form. A few notes on notation:
+
+\begin{multicols}{2}
+    \begin{itemize}
+        \item $N$ -- the number of time samples.
+        \item $n$ -- the current sample considered (0, 1, ..., $N$-1).
+        \item $x_n$ -- the value of the signal at time $n$.
+        \item $k$ -- the current frequency (0 Hz to N-1 Hz).
+        \item $X_k$ -- the complex number representing amplitude and phase.
+    \end{itemize}
+\end{multicols}
+\textbf{Forward DFT} $$ X_k = \sum_{n=0}^{N-1} x_n \cdot e^{-i 2 \pi k n / N} $$
+
+\textbf{Inverse DFT} $$ x_n = \frac{1}{N} \sum_{n=0}^{N-1} X_k \cdot e^{-i 2 \pi k n / N} $$
+
+\begin{align*}
+    X_k &= \sum_{n=0}^{N-1} x_n \cdot e^{-i 2 \pi k n / N}\\
+    \textbf{X} &= \textbf{x} \cdot M\\
+    \intertext{Where the matrix $M$ is given by}
+    M_{kn} &= e^{-i 2 \pi k n / N}
+\end{align*}
+
+\newpage
+\thispagestyle{fancy}
+We can compute the DFT using matrix multiplication as shown below.
+\begin{lstlisting}[language=Python, caption=Na\"{i}ve implementation of the DFT]
+import numpy as np
+
+def dft(x):
+    """Computes the discrete Fourier transform of the 1-D array x"""
+    x = np.asarray(x, dtype=float)
+    n = np.arange(N)
+    N = x.shape[0]
+    k = n.reshape((N, 1))
+    M = np.exp(-2j * np.pi * k * n / N)
+
+    return np.dot(x, M)
+\end{lstlisting}
+
+
+\section*{Cooley-Tukey FFT Algorithm}
+This algorithm exploits the symmetry in the DFT. Let us start by re-expressing the DFT in terms of $X_{N+k}$.\vspace{-1em}
+
+\begin{align*}
+    X_{N+k} &= \sum_{n=0}^{N-1} x_n \cdot e^{-i 2 \pi k n / N}\\
+    &= \sum_{n=0}^{N-1} x_n \cdot e^{-i 2\pi n} \cdot e^{-i 2\pi k n / N}\\
+    \intertext{We can now use the identity $e^{ 2\pi i} = 1 \Rightarrow e^{2\pi i n} = (e^{2\pi i})^n = 1^n = 1$.}
+    &= \sum_{n=0}^{N-1} x_n \cdot e^{-i 2\pi k n / N}\\
+    \intertext{However, this is just the original DFT. Thus, symmetry exists such that $X_{N+k} = X_k$. We can take this one step further $X_{k + iN} = X_k$, for any integer $i \in \mathbb{R}$.}
+    X_k &= \sum_{n=0}^{N-1} x_n \cdot e^{-i 2\pi k n/N}\\
+    &= \sum_{m=0}^{N/2 - 1} x_{2m} \cdot e^{-i2\pi k(2m)/(N/2)} + \sum_{m=0}^{N/2 - 1} x_{2m + 1} \cdot e^{-i2\pi k(2m + 1)/ (N/2)}\\
+    &= \sum_{m=0}^{N/2 - 1} x_{2m} \cdot e^{-i2\pi k(2m)/(N/2)} + e^{-i 2\pi k/N} \sum_{m=0}^{N/2 - 1} x_{2m + 1} \cdot e^{-i2\pi k  m/ (N/2)}\\
+\end{align*}
+
+Here, the DFT is split into two terms: one for even-numbered values and one for odd-numbered values. This still gives $(N/2) * N$ computations giving the same time complexity of $O(n^2)$. However, we notice that $0 \leq k < N$ and $0 \leq n < M \equiv N/2$. From the symmetric properties shown, there is only need to perform half the computations for each partition of the original $N$-dimensional vector. Thus, the algorithm is converted from $O(n^2)$ to $O(M^2)$ where $M = N/2$.
+
+It is clear here that we are cooking up a divide-and-conquer approach: partition the vector until the partitioning no longer provides any reasonable time benefits, say N $\leq 32$. We can recursively apply all computations such that $O(N^2)$ becomes $O(\frac{N}{2} log_2 N) = O(N log N)$.\footnote{Note: this algorithm works $\iff$ the input vector's size is a power of 2.}
+
+
+\end{document}
