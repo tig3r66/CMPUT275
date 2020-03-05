@@ -2,6 +2,8 @@
 # This section is copied from GitHub/gitignore licensed under CC0 1.0 Universal.
 # Link: https://github.com/github/gitignore
 
+.DS_STORE
+
 # Prerequisites
 *.d
 
