@@ -31,9 +31,10 @@ class Worker(QRunnable):
         self.kwargs = kwargs
         self.signals = WorkerSignals()    
 
+
     @pyqtSlot()
     def run(self):
-        '''Initialise the runner function with passed args, kwargs.
+        '''Initialize the runner function with passed args, kwargs.
         '''
         try:
             result = self.fn(*self.args, **self.kwargs)
@@ -45,3 +46,10 @@ class Worker(QRunnable):
             self.signals.result.emit(result)
         finally:
             self.signals.finished.emit()
+
+
+    @pyqtSlot()
+    def stop(self):
+        """Terminates all thread processes.
+        """
+        self.terminate()
