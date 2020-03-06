@@ -4,7 +4,7 @@ import worker_threads as wt
 from collections import deque
 
 # for data streaming
-import pylsl
+from pylsl import StreamInlet, resolve_stream
 
 # for UI
 from PyQt5 import QtCore, QtWidgets
@@ -16,6 +16,7 @@ plt.style.use('seaborn')
 
 
 class MainWindow(QtWidgets.QMainWindow):
+    _run_thread = True
 
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
@@ -33,6 +34,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # multithreading
         self.threadpool = QtCore.QThreadPool()
+        self.pull_data_worker()
+        # gracefully exiting all threads
+        app.aboutToQuit.connect(self.stop_threads)
 
         # Setup a timer to trigger the redraw
         self.timer = QtCore.QTimer()
@@ -92,9 +96,29 @@ class MainWindow(QtWidgets.QMainWindow):
         # trigger the canvas to update and redraw
         self.eeg_canvas.draw()
 
+
     def eeg_worker(self):
         worker = wt.Worker(self.update_eegplot)
         self.threadpool.start(worker)
+
+
+    def pull_data(self):
+        # TODO: make this update a buffer to plot from
+        print('Looking for an EEG stream...')
+        streams = resolve_stream('type', 'EEG')
+        inlet = StreamInlet(streams[0])
+        while self._run_thread:
+            sample, timestamp = inlet.pull_sample()
+            print(timestamp, sample)
+
+
+    def pull_data_worker(self):
+        self.data_worker = wt.Worker(self.pull_data)
+        self.threadpool.start(self.data_worker)
+
+
+    def stop_threads(self):
+        self._run_thread = False
 
 
 if __name__ == '__main__':
