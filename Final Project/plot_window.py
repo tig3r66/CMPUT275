@@ -17,7 +17,7 @@ plt.style.use('seaborn')
 class PlotWindow():
 
     def setup_ui(self, MainWindow):
-        self.__run_thread = True
+        self._run_thread = True
 
         MainWindow.setStyleSheet(
             'QMainWindow {'
@@ -56,12 +56,12 @@ class PlotWindow():
 
         # multithreading
         self.threadpool = QtCore.QThreadPool()
-        self.pull_data_worker()
+        self.start_thread(self.pull_data)
 
         # Setup a timer to trigger the redraw
         self.timer = QtCore.QTimer()
         self.timer.setInterval(100)
-        self.timer.timeout.connect(self.eeg_worker)
+        self.timer.timeout.connect(lambda: self.start_thread(self.update_eegplot))
         self.timer.start()
 
 
@@ -96,26 +96,22 @@ class PlotWindow():
         self.eeg_canvas.draw()
 
 
-    def eeg_worker(self):
-        worker = wt.Worker(self.update_eegplot)
-        self.threadpool.start(worker)
-
-
     def pull_data(self):
         # TODO: make this update a buffer to plot from
-        pass
-        # print('Looking for an EEG stream...')
-        # streams = resolve_stream('type', 'EEG')
-        # inlet = StreamInlet(streams[0])
-        # while self.__run_thread:
-        #     sample, timestamp = inlet.pull_sample()
+        print('Looking for an EEG stream...')
+        streams = resolve_stream('type', 'EEG')
+        inlet = StreamInlet(streams[0])
+        while self._run_thread:
+            sample, timestamp = inlet.pull_sample()
+            print('timestamp:', timestamp, 'sample:', sample)
 
 
-    def pull_data_worker(self):
-        self.data_worker = wt.Worker(self.pull_data)
-        self.threadpool.start(self.data_worker)
+    def start_thread(self, *args):
+        for func in args:
+            self.thread = wt.Worker(func)
+            self.threadpool.start(self.thread)
 
 
-    # overriding inherited method to gracefully exit running threads
-    def closeEvent(self):
-        self.__run_thread = False
+    def close_threads(self):
+        self._run_thread = False
+        self.threadpool.waitForDone()

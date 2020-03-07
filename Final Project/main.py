@@ -12,6 +12,11 @@ class Controller:
         self.ui = PlotWindow()
         self.ui.setup_ui(self.plot_window)
         self.plot_window.show()
+        app.aboutToQuit.connect(self.close_threads)
+
+
+    def close_threads(self):
+        self.ui.close_threads()
 
 
 if __name__ == '__main__':
