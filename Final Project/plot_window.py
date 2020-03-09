@@ -11,10 +11,12 @@ from mpl_canvas import MplCanvas
 
 # for data plotting
 import matplotlib.pyplot as plt
-plt.style.use('seaborn')
+plt.style.use('dark_background')
 
 
 class PlotWindow():
+    n_data = 100
+    iter_n = 0
 
     def setup_ui(self, MainWindow):
         self._run_thread = True
@@ -47,12 +49,12 @@ class PlotWindow():
         # setting up data streams
         random.seed(0)
 
-        n_data = 100
-        self.xdata = deque([-(n_data/10 - i/10) for i in range(n_data)])
-        self.ydata = deque([random.uniform(-64, 64) for i in range(n_data)])
+        self.xdata = deque([i/10 for i in range(self.n_data)])
+        self.ydata = deque([random.uniform(-64, 64) for i in range(self.n_data)])
 
         # Storing a reference to the plotted line
         self._plot_ref = None
+        self._moving_ref = None
 
         # multithreading
         self.threadpool = QtCore.QThreadPool()
@@ -83,14 +85,19 @@ class PlotWindow():
 
 
     def update_eegplot(self):
-        self.ydata.popleft()
-        self.ydata.append(random.uniform(-64, 64))
+        self.ydata[self.iter_n] = random.uniform(-64, 64)
+        self.iter_n = (self.iter_n + 1) % self.n_data
 
         if self._plot_ref is None:
             self._plot_ref, = self.eeg_canvas.axes.plot(self.xdata,
-                self.ydata, 'k')
+                self.ydata, '#00FF7F', linewidth=1)
         else:
             self._plot_ref.set_ydata(self.ydata)
+
+        if self._moving_ref != None:
+            self._moving_ref.remove()
+        self._moving_ref = self.eeg_canvas.axes.axvline(
+            self.xdata[self.iter_n], -64, 64, c='r')
 
         # trigger the canvas to update and redraw
         self.eeg_canvas.draw()
@@ -103,7 +110,7 @@ class PlotWindow():
         inlet = StreamInlet(streams[0])
         while self._run_thread:
             sample, timestamp = inlet.pull_sample()
-            print('timestamp:', timestamp, 'sample:', sample)
+            # print('timestamp:', timestamp, 'sample:', sample)
 
 
     def start_thread(self, *args):
