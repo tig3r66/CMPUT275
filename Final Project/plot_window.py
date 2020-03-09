@@ -70,7 +70,7 @@ class PlotWindow():
     def setup_eeg_window(self):
         self.eeg_canvas = MplCanvas(self, width=9, height=3, dpi=100)
         self.eeg_canvas.axes.set_ylim(-150, 150)
-        self.eeg_canvas.axes.set_title('Raw Time Series')
+        self.eeg_canvas.axes.set_title('EEG')
         self.eeg_canvas.axes.set_xlabel('Time (s)')
         self.eeg_canvas.axes.get_yaxis().set_visible(False)
         self.eeg_canvas.fig.tight_layout()
