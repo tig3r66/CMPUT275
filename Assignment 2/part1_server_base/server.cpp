@@ -1,4 +1,6 @@
 #include <iostream>
+#include <cmath>
+//remeber to include .h files
 using namespace std;
 
 void hold() {
@@ -44,6 +46,38 @@ void serverComm() {
 	}	
 }
 
-int main() {
-
+long long manhattan(const Point& pt1, const Point& pt2) {
+	return (abs(pt1.lat - pt2.lat) + abs(pt1.lon - pt2.lon));
 }
+
+void readGraph(string filename, WDigraph &graph, unordered_map<int, Point> points) {
+	float lat, lon;
+	long long convertedLat, convertedLon;
+	ifstream textIn(filename);
+    if (!textIn.good()) {
+        cout << "error: digraph text file not found" << endl;
+        cout << "usage: ./graph_concepts <digraph_file_name>.txt" << endl;
+        exit(EXIT_FAILURE);
+    }
+    Point point;
+    long long distance;
+	while (textIn >> graphID >> comma) {
+        if (graphID == 'V') {
+            // vertex format: V,ID,Lat,Lon
+            textIn >> ID >> comma >> lat >> comma >> lon;
+            convertedLon = static_cast<long, long>(lon * 100000)
+            convertedLat = static_cast<long, long>(lat * 100000)
+            point = {lat, lon};
+            points[ID] = point;
+            digraphPtr->addVertex(ID);
+        } else if (graphID == 'E') {
+            // edge format: E,start,end,name
+            textIn >> start >> comma >> end >> comma;
+            getline(textIn, name);
+            //find points and get manhattan distance
+            distance = manhattan(startPt, endPt);
+            //associate edge with that distance
+            digraphPtr->addEdge(start, end); 
+        }
+    }
+} 
