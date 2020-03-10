@@ -21,6 +21,6 @@ outlet = StreamOutlet(info)
 print("now sending data...")
 while True:
     # make a new random 1-channel sample and send it
-    mysample = [random.random(-64, 64)]
+    mysample = [random.uniform(-64, 64)]
     outlet.push_sample(mysample)
     time.sleep(0.01)
