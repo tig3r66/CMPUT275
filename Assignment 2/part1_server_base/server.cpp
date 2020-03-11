@@ -1,6 +1,10 @@
 #include <iostream>
 #include <cmath>
-//remeber to include .h files
+#include <fstream>
+#include <string>
+#include "server.h"
+#include "wdigraph.h"
+
 using namespace std;
 
 void hold() {
@@ -10,7 +14,7 @@ void hold() {
 	while (true) { //add conditon regrading time for part 2
 		cin >> comm;
 		if (comm == 'A') { // wait for ACK key 
-			commed = true;
+			//commed = true;
 			break;
 		} /*
 		else {
@@ -22,14 +26,18 @@ void hold() {
 
 void processRequest(long startLon, long startLat, long endLon, long endLat) {
 	// calc and print waypoints in a list or shit
+	/*
 	if () { // if waypoints = 0
 		return;
 	}
+	*/
 	hold();
+	/*
 	for () { // replace condition with number of waypoints in list
 		//print each waypoint
 		hold(); //wait for ACK
 	}
+	*/
 	cout << 'E' << endl; // end key, replace
 }
 
@@ -51,8 +59,11 @@ long long manhattan(const Point& pt1, const Point& pt2) {
 }
 
 void readGraph(string filename, WDigraph &graph, unordered_map<int, Point> points) {
+	char graphID, comma;
+    int ID, start, end;
 	float lat, lon;
 	long long convertedLat, convertedLon;
+	string name;
 	ifstream textIn(filename);
     if (!textIn.good()) {
         cout << "error: digraph text file not found" << endl;
@@ -65,19 +76,20 @@ void readGraph(string filename, WDigraph &graph, unordered_map<int, Point> point
         if (graphID == 'V') {
             // vertex format: V,ID,Lat,Lon
             textIn >> ID >> comma >> lat >> comma >> lon;
-            convertedLon = static_cast<long, long>(lon * 100000)
-            convertedLat = static_cast<long, long>(lat * 100000)
-            point = {lat, lon};
+            convertedLon = static_cast<long long>(lon * SCALE);
+            convertedLat = static_cast<long long>(lat * SCALE);
+            point = {convertedLat, convertedLon};
             points[ID] = point;
-            digraphPtr->addVertex(ID);
+            graph.addVertex(ID);
         } else if (graphID == 'E') {
             // edge format: E,start,end,name
             textIn >> start >> comma >> end >> comma;
             getline(textIn, name);
             //find points and get manhattan distance
-            distance = manhattan(startPt, endPt);
+
+            //distance = manhattan(startPt, endPt);
             //associate edge with that distance
-            digraphPtr->addEdge(start, end); 
+            graph.addEdge(start, end, 100); 
         }
     }
 } 
