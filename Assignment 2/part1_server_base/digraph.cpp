@@ -1,4 +1,4 @@
-#include "digraph.h"
+#include "include/digraph.h"
 
 using namespace std;
 

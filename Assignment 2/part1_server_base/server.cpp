@@ -2,9 +2,9 @@
 #include <cmath>
 #include <fstream>
 #include <string>
-#include "server.h"
-#include "wdigraph.h"
-#include "dijkstra.h"
+#include "include/server.h"
+#include "include/wdigraph.h"
+#include "include/dijkstra.h"
 
 using namespace std;
 

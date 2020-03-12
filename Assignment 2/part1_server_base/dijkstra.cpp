@@ -1,5 +1,5 @@
-#include "dijkstra.h"
-#include "heap.h"
+#include "include/dijkstra.h"
+#include "include/heap.h"
 using namespace std;
 
 void dijkstra(const WDigraph& graph, int startVertex,
