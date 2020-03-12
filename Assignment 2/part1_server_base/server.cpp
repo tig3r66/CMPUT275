@@ -8,6 +8,7 @@
 
 using namespace std;
 
+
 void hold() {
 	char comm;
 	//bool commed = true; //timeout implmentation for part 2
@@ -25,14 +26,16 @@ void hold() {
 	}
 }
 
-void processRequest(long startLon, long startLat, long endLon, long endLat) {
+
+void processRequest(long startLon, long startLat, long endLon, long endLat, WDigraph& graph) {
 	// calc and print waypoints in a list or shit
+
 	/*
 	if () { // if waypoints = 0
 		return;
 	}
 	*/
-	hold();
+	//hold();
 	/*
 	for () { // replace condition with number of waypoints in list
 		//print each waypoint
@@ -42,22 +45,24 @@ void processRequest(long startLon, long startLat, long endLon, long endLat) {
 	cout << 'E' << endl; // end key, replace
 }
 
-void serverComm() {
+
+void serverComm(WDigraph& graph) {
 	char input;
 	long startLon, startLat, endLon, endLat;
 	while (true) {
 		cin >> input; // replace with arduino serial input in part 2
 		if (input == 'R') { //process request, server enters request handling
 			cin >> startLon >> startLat >> endLon >> endLat; //replace with serial input in part 2
-			// do djkastra with these points and print waypoints
-			processRequest(startLon, startLat, endLon, endLat);
+			processRequest(startLon, startLat, endLon, endLat, graph); //do djks
 		}
 	}	
 }
 
+
 long long manhattan(const Point& pt1, const Point& pt2) {
 	return (abs(pt1.lat - pt2.lat) + abs(pt1.lon - pt2.lon));
 }
+
 
 void readGraph(string filename, WDigraph &graph, unordered_map<int, Point> points) {
 	char graphID, comma;
@@ -94,6 +99,12 @@ void readGraph(string filename, WDigraph &graph, unordered_map<int, Point> point
     }
 } 
 
-int main() {
+
+int main(int argc, char* argv[]) {
+	WDigraph graph;
+	unordered_map<int, Point> points;
+	readGraph(argv[1], graph, points);
+	serverComm(graph);
+
 	return 0;
 }
