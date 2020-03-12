@@ -1,4 +1,4 @@
-server: server.o digraph.o
+server: server.o dijkstra.o digraph.o
 	g++ server.o digraph.o -o server
 server.o: server.cpp 
 	g++ server.cpp -o server.o -c -Wall

@@ -29,7 +29,10 @@ void hold() {
 
 void processRequest(long startLon, long startLat, long endLon, long endLat, WDigraph& graph) {
 	// calc and print waypoints in a list or shit
-
+	unordered_map<int, PIL> tree;
+	Point minpoint, maxpoints;
+	for (auto x: )
+	dijkstra(graph, )
 	/*
 	if () { // if waypoints = 0
 		return;
@@ -44,20 +47,6 @@ void processRequest(long startLon, long startLat, long endLon, long endLat, WDig
 	*/
 	cout << 'E' << endl; // end key, replace
 }
-
-
-void serverComm(WDigraph& graph) {
-	char input;
-	long startLon, startLat, endLon, endLat;
-	while (true) {
-		cin >> input; // replace with arduino serial input in part 2
-		if (input == 'R') { //process request, server enters request handling
-			cin >> startLon >> startLat >> endLon >> endLat; //replace with serial input in part 2
-			processRequest(startLon, startLat, endLon, endLat, graph); //do djks
-		}
-	}	
-}
-
 
 long long manhattan(const Point& pt1, const Point& pt2) {
 	return (abs(pt1.lat - pt2.lat) + abs(pt1.lon - pt2.lon));
@@ -101,10 +90,16 @@ void readGraph(string filename, WDigraph &graph, unordered_map<int, Point> point
 
 
 int main(int argc, char* argv[]) {
-	WDigraph graph;
-	unordered_map<int, Point> points;
 	readGraph(argv[1], graph, points);
-	serverComm(graph);
+	char input;
+	long startLon, startLat, endLon, endLat;
+	while (true) {
+		cin >> input; // replace with arduino serial input in part 2
+		if (input == 'R') { //process request, server enters request handling
+			cin >> startLon >> startLat >> endLon >> endLat; //replace with serial input in part 2
+			processRequest(startLon, startLat, endLon, endLat, graph); //do djks
+		}
+	}	
 
 	return 0;
 }

@@ -7,18 +7,18 @@ void dijkstra(const WDigraph& graph, int startVertex,
               unordered_map<int, PIL>& tree) {
 	// heap of all events, where pair represents edge on fire and key represents time fires reaches end node
 	BinaryHeap<PIL, int> events; 
-	//put fire in starting vertex
-	HeapItem<PIL, int> firstFire = {PIL(startVertex,startVertex), 0};
-	HeapItem<PIL, int currentFire;
-	events.insert(firstFire);
+	HeapItem<PIL, int> currentFire;
+	events.insert(PIL(startVertex, startVertex), 0);
 	while (events.size() > 0) {
-		currentFire = events.popMin();
-		if (tree.find((currentFire.item).first) != tree.end()) {
-			tree[(currentFire.item).first] = PIL((currentFire.item).first, (currentFire.item).second);
+		currentFire = events.min();
+		events.popMin();
+		if (tree.find(currentFire.item.second) != tree.end()) {
+			auto v = currentFire.item.second;
+			tree[v] = PIL(currentFire.item.first, currentFire.key);
+			for (auto iter = graph.neighbours(v); 
+				iter != graph.endIterator(v); iter++) {
+				events.insert(PIL(v, *iter), graph.getCost(v, *iter));
+			}
 		}
 	} 
-
-
-
-
 }

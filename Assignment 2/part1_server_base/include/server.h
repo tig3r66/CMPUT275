@@ -14,8 +14,6 @@ void hold();
 
 void processRequest(long, long, long, long, WDigraph&);
 
-void serverComm(WDigraph&);
-
 long long manhattan(const Point&, const Point&);
 
 void readGraph(string file, WDigraph&, unordered_map<int, Point>);
