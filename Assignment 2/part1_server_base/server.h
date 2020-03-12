@@ -9,9 +9,9 @@ struct Point {
 
 void hold();
 
-void processRequest(long, long, long, long);
+void processRequest(long, long, long, long, WDigraph&);
 
-void serverComm();
+void serverComm(WDigraph&);
 
 long long manhattan(const Point&, const Point&);
 

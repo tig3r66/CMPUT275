@@ -4,6 +4,7 @@
 #include <string>
 #include "server.h"
 #include "wdigraph.h"
+#include "dijkstra.h"
 
 using namespace std;
 
@@ -86,10 +87,13 @@ void readGraph(string filename, WDigraph &graph, unordered_map<int, Point> point
             textIn >> start >> comma >> end >> comma;
             getline(textIn, name);
             //find points and get manhattan distance
-
-            //distance = manhattan(startPt, endPt);
+            distance = manhattan(points[start], points[end]);
             //associate edge with that distance
-            graph.addEdge(start, end, 100); 
+            graph.addEdge(start, end, distance); 
         }
     }
 } 
+
+int main() {
+	return 0;
+}
