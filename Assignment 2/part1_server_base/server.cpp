@@ -102,12 +102,6 @@ void readGraph(const char* filename, WDigraph& graph,
     textIn.close();
 }
 
-void comm(int numWaypoints, list<int> path) {
-
-
-}
-
-
 int main(int argc, char* argv[]) {
     WDigraph graph;
     unordered_map<int, Point> points;
@@ -120,19 +114,15 @@ int main(int argc, char* argv[]) {
 
     readGraph(yegGraph, graph, points);
 
-    ifstream inputText(argv[1]);
-    isValidIfstream(inputText);
-
 	while (true) {
-		inputText >> input; 
+		cin  >> input; 
 		if (input == 'R') {
-			inputText >> startLat >> startLon >> endLat >> endLon; 
+			cin >> startLat >> startLon >> endLat >> endLon; 
 			Point start = {startLat, startLon};
 			Point end = {endLat, endLon};
 
 			startIndex = findClosestPointOnMap(start, points);
 			endIndex = findClosestPointOnMap(end, points);
-            cout << "startIndex: " << startIndex << " endIndex: " << endIndex << endl;
 
 			dijkstra(graph, startIndex, tree);
 
@@ -141,18 +131,19 @@ int main(int argc, char* argv[]) {
 			} else {
 				int i = 0;
 				int numWaypoints =  path.size();
-				cout << numWaypoints << endl;
+				cout << "N " << numWaypoints << endl;
 				while (i < numWaypoints) {
-					inputText >> input;
+					cin >> input;
 					if (input == 'A') {
 						int waypointID = path.front();
+						path.pop_front();
 						Point wayPoint = points[waypointID];
-						cout << "W " << wayPoint.lon << " " << wayPoint.lat << endl;
+						cout << "W " << wayPoint.lat << " " << wayPoint.lon << endl;
 						i++;
 					}
 				}
 				while (true) {
-					inputText >> input;
+					cin >> input;
 					if (input == 'A') {
 						cout << "E" << endl;
 						break;
