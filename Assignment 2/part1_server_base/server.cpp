@@ -99,6 +99,12 @@ void readGraph(const char* filename, WDigraph& graph,
             graph.addEdge(start, end, distance);
         }
     }
+    textIn.close();
+}
+
+void comm(int numWaypoints, list<int> path) {
+
+
 }
 
 
@@ -109,14 +115,18 @@ int main(int argc, char* argv[]) {
     list<int> path;
 	char input;
 	long long startLon, startLat, endLon, endLat;
+	const char* yegGraph = "edmonton-roads-2.0.1.txt";
 	int startIndex, endIndex;
 
-    readGraph(argv[1], graph, points);
+    readGraph(yegGraph, graph, points);
+
+    ifstream inputText(argv[1]);
+    isValidIfstream(inputText);
 
 	while (true) {
-		cin >> input; 
+		inputText >> input; 
 		if (input == 'R') {
-			cin >> startLat >> startLon >> endLat >> endLon; 
+			inputText >> startLat >> startLon >> endLat >> endLon; 
 			Point start = {startLat, startLon};
 			Point end = {endLat, endLon};
 
@@ -126,11 +136,28 @@ int main(int argc, char* argv[]) {
 
 			dijkstra(graph, startIndex, tree);
 
-			bool flag = findShortestPath(tree, path, startIndex, endIndex);
-			if (!flag) {
-				cout << "NO PATH" << endl;
+			if (!findShortestPath(tree, path, startIndex, endIndex)) {
+				cout << "0" << endl;
 			} else {
-				cout << path.size() << endl;
+				int i = 0;
+				int numWaypoints =  path.size();
+				cout << numWaypoints << endl;
+				while (i < numWaypoints) {
+					inputText >> input;
+					if (input == 'A') {
+						int waypointID = path.front();
+						Point wayPoint = points[waypointID];
+						cout << "W " << wayPoint.lon << " " << wayPoint.lat << endl;
+						i++;
+					}
+				}
+				while (true) {
+					inputText >> input;
+					if (input == 'A') {
+						cout << "E" << endl;
+						break;
+					}
+				}
 			}
 			break;
 		}
