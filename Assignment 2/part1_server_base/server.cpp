@@ -9,7 +9,7 @@
 
 using namespace std;
 
-// source of error here?
+// source of error here? both end and start point returns same index
 long long findClosestPointOnMap(const Point& point, unordered_map<int, Point> points) {
 	long long minDistance = 0;
 	int pointID;
