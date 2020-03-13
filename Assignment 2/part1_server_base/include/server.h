@@ -2,6 +2,7 @@
 #define SERVER_H
 
 #include "wdigraph.h"
+#include "dijkstra.h"
 #include <unordered_map>
 
 #define SCALE 100000
@@ -12,9 +13,9 @@ struct Point {
 	long long lon;
 };
 
-void hold();
+bool findShortestPath(unordered_map<int, PIL>, list<int>, long long start, long long end);
 
-void processRequest(long, long, long, long, WDigraph&);
+long long findClosestPointOnMap(const Point&, unordered_map<int, Point>);
 
 long long manhattan(const Point&, const Point&);
 

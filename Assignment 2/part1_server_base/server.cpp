@@ -2,6 +2,7 @@
 #include <cmath>
 #include <fstream>
 #include <string>
+#include <list>
 #include "include/server.h"
 #include "include/wdigraph.h"
 #include "include/dijkstra.h"
@@ -9,44 +10,40 @@
 using namespace std;
 
 
-void hold() {
-	char comm;
-	//bool commed = true; // timeout implmentation for part 2
-
-	while (true) { // add conditon regrading time for part 2
-		cin >> comm;
-		if (comm == 'A') { // wait for ACK key 
-			//commed = true;
-			break;
-		} /*
-		else {
-			break;
+long long findClosestPointOnMap(const Point& point, unordered_map<long long, Point> points) {
+	long long minDistance = 0;
+	long long pointID;
+	for (auto x: points) {
+		long long ptDis = manhattan(x.second, point);
+		if (ptDis < minDistance && minDistance != 0) {
+			pointID = x.first;
+			minDistance = ptDis;
 		}
-		*/
+		else if (minDistance == 0) {
+			pointID = x.first;
+			minDistance = ptDis;
+		}
+	}
+	return pointID;
+}
+
+// returns true if path is possible false if not
+bool findShortestPath(unordered_map<int, PIL> tree, list<int> path, long long start, long long end) {
+	if (tree.find(end) == tree.end()) {
+		return false;
+	}
+	else {
+		int currentNode = end;
+		while (currentNode != end) {
+			path.push_front(end);
+			currentNode = tree[currentNode].first;
+		}
+		path.push_front(start);
+		return true;
 	}
 }
 
 
-void processRequest(long startLon, long startLat, long endLon, long endLat, WDigraph& graph) {
-	// calc and print waypoints in a list or shit
-	unordered_map<int, PIL> tree;
-	Point minpoint, maxpoints;
-	// for (auto x: )
-	// dijkstra(graph, )
-	/*
-	if () { // if waypoints = 0
-		return;
-	}
-	*/
-	//hold();
-	/*
-	for () { // replace condition with number of waypoints in list
-		//print each waypoint
-		hold(); //wait for ACK
-	}
-	*/
-	// cout << 'E' << endl; // end key, replace
-}
 
 long long manhattan(const Point& pt1, const Point& pt2) {
 	return (abs(pt1.lat - pt2.lat) + abs(pt1.lon - pt2.lon));
@@ -81,7 +78,7 @@ void readGraph(string filename, WDigraph &graph, unordered_map<long long, Point>
             convertedLon = static_cast<long long>(lon * SCALE);
             convertedLat = static_cast<long long>(lat * SCALE);
             point = {convertedLat, convertedLon};
-            points.second = point;
+            points[ID] = point;
             graph.addVertex(ID);
         } else if (graphID == 'E') {
             // edge format: E,start,end,name
@@ -97,16 +94,38 @@ void readGraph(string filename, WDigraph &graph, unordered_map<long long, Point>
 
 int main(int argc, char* argv[]) {
     WDigraph graph;
-    Point points;
+    unordered_map<long long, Point> points;
+    unordered_map<int, PIL> tree;
+    list<int> path;
 
 	readGraph(argv[1], graph, points);
+
 	char input;
 	long startLon, startLat, endLon, endLat;
+	long long startIndex, endIndex;
+	Point start, end; // might not be needed
+	// recall that cins and couts are serial inputs and outputs for pt2
 	while (true) {
-		cin >> input; // replace with arduino serial input in part 2
-		if (input == 'R') { //process request, server enters request handling
-			cin >> startLon >> startLat >> endLon >> endLat; //replace with serial input in part 2
-			processRequest(startLon, startLat, endLon, endLat, graph); //do djks
+		cin >> input; 
+		if (input == 'R') { 
+			cin >> startLon >> startLat >> endLon >> endLat; 
+
+			// move into functions?
+			start = {startLat, startLon};
+			end = {endLat, endLon};
+
+			startIndex = findClosestPointOnMap(start, points);
+			cout << startIndex << endl;
+			endIndex = findClosestPointOnMap(end, points);
+			cout << endIndex << endl;
+			dijkstra(graph, startIndex, tree);
+			if (!findShortestPath(tree, path, startIndex, endIndex)) {
+				cout << '0' << endl;
+			}
+			else {
+				cout << (path.size() - 8) << endl;
+			}
+			break;
 		}
 	}
 

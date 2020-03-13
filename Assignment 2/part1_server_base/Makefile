@@ -1,5 +1,5 @@
 server: server.o dijkstra.o digraph.o
-	g++ server.o digraph.o -o server
+	g++ server.o digraph.o dijkstra.o -o server
 server.o: server.cpp 
 	g++ server.cpp -o server.o -c -Wall
 dijkstra.o: dijkstra.cpp 
