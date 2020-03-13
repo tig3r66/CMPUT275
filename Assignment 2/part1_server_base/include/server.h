@@ -15,11 +15,13 @@ struct Point {
 
 bool findShortestPath(unordered_map<int, PIL>, list<int>&, int start, int end);
 
-long long findClosestPointOnMap(const Point&, unordered_map<int, Point>);
+long long findClosestPointOnMap(const Point& point,
+    unordered_map<int, Point> points);
 
 long long manhattan(const Point&, const Point&);
 
-void readGraph(string file, WDigraph&, unordered_map<int, Point>&);
+void readGraph(string filename, WDigraph& graph,
+    unordered_map<int, Point>& points);
 
 void isValidIfstream(const ifstream& filename);
 

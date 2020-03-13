@@ -9,38 +9,39 @@
 
 using namespace std;
 
-// source of error here? both end and start point returns same index
-long long findClosestPointOnMap(const Point& point, unordered_map<int, Point> points) {
-	long long minDistance = 0;
-	int pointID;
-	//cout << "flag" << endl;
-	for (auto x = points.begin(); x != points.end(); x++) {
-		long long ptDis = manhattan(x->second, point);
-		cout << ptDis << endl;
-		if (ptDis < minDistance && minDistance != 0) {
-			pointID = x->first;
-			minDistance = ptDis;
-		}
-		else if (minDistance == 0) {
-			pointID = x->first;
-			minDistance = ptDis;
+
+long long findClosestPointOnMap(const Point& currPoint,
+    const unordered_map<int, Point> points
+) {
+	long long minDistance;
+	int pointID, i = 0;
+
+	for (auto x : points) {
+		long long ptDistance = manhattan(x.second, currPoint);
+        if (i == 0) {
+            pointID = x.first;
+            minDistance = ptDistance;
+            i++;
+        }
+
+        if (ptDistance < minDistance) {
+			pointID = x.first;
+			minDistance = ptDistance;
 		}
 	}
-	//cout << "flag2" << endl;
+
 	return pointID;
 }
 
 
-// returns true if path is possible false if not
-bool findShortestPath(unordered_map<int, PIL> tree, list<int> &path, int start, int end) {
-	//cout << "hello" << endl;
+// returns true whether path is possible
+bool findShortestPath(unordered_map<int, PIL> tree, list<int> &path,
+    int start, int end
+) {
 	if (tree.find(end) == tree.end()) {
-		//cout << "hello" << endl;
 		return false;
-	}
-	else {
+	} else {
 		int currentNode = end;
-		cout << currentNode << endl;
 		while (currentNode != start) {
 			path.push_front(currentNode);
 			currentNode = tree[currentNode].first;
@@ -49,7 +50,6 @@ bool findShortestPath(unordered_map<int, PIL> tree, list<int> &path, int start, 
 		return true;
 	}
 }
-
 
 
 long long manhattan(const Point& pt1, const Point& pt2) {
@@ -66,13 +66,12 @@ void isValidIfstream(const ifstream& filename) {
 }
 
 
-void readGraph(string filename, WDigraph &graph,
-    unordered_map<int, Point> &points
+void readGraph(const char* filename, WDigraph& graph,
+    unordered_map<int, Point>& points
 ) {
 	char graphID, comma;
     int ID, start, end;
 	float lat, lon;
-	long long convertedLat, convertedLon, distance;
 	string name;
     Point point;
 
@@ -84,12 +83,9 @@ void readGraph(string filename, WDigraph &graph,
         if (graphID == 'V') {
             // vertex format: V,ID,Lat,Lon
             textIn >> ID >> comma >> lat >> comma >> lon;
-            convertedLon = static_cast<long long>(lon * SCALE);
-            // DEBUG
-            //cout << convertedLon << endl;
-            convertedLat = static_cast<long long>(lat * SCALE);
-            // DEBUG 
-            //cout << convertedLat << endl;
+            long long convertedLon = static_cast<long long>(lon * SCALE);
+            long long convertedLat = static_cast<long long>(lat * SCALE);
+
             point = {convertedLat, convertedLon};
             points[ID] = point;
             graph.addVertex(ID);
@@ -97,12 +93,13 @@ void readGraph(string filename, WDigraph &graph,
             // edge format: E,start,end,name
             textIn >> start >> comma >> end >> comma;
             getline(textIn, name);
+
             // find points and get manhattan distance
-            distance = manhattan(points[start], points[end]);
-            graph.addEdge(start, end, distance); 
+            long long distance = manhattan(points[start], points[end]);
+            graph.addEdge(start, end, distance);
         }
     }
-} 
+}
 
 
 int main(int argc, char* argv[]) {
@@ -110,41 +107,34 @@ int main(int argc, char* argv[]) {
     unordered_map<int, Point> points;
     unordered_map<int, PIL> tree;
     list<int> path;
+	char input;
+	long long startLon, startLat, endLon, endLat;
+	int startIndex, endIndex;
 
-	readGraph(argv[1], graph, points);
+    readGraph(argv[1], graph, points);
 
-	// char input;
-	// long long startLon, startLat, endLon, endLat;
-	// int startIndex, endIndex;
-	// Point start, end; // might not be needed
-	// recall that cins and couts are serial inputs and outputs for pt2
-	// while (true) {
-	// 	cin >> input; 
-	// 	if (input == 'R') { 
-	// 		cin >> startLon >> startLat >> endLon >> endLat; 
+	while (true) {
+		cin >> input; 
+		if (input == 'R') {
+			cin >> startLat >> startLon >> endLat >> endLon; 
+			Point start = {startLat, startLon};
+			Point end = {endLat, endLon};
 
-	// 		// move into functions?
-	// 		start = {startLat, startLon};
-	// 		end = {endLat, endLon};
+			startIndex = findClosestPointOnMap(start, points);
+			endIndex = findClosestPointOnMap(end, points);
+            cout << "startIndex: " << startIndex << " endIndex: " << endIndex << endl;
 
-	// 		//cout << points.size() << endl;
+			dijkstra(graph, startIndex, tree);
 
-	// 		startIndex = findClosestPointOnMap(start, points);
-	// 		cout << startIndex << endl;
-	// 		endIndex = findClosestPointOnMap(end, points);
-	// 		cout << endIndex << endl;
-	// 		dijkstra(graph, startIndex, tree);
-	// 		//cout << tree.size() << endl;
-	// 		bool flag = findShortestPath(tree, path, startIndex, endIndex);
-	// 		if (!flag) {
-	// 			cout << '0' << endl;
-	// 		}
-	// 		else {
-	// 			//cout << (path.size() - 8) << endl;
-	// 		}
-	// 		break;
-	// 	}
-	// }
+			bool flag = findShortestPath(tree, path, startIndex, endIndex);
+			if (!flag) {
+				cout << "NO PATH" << endl;
+			} else {
+				cout << path.size() << endl;
+			}
+			break;
+		}
+	}
 
 	return 0;
 }
