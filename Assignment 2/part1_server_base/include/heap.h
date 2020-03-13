@@ -14,8 +14,8 @@
 
 template <class T, class K>
 struct HeapItem {
-  T item;
-  K key;
+    T item;
+    K key;
 };
 
 template <class T, class K>
@@ -50,10 +50,12 @@ public:
     void fixHeapDown(int i);
 };
 
+
 template <class T, class K>
 HeapItem<T, K> BinaryHeap<T, K>::min() const {
     return heap[0];
 }
+
 
 template <class T, class K>
 void BinaryHeap<T, K>::insert(const T& item, const K& key) {
@@ -64,6 +66,7 @@ void BinaryHeap<T, K>::insert(const T& item, const K& key) {
     // fix the heap property
     fixHeapUp(heap.size()-1);
 }
+
 
 template <class T, class K>
 void BinaryHeap<T, K>::popMin() {
@@ -78,10 +81,12 @@ void BinaryHeap<T, K>::popMin() {
     }
 }
 
+
 template <class T, class K>
 int BinaryHeap<T, K>::size() const {
     return heap.size();
 }
+
 
 template <class T, class K>
 void BinaryHeap<T, K>::fixHeapUp(int i) {
@@ -98,6 +103,7 @@ void BinaryHeap<T, K>::fixHeapUp(int i) {
         }
     }
 }
+
 
 template <class T, class K>
 void BinaryHeap<T, K>::fixHeapDown(int i) {
