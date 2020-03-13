@@ -1,3 +1,12 @@
+//  ========================================
+//  Name: Edward (Eddie) Guo
+//  ID: [redacted]
+//  Partner: Jason Kim
+//  CMPUT 275, Winter 2020
+//
+//  Assignment 2 Part 1: Directions (Server)
+//  ========================================
+
 #ifndef _WEIGHTED_GRAPH_H_
 #define _WEIGHTED_GRAPH_H_
 
@@ -15,27 +24,27 @@ using namespace std;
 
 class WDigraph : public Digraph {
 public:
-  // No constructor or destructor are necessary this time.
-  // A new instance will be an empty graph with no nodes.
+    // No constructor or destructor are necessary this time.
+    // A new instance will be an empty graph with no nodes.
 
-  // returns the cost/weight of an edge
-  // if it does not exist, returns error
-  long long getCost(int u, int v) const {
-    // uses .at because there is no const operator[]
-    // for unordered maps
-    return cost.at(u).at(v);
-  }
+    // returns the cost/weight of an edge
+    // if it does not exist, returns error
+    long long getCost(int u, int v) const {
+        // uses .at because there is no const operator[]
+        // for unordered maps
+        return cost.at(u).at(v);
+    }
 
-  // adds a weighted edge
-  // if the edge already existed, does nothing
-  void addEdge(int u, int v, long long w){
-    // use Digraph's addEdge method
-    Digraph::addEdge(u, v);
-    cost[u][v] = w;
-  }
+    // adds a weighted edge
+    // if the edge already existed, does nothing
+    void addEdge(int u, int v, long long w){
+        // use Digraph's addEdge method
+        Digraph::addEdge(u, v);
+        cost[u][v] = w;
+    }
 
 private:
-  unordered_map<int, unordered_map<int, long long>> cost;
+    unordered_map<int, unordered_map<int, long long>> cost;
 };
 
 #endif
