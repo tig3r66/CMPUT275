@@ -10,25 +10,29 @@
 using namespace std;
 
 
-long long findClosestPointOnMap(const Point& point, unordered_map<long long, Point> points) {
+long long findClosestPointOnMap(const Point& point, unordered_map<int, Point> points) {
 	long long minDistance = 0;
-	long long pointID;
-	for (auto x: points) {
-		long long ptDis = manhattan(x.second, point);
+	int pointID;
+	//cout << "flag" << endl;
+	// seg fault
+	for (auto x = points.begin(); x != points.end(); x++) {
+		long long ptDis = manhattan(x->second, point);
+		//cout << ptDis << endl;
 		if (ptDis < minDistance && minDistance != 0) {
-			pointID = x.first;
+			pointID = x->first;
 			minDistance = ptDis;
 		}
 		else if (minDistance == 0) {
-			pointID = x.first;
+			pointID = x->first;
 			minDistance = ptDis;
 		}
 	}
+	//cout << "flag2" << endl;
 	return pointID;
 }
 
 // returns true if path is possible false if not
-bool findShortestPath(unordered_map<int, PIL> tree, list<int> path, long long start, long long end) {
+bool findShortestPath(unordered_map<int, PIL> tree, list<int> &path, int start, int end) {
 	if (tree.find(end) == tree.end()) {
 		return false;
 	}
@@ -59,7 +63,7 @@ void isValidIfstream(const ifstream& filename) {
 }
 
 
-void readGraph(string filename, WDigraph &graph, unordered_map<long long, Point> points) {
+void readGraph(string filename, WDigraph &graph, unordered_map<int, Point> &points) {
 	char graphID, comma;
     int ID, start, end;
 	float lat, lon;
@@ -76,7 +80,11 @@ void readGraph(string filename, WDigraph &graph, unordered_map<long long, Point>
             // vertex format: V,ID,Lat,Lon
             textIn >> ID >> comma >> lat >> comma >> lon;
             convertedLon = static_cast<long long>(lon * SCALE);
+            // DEBUG
+            //cout << convertedLon << endl;
             convertedLat = static_cast<long long>(lat * SCALE);
+            // DEBUG 
+            //cout << convertedLat << endl;
             point = {convertedLat, convertedLon};
             points[ID] = point;
             graph.addVertex(ID);
@@ -94,15 +102,15 @@ void readGraph(string filename, WDigraph &graph, unordered_map<long long, Point>
 
 int main(int argc, char* argv[]) {
     WDigraph graph;
-    unordered_map<long long, Point> points;
+    unordered_map<int, Point> points;
     unordered_map<int, PIL> tree;
     list<int> path;
 
 	readGraph(argv[1], graph, points);
 
 	char input;
-	long startLon, startLat, endLon, endLat;
-	long long startIndex, endIndex;
+	long long startLon, startLat, endLon, endLat;
+	int startIndex, endIndex;
 	Point start, end; // might not be needed
 	// recall that cins and couts are serial inputs and outputs for pt2
 	while (true) {
@@ -114,12 +122,15 @@ int main(int argc, char* argv[]) {
 			start = {startLat, startLon};
 			end = {endLat, endLon};
 
+			//cout << points.size() << endl;
+
 			startIndex = findClosestPointOnMap(start, points);
-			cout << startIndex << endl;
+			//cout << startIndex << endl;
 			endIndex = findClosestPointOnMap(end, points);
-			cout << endIndex << endl;
+			//cout << endIndex << endl;
 			dijkstra(graph, startIndex, tree);
-			if (!findShortestPath(tree, path, startIndex, endIndex)) {
+			bool flag = findShortestPath(tree, path, startIndex, endIndex);
+			if (!flag) {
 				cout << '0' << endl;
 			}
 			else {
