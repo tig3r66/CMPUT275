@@ -30,6 +30,7 @@ long long findClosestPointOnMap(const Point& point, unordered_map<int, Point> po
 	return pointID;
 }
 
+
 // returns true if path is possible false if not
 bool findShortestPath(unordered_map<int, PIL> tree, list<int> &path, int start, int end) {
 	//cout << "hello" << endl;
@@ -65,7 +66,9 @@ void isValidIfstream(const ifstream& filename) {
 }
 
 
-void readGraph(string filename, WDigraph &graph, unordered_map<int, Point> &points) {
+void readGraph(string filename, WDigraph &graph,
+    unordered_map<int, Point> &points
+) {
 	char graphID, comma;
     int ID, start, end;
 	float lat, lon;
@@ -110,38 +113,38 @@ int main(int argc, char* argv[]) {
 
 	readGraph(argv[1], graph, points);
 
-	char input;
-	long long startLon, startLat, endLon, endLat;
-	int startIndex, endIndex;
-	Point start, end; // might not be needed
+	// char input;
+	// long long startLon, startLat, endLon, endLat;
+	// int startIndex, endIndex;
+	// Point start, end; // might not be needed
 	// recall that cins and couts are serial inputs and outputs for pt2
-	while (true) {
-		cin >> input; 
-		if (input == 'R') { 
-			cin >> startLon >> startLat >> endLon >> endLat; 
+	// while (true) {
+	// 	cin >> input; 
+	// 	if (input == 'R') { 
+	// 		cin >> startLon >> startLat >> endLon >> endLat; 
 
-			// move into functions?
-			start = {startLat, startLon};
-			end = {endLat, endLon};
+	// 		// move into functions?
+	// 		start = {startLat, startLon};
+	// 		end = {endLat, endLon};
 
-			//cout << points.size() << endl;
+	// 		//cout << points.size() << endl;
 
-			startIndex = findClosestPointOnMap(start, points);
-			cout << startIndex << endl;
-			endIndex = findClosestPointOnMap(end, points);
-			cout << endIndex << endl;
-			dijkstra(graph, startIndex, tree);
-			//cout << tree.size() << endl;
-			bool flag = findShortestPath(tree, path, startIndex, endIndex);
-			if (!flag) {
-				cout << '0' << endl;
-			}
-			else {
-				//cout << (path.size() - 8) << endl;
-			}
-			break;
-		}
-	}
+	// 		startIndex = findClosestPointOnMap(start, points);
+	// 		cout << startIndex << endl;
+	// 		endIndex = findClosestPointOnMap(end, points);
+	// 		cout << endIndex << endl;
+	// 		dijkstra(graph, startIndex, tree);
+	// 		//cout << tree.size() << endl;
+	// 		bool flag = findShortestPath(tree, path, startIndex, endIndex);
+	// 		if (!flag) {
+	// 			cout << '0' << endl;
+	// 		}
+	// 		else {
+	// 			//cout << (path.size() - 8) << endl;
+	// 		}
+	// 		break;
+	// 	}
+	// }
 
 	return 0;
 }

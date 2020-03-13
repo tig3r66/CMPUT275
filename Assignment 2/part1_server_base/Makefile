@@ -1,13 +1,39 @@
-server: server.o dijkstra.o digraph.o
-	g++ server.o digraph.o dijkstra.o -o server
-server.o: server.cpp 
-	g++ server.cpp -o server.o -c -Wall
-dijkstra.o: dijkstra.cpp 
-	g++ dijkstra.cpp -o dijkstra.o -c -Wall
-digraph.o: digraph.cpp
-	g++ digraph.cpp -o digraph.o -c -Wall
-clean: 
-	rm -f server server.o dijkstra.o digraph.o
+#  ===========================
+#  Name: Edward (Eddie) Guo
+#  ID: 1576381
+#  CMPUT 275, Winter 2020
+#
+#  Assignment 2 Part 1: Server
+#  ===========================
 
+CC=g++
+OBJS=server.o dijkstra.o digraph.o
+CFLAGS=-Wall -c -std=c++11 -O3
+PROG=server
+INCLUDES=include/server.h include/wdigraph.h include/digraph.h include/dijkstra.h
 
+server: $(OBJS)
+	@$(CC) $(OBJS) -o $(PROG)
+	@echo server executable successfully generated.
 
+server.o: server.cpp $(INCLUDES)
+	@g++ server.cpp -o server.o $(CFLAGS)
+	@echo server.o successfully compiled.
+
+dijkstra.o: dijkstra.cpp include/dijkstra.h include/heap.h
+	@g++ dijkstra.cpp -o dijkstra.o $(CFLAGS)
+	@echo dijkstra.o successfully compiled.
+
+digraph.o: digraph.cpp include/digraph.h
+	@g++ digraph.cpp -o digraph.o $(CFLAGS)
+	@echo digraph.o successfully compiled.
+
+help:
+	@echo Executable targets: $(PROG)
+	@echo Object targets: $(OBJS)
+	@echo Includes: $(INCLUDES)
+
+clean:
+	@rm -f $(OBJS)
+	@rm -f $(PROG)
+	@echo Object files and executables successfully removed.
