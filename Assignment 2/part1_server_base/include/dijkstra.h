@@ -1,3 +1,12 @@
+//  ========================================
+//  Name: Edward (Eddie) Guo
+//  ID: [redacted]
+//  Partner: Jason Kim
+//  CMPUT 275, Winter 2020
+//
+//  Assignment 2 Part 1: Directions (Server)
+//  ========================================
+
 #ifndef _DIJKSTRA_H_
 #define _DIJKSTRA_H_
 
