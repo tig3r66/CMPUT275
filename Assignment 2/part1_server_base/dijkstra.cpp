@@ -25,7 +25,7 @@ void dijkstra(const WDigraph& graph, int startVertex,
                 iter++
             ) {
                 tempPair = make_pair(v, *iter);
-                events.insert(tempPair, graph.getCost(v, *iter));
+                events.insert(tempPair, currentFire.key + graph.getCost(v, *iter));
 			}
 		}
 	}
