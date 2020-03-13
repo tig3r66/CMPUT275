@@ -13,13 +13,14 @@ void dijkstra(const WDigraph& graph, int startVertex,
 	while (events.size() > 0) {
 		currentFire = events.min();
 		events.popMin();
-		if (tree.find(currentFire.item.second) != tree.end()) {
-			auto v = currentFire.item.second;
+		auto v = currentFire.item.second;
+		if (tree.find(v) == tree.end()) {
 			tree[v] = PIL(currentFire.item.first, currentFire.key);
 			for (auto iter = graph.neighbours(v); 
 				iter != graph.endIterator(v); iter++) {
 				events.insert(PIL(v, *iter), graph.getCost(v, *iter));
 			}
 		}
+		//cout << tree.size() << endl;
 	} 
 }

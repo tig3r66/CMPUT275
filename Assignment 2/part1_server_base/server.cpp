@@ -9,15 +9,14 @@
 
 using namespace std;
 
-
+// source of error here?
 long long findClosestPointOnMap(const Point& point, unordered_map<int, Point> points) {
 	long long minDistance = 0;
 	int pointID;
 	//cout << "flag" << endl;
-	// seg fault
 	for (auto x = points.begin(); x != points.end(); x++) {
 		long long ptDis = manhattan(x->second, point);
-		//cout << ptDis << endl;
+		cout << ptDis << endl;
 		if (ptDis < minDistance && minDistance != 0) {
 			pointID = x->first;
 			minDistance = ptDis;
@@ -33,13 +32,16 @@ long long findClosestPointOnMap(const Point& point, unordered_map<int, Point> po
 
 // returns true if path is possible false if not
 bool findShortestPath(unordered_map<int, PIL> tree, list<int> &path, int start, int end) {
+	//cout << "hello" << endl;
 	if (tree.find(end) == tree.end()) {
+		//cout << "hello" << endl;
 		return false;
 	}
 	else {
 		int currentNode = end;
-		while (currentNode != end) {
-			path.push_front(end);
+		cout << currentNode << endl;
+		while (currentNode != start) {
+			path.push_front(currentNode);
 			currentNode = tree[currentNode].first;
 		}
 		path.push_front(start);
@@ -125,16 +127,17 @@ int main(int argc, char* argv[]) {
 			//cout << points.size() << endl;
 
 			startIndex = findClosestPointOnMap(start, points);
-			//cout << startIndex << endl;
+			cout << startIndex << endl;
 			endIndex = findClosestPointOnMap(end, points);
-			//cout << endIndex << endl;
+			cout << endIndex << endl;
 			dijkstra(graph, startIndex, tree);
+			//cout << tree.size() << endl;
 			bool flag = findShortestPath(tree, path, startIndex, endIndex);
 			if (!flag) {
 				cout << '0' << endl;
 			}
 			else {
-				cout << (path.size() - 8) << endl;
+				//cout << (path.size() - 8) << endl;
 			}
 			break;
 		}
