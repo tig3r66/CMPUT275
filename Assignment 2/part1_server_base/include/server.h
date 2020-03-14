@@ -22,7 +22,8 @@ struct Point {
 	long long lon;
 };
 
-bool findShortestPath(unordered_map<int, PIL>, list<int>&, int start, int end);
+bool findShortestPath(unordered_map<int, PIL>& tree, list<int>& path,
+    int start, int end);
 
 long long findClosestPointOnMap(const Point& point,
     unordered_map<int, Point> points);

@@ -35,7 +35,7 @@ long long findClosestPointOnMap(const Point& currPoint,
 
 
 // returns true whether path is possible
-bool findShortestPath(unordered_map<int, PIL> tree, list<int> &path,
+bool findShortestPath(unordered_map<int, PIL>& tree, list<int>& path,
     int start, int end
 ) {
 	if (tree.find(end) == tree.end()) {
