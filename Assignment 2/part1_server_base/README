@@ -1,0 +1,74 @@
+Name: Edward (Eddie) Guo
+ID: [redacted]
+Partner: Jason Kim
+CMPUT 275, Winter 2020
+
+Assignment 2 Part 1: Directions (Server)
+
+--------------
+Included Files
+--------------
+    * server.cpp
+    * dijkstra.cpp
+    * digraph.cpp
+    * edmonton-roads-2.0.1.txt
+    * include/
+        * wdigraph.h
+        * digraph.h
+        * dijkstra.h
+        * heap.h
+        * server.h
+    * Makefile
+    * README
+
+----------------
+Makefile Targets
+----------------
+    - make: generates an executable called 'server'.
+    - make graph_concepts: generates an executable called 'server'.
+
+    - make server.o: generates an object file called 'server.o'.
+    - make dijkstra.o: generates an object file called 'dijkstra.o'.
+    - make digraph.o: generates an object file called 'digraph.o'.
+
+    - make help: prints a list of executable and object targets.
+	- make clean: removes all object files and executables.
+
+---------------------
+Running Instructions
+---------------------
+    1. To create the server executable, type 'make' or 'make server' in the
+    command-line.
+
+    2. To create the server, dijkstra, or digraph object files, type 'make
+    <object_file>.o' in the command-line, where <object_file> is server,
+    dijkstra, or digraph.
+
+    3. To remove all object files and executables, type 'make clean' in the
+    command-line.
+
+-----
+Notes
+-----
+    * server.cpp contains the main program.
+
+    * The program assumes that a command-line argument of the digraph .txt file
+    is passed. I.e., after 'make graph_concepts', the user could type
+    './graph_concepts edmonton-roads-2.0.1.txt'.
+
+    * If an invalid graph file name is passed to readGraph(), the program will
+    inform the user that there is no valid digraph text file provided, give the
+    correct usage, and exit the program.
+
+    * An example of a road network with 4 vertices and 3 edges is below (please
+    see the assignment description for more details):
+
+        V,1,53.430996,-113.491331
+        V,2,53.434340,-113.490152
+        V,3,53.414340,-113.470152
+        V,4,53.435320,-113.480152
+        E,1,3,St Albert Road
+        E,2,3,80 Avenue North-west
+        E,2,1,None
+
+    * The Makefile will echo helpful messages to the user upon correct usage.
