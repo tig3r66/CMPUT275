@@ -121,7 +121,7 @@ void processWaypoints(unordered_map<int, Point>& points, list<int>& path) {
     // last acknowledge
     cin >> input;
     if (input == 'A') {
-        cout << "E" << endl;
+        cout << 'E' << endl;
     }
 }
 
