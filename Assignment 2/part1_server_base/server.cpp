@@ -71,7 +71,7 @@ void readGraph(const char* filename, WDigraph& graph,
 ) {
 	char graphID, comma;
     int ID, start, end;
-	float lat, lon;
+	double lat, lon;
 	string name;
     Point point;
 
@@ -102,6 +102,30 @@ void readGraph(const char* filename, WDigraph& graph,
     textIn.close();
 }
 
+
+void processWaypoints(unordered_map<int, Point>& points, list<int>& path) {
+    char input;
+    int numWaypoints = path.size();
+    cout << "N " << numWaypoints << endl;
+
+    for (int i = 0; i < numWaypoints; i++) {
+        cin >> input;
+        if (input == 'A') {
+            int waypointID = path.front();
+            path.pop_front();
+            Point wayPoint = points[waypointID];
+            cout << "W " << wayPoint.lat << " " << wayPoint.lon << endl;
+        }
+    }
+
+    // last acknowledge
+    cin >> input;
+    if (input == 'A') {
+        cout << "E" << endl;
+    }
+}
+
+
 int main(int argc, char* argv[]) {
     WDigraph graph;
     unordered_map<int, Point> points;
@@ -115,7 +139,7 @@ int main(int argc, char* argv[]) {
     readGraph(yegGraph, graph, points);
 
 	while (true) {
-		cin  >> input; 
+		cin  >> input;
 		if (input == 'R') {
 			cin >> startLat >> startLon >> endLat >> endLon; 
 			Point start = {startLat, startLon};
@@ -127,30 +151,12 @@ int main(int argc, char* argv[]) {
 			dijkstra(graph, startIndex, tree);
 
 			if (!findShortestPath(tree, path, startIndex, endIndex)) {
-				cout << "0" << endl;
+                // no path
+				cout << "N 0" << endl;
 			} else {
-				int i = 0;
-				int numWaypoints =  path.size();
-				cout << "N " << numWaypoints << endl;
-				while (i < numWaypoints) {
-					cin >> input;
-					if (input == 'A') {
-						int waypointID = path.front();
-						path.pop_front();
-						Point wayPoint = points[waypointID];
-						cout << "W " << wayPoint.lat << " " << wayPoint.lon << endl;
-						i++;
-					}
-				}
-				while (true) {
-					cin >> input;
-					if (input == 'A') {
-						cout << "E" << endl;
-						break;
-					}
-				}
+                processWaypoints(points, path);
+                break;
 			}
-			break;
 		}
 	}
 

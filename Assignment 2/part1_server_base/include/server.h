@@ -29,6 +29,8 @@ long long findClosestPointOnMap(const Point& point,
 
 long long manhattan(const Point&, const Point&);
 
+void processWaypoints(unordered_map<int, Point>& points, list<int>& path);
+
 void readGraph(string filename, WDigraph& graph,
     unordered_map<int, Point>& points);
 
