@@ -1,3 +1,12 @@
+//  ========================================
+//  Name: Edward (Eddie) Guo
+//  ID: [redacted]
+//  Partner: Jason Kim
+//  CMPUT 275, Winter 2020
+//
+//  Assignment 2 Part 1: Directions (Server)
+//  ========================================
+
 #include <iostream>
 #include <cmath>
 #include <fstream>
@@ -10,20 +19,33 @@
 using namespace std;
 
 
+/*
+    Finds the closest waypoint on the map to the current vertex based on
+    Manhattan distance.
+
+    Parameters:
+        currPoint (const Point&): the current point.
+        points (const unordered_map<int, Point>): the set of points to search
+            in order to find the closest point to currPoint.
+    Returns:
+        pointID (int): the ID of the closest point to currPoint.
+*/
 long long findClosestPointOnMap(const Point& currPoint,
     const unordered_map<int, Point> points
 ) {
 	long long minDistance;
-	int pointID, i = 0;
+	int pointID;
+    bool firstRun = true;
 
 	for (auto x : points) {
 		long long ptDistance = manhattan(x.second, currPoint);
-        if (i == 0) {
+        // initializing minDistance for the first run
+        if (firstRun) {
             pointID = x.first;
             minDistance = ptDistance;
-            i++;
+            firstRun = false;
         }
-
+        // searching to find the closest point to currPoint
         if (ptDistance < minDistance) {
 			pointID = x.first;
 			minDistance = ptDistance;
@@ -34,7 +56,16 @@ long long findClosestPointOnMap(const Point& currPoint,
 }
 
 
-// returns true whether path is possible
+/*
+    Determines whether a path is possible between two points. If possible, it
+    builds a path of waypoints to traverse.
+
+    Parameters:
+        tree (unordered_map<int, PIL>&): the search tree to obtain the path.
+        path (list<int>&): the path of waypoints to build.
+    Returns:
+        bool: true if a path is possible, otherwise false.
+*/
 bool findShortestPath(unordered_map<int, PIL>& tree, list<int>& path,
     int start, int end
 ) {
@@ -46,38 +77,65 @@ bool findShortestPath(unordered_map<int, PIL>& tree, list<int>& path,
 			path.push_front(currentNode);
 			currentNode = tree[currentNode].first;
 		}
+
 		path.push_front(start);
 		return true;
 	}
 }
 
 
+/*
+    Computes the Manhattan distance between two Point objects.
+
+    Parameters:
+        pt1 (const Point&): the first point.
+        pt2 (const Point&): the second point.
+    Returns:
+        |z| (int): the Manhattan distance between pt1 and pt2.
+*/
 long long manhattan(const Point& pt1, const Point& pt2) {
 	return (abs(pt1.lat - pt2.lat) + abs(pt1.lon - pt2.lon));
 }
 
 
+/*
+    Validates whether the input file can be opened. If not, it exits the
+    program and informs the user of the correct usage.
+
+    Parameters:
+        filename (const ifstream&): the filename to verify.
+*/
 void isValidIfstream(const ifstream& filename) {
     if (!filename.good()) {
 	    cout << "error: digraph text file not found" << endl;
-	    cout << "usage: ./graph_concepts <digraph_file_name>.txt" << endl;
 	    exit(EXIT_FAILURE);
     }
 }
 
 
+/*
+    Reads the Edmonton map from the provided file and loads it into the WDigraph
+    object. The function stores vertex coordinates in the Point struct and maps
+    each vertex to its corresponding Point struct.
+
+    Parameters:
+        filename (const char*): the filename describing the road network file.
+        graph (WDigraph&): the weighted directed map to build.
+        points (unordered_map<int, Point>&): a mapping between vertex
+            identifiers and their coordinates.
+*/
 void readGraph(const char* filename, WDigraph& graph,
     unordered_map<int, Point>& points
 ) {
+	// input validation
+	ifstream textIn(filename);
+    isValidIfstream(textIn);
+
 	char graphID, comma;
     int ID, start, end;
 	double lat, lon;
 	string name;
     Point point;
-
-	// input validation
-	ifstream textIn(filename);
-    isValidIfstream(textIn);
 
 	while (textIn >> graphID >> comma) {
         if (graphID == 'V') {
@@ -94,7 +152,7 @@ void readGraph(const char* filename, WDigraph& graph,
             textIn >> start >> comma >> end >> comma;
             getline(textIn, name);
 
-            // find points and get manhattan distance
+            // find points and gets Manhattan distance
             long long distance = manhattan(points[start], points[end]);
             graph.addEdge(start, end, distance);
         }
@@ -103,6 +161,16 @@ void readGraph(const char* filename, WDigraph& graph,
 }
 
 
+/*
+    Helper function that processes valid requests sent to the server via stdin
+    and stdout. This function will print waypoints to the command-line from the
+    requested start and end points.
+
+    Parameters:
+        points (unordered_map<int, Point>&): a mapping between vertex
+            identifiers and their coordinates.
+        path (list<int>&): the path of waypoints to traverse.
+*/
 void processWaypoints(unordered_map<int, Point>& points, list<int>& path) {
     char input;
     int numWaypoints = path.size();
@@ -136,29 +204,27 @@ int main(int argc, char* argv[]) {
 	const char* yegGraph = "edmonton-roads-2.0.1.txt";
 	int startIndex, endIndex;
 
+    // builds the weighted directed graph from the yegGraph input file
     readGraph(yegGraph, graph, points);
 
-	while (true) {
-		cin  >> input;
-		if (input == 'R') {
-			cin >> startLat >> startLon >> endLat >> endLon; 
-			Point start = {startLat, startLon};
-			Point end = {endLat, endLon};
+    cin >> input;
+    if (input == 'R') {
+        cin >> startLat >> startLon >> endLat >> endLon; 
+        Point start = {startLat, startLon};
+        Point end = {endLat, endLon};
 
-			startIndex = findClosestPointOnMap(start, points);
-			endIndex = findClosestPointOnMap(end, points);
+        startIndex = findClosestPointOnMap(start, points);
+        endIndex = findClosestPointOnMap(end, points);
 
-			dijkstra(graph, startIndex, tree);
+        dijkstra(graph, startIndex, tree);
 
-			if (!findShortestPath(tree, path, startIndex, endIndex)) {
-                // no path
-				cout << "N 0" << endl;
-			} else {
-                processWaypoints(points, path);
-                break;
-			}
-		}
-	}
+        if (!findShortestPath(tree, path, startIndex, endIndex)) {
+            // no path
+            cout << "N 0" << endl;
+        } else {
+            processWaypoints(points, path);
+        }
+    }
 
 	return 0;
 }

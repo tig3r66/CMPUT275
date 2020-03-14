@@ -25,10 +25,12 @@ typedef pair<int, long long> PIL;
 // x.first is "v", x.second.first is "u" and x.second.second is "d" from this
 typedef pair<int, PIL> PIPIL;
 
-
-// NOTE: you are not required to use PIPIL in your solution if you would prefer
-// to implement Dijkstra's algorithm differently, this is here simply because
-// it was used in the lecture for the slower version of Dijkstra's algorithm.
+/*
+    Computes the least cost paths that starts from a given vertex. This
+    implementation of Dijkstra's algorithm uses a binary heap to efficiently
+    retrieve an unexplored vertex that has the minimum distance from the start
+    vertex at every iteration.
+*/
 void dijkstra(const WDigraph& graph, int startVertex,
     unordered_map<int, PIL>& tree);
 

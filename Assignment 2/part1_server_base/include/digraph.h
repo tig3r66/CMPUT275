@@ -17,6 +17,7 @@
 
 using namespace std;
 
+
 /*
     Represents a graph using an adjacency list representation.
     Vertices are assumed to be integers.
