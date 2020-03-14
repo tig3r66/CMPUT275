@@ -5,11 +5,12 @@ def manhattan(x1, y1, x2, y2):
 
 fin1 = open(sys.argv[1], "r")
 fin2 = open(sys.argv[2], "r")
-fout = open("output.txt", "w")
+
 fin1.read(1)
 counter1 = int(fin1.readline())
 fin2.read(1)
 counter2 = int(fin2.readline())
+
 if (counter1 != counter2):
 	raise Exception("number of lines do not match")
 
@@ -33,8 +34,9 @@ while (i < counter1):
 		sum2 += manhattan(prevLon2, prevLat2, currentLon2, currentLat2)
 		i += 1
 
-fout.write(str(sum1 == sum2))
+print(f'Sum 1: {sum1}\nSum 2: {sum2}')
+if (sum1 == sum2):
+	print("The sums are equivalent.")
 
 fin1.close()
 fin2.close()
-fout.close()
