@@ -216,13 +216,7 @@ int main(int argc, char* argv[]) {
         startIndex = findClosestPointOnMap(start, points);
         endIndex = findClosestPointOnMap(end, points);
 
-        // #include <chrono>
-        // auto t1 = std::chrono::high_resolution_clock::now();
         dijkstra(graph, startIndex, tree);
-        // astar(graph, startIndex, endIndex, tree, points);
-        // auto t2 = std::chrono::high_resolution_clock::now();
-        // auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
-        // cout << "Time in ms: " << duration << endl;
 
         if (!findShortestPath(tree, path, startIndex, endIndex)) {
             // no path

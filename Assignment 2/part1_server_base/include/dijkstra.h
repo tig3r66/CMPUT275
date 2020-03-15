@@ -34,12 +34,4 @@ typedef pair<int, PIL> PIPIL;
 void dijkstra(const WDigraph& graph, int startVertex,
     unordered_map<int, PIL>& tree);
 
-void astar(const WDigraph& graph, int startVertex, int endVertex,
-    unordered_map<int, PIL>& tree, unordered_map<int, Point>& points);
-
-/*
-    Computes the Manhattan distance between two Point objects.
-*/
-long long heuristic(const Point& pt1, const Point& pt2);
-
 #endif
