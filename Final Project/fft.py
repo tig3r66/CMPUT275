@@ -1,78 +1,163 @@
-import time
+import time, cmath, sys
 import numpy as np
-from cmath import exp, pi
 
-def recursive_fft(x):
-    """Recursive implementation of the 1D Cooley-Tukey FFT"""
+
+def recursive_fft(x, inverse):
+    """Recursive implementation of the 1D Cooley-Tukey FFT.
+
+    Parameters:
+        x (array): the discrete amplitudes to transform.
+        inverse (bool): perform the inverse fft if true.
+    Returns:
+        X (complex number array): the phase and amplitude of the transformation.
+    """
+    coef = 1 if inverse else -1
     N = len(x)
     # base case
     if N <= 1:
         return x
-
     # recursively dividing
-    even_terms = recursive_fft(x[0::2])
-    odd_terms = recursive_fft(x[1::2])
-    T = [ exp(-2j * pi * k / N) * odd_terms[k] for k in range(N >> 1) ]
+    even_terms = recursive_fft(x[0::2], inverse)
+    odd_terms = recursive_fft(x[1::2], inverse)
+    T = [np.exp(coef * 2j * np.pi * k / N) * odd_terms[k] for k in range(N >> 1)]
+
     return [even_terms[k] + T[k] for k in range(N >> 1)] + \
         [even_terms[k] - T[k] for k in range(N >> 1)]
 
 
-def dft(x):
-    """Discrete Fourier transform of a 1D array x"""
+def dft(x, inverse):
+    """Discrete Fourier transform of a 1D array x.
+
+    Parameters:
+        x (array): the discrete amplitudes to transform.
+        inverse (bool): perform the inverse fft if true.
+    Returns:
+        np.dot(M, x) (complex number array): the phase and amplitude of the
+            transformation.
+    """
+    coef = 1 if inverse else -1
     x = np.asarray(x, dtype=float)
     N = x.shape[0]
     n = np.arange(N)
     k = n.reshape((N, 1))
-    M = np.exp(-2j * np.pi * k * n / N)
+    M = np.exp(coef * 2j * np.pi * k * n / N)
     return np.dot(M, x)
 
 
-def asarray_fft(x):
+def asarray_fft(x, inverse):
     """Recursive implementation of the 1D Cooley-Tukey FFT using np asarray
-    to prevent copying."""
+    to prevent copying.
+
+    Parameters:
+        x (array): the discrete amplitudes to transform.
+        inverse (bool): perform the inverse fft if true.
+    Returns:
+        X (complex number array): the phase and amplitude of the transformation.
+    """
+    coef = 1 if inverse else -1
     N = x.shape[0]
 
-    if N % 2 > 0:
-        raise ValueError("size of x must be a power of 2")
-    elif N <= 32:  # this cutoff should be optimized
-        return dft(x)
+    # validating input array
+    if N % 2 != 0:
+        raise ValueError('array size must be a power of 2')
+    # 32 was arbitrarily chosen as "good enough"
+    elif N <= 32:
+        return dft(x, inverse)
+    # perform DFT on all N <= 32 sub-arrays
     else:
-        X_even = asarray_fft(x[::2])
-        X_odd = asarray_fft(x[1::2])
-        factor = np.exp(-2j * np.pi * np.arange(N) / N)
-        return np.concatenate([X_even + factor[:(N >> 1)] * X_odd,
-                               X_even + factor[(N >> 1):] * X_odd])
+        even_terms = asarray_fft(x[::2], inverse)
+        odd_terms = asarray_fft(x[1::2], inverse)
+        exp_array = np.exp(coef * 2j * np.pi * np.arange(N) / N)
+        return np.concatenate([even_terms + exp_array[:(N >> 1)] * odd_terms,
+                               even_terms + exp_array[(N >> 1):] * odd_terms])
+
+
+def vectorized_fft(x, inverse):
+    """Vectorized, non-recursive implementation of the Cooley-Tukey FFT.
+
+    Parameters:
+        x (array): the discrete amplitudes to transform.
+        inverse (bool): perform the inverse fft if true.
+    Returns:
+        X (complex number array): the phase and amplitude of the transformation.
+    """
+    coef = 1 if inverse else -1
+    N = x.shape[0]
+
+    # validating input array
+    if N % 2 != 0:
+        raise ValueError('array size must be a power of 2')
+    # 32 was arbitrarily chosen as "good enough"
+    new_N = min(N, 32)
+
+    # perform DFT on all N <= 32 sub-arrays
+    n = np.arange(new_N)
+    k = n[:, None]
+    M = np.exp(coef * 2j * np.pi * n * k / new_N)
+    X = np.dot(M, x.reshape((new_N, -1)))
+
+    # build-up each level of the recursive calculation all at once
+    while X.shape[0] < N:
+        even_terms = X[:, :(X.shape[1] >> 1)]
+        odd_terms = X[:, (X.shape[1] >> 1):]
+        exp_array = np.exp(coef * 1j * np.pi * np.arange(X.shape[0])
+                        / X.shape[0])[:, None]
+        X = np.vstack([even_terms + exp_array * odd_terms,
+                       even_terms - exp_array * odd_terms])
+    return X.ravel()
 
 
 def fft_func_time(func, x):
+    """Times various functions that takes a vector x as an input.
+
+    Parameters:
+        func (fft function): the function to be timed.
+        x (array): the discrete amplitudes to transform.
+    Returns:
+        end - start (float): wall clock running time in seconds of func(x).
+    """
     start = time.time()
     func(x)
     end = time.time()
     return (end - start)
 
 
-def time_test_np_vanilla(power_size, num_tests):
+def time_test_np_vanilla(func1, func2, power_size, num_tests):
+    """Determines which fft function is faster.
+    """
     np.random.seed(0)
     x = np.asarray(np.random.random(1 << power_size))
 
-    np_wins, vanilla_wins = 0, 0
+    func1_wins, func2_wins = 0, 0
     for i in range(num_tests):
-        temp_np = fft_func_time(asarray_fft, x)
-        temp_vanilla = fft_func_time(recursive_fft, x)
+        temp_func1 = fft_func_time(func1, x)
+        temp_func2 = fft_func_time(func2, x)
 
-        if temp_np < temp_vanilla:
+        if temp_func1 < temp_func2:
             # np was faster
-            np_wins += 1
-        elif temp_np > temp_vanilla:
+            func1_wins += 1
+        elif temp_func1 > temp_func2:
             # recursive was faster
-            vanilla_wins += 1
-    return f'Numpy wins: {np_wins}\nVanilla wins: {vanilla_wins}'
+            func2_wins += 1
+
+    output = [
+                f'Tests run: {num_tests}',
+                f'Size of input vector: 2^{power_size}',
+                f'{func1.__name__} wins: '
+                    f'{func1_wins}\n{func2.__name__} wins: {func2_wins}'
+             ]
+    return output
 
 
 if __name__ == '__main__':
     np.random.seed(0)
-    x = np.asarray(np.random.random(1 << 17))
+    x = np.asarray(np.random.random(1 << 10))
+    # output = time_test_np_vanilla(vectorized_fft, recursive_fft, 5, 5)
+    # for i in output:
+    #     print(i, end='\n')
 
+    # print(fft_func_time(np.fft.fft, x))
+    # print(fft_func_time(vectorized_fft, x))
     # print(fft_func_time(asarray_fft, x))
     # print(fft_func_time(recursive_fft, x))
-    # print(np.allclose(asarray_fft(x), np.fft.fft(x)))
+    print(np.allclose(vectorized_fft(x, False), np.fft.fft(x)))
