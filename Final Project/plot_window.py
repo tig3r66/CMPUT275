@@ -1,6 +1,6 @@
-import random
+import random, time
 import worker_threads as wt
-from collections import deque
+import fft
 
 # for data streaming
 from pylsl import StreamInlet, resolve_stream
@@ -10,17 +10,27 @@ from PyQt5 import QtCore, QtWidgets
 from mpl_canvas import MplCanvas
 
 # for data plotting
+import numpy as np
 import matplotlib.pyplot as plt
 plt.style.use('dark_background')
 
 
 class PlotWindow():
-    n_data = 100
+    # number of points to plot
+    n_data = 1000
+    # timepoint at which to plot
     iter_n = 0
+    sampling_rate = 100
+
+    # window setting constants
+    ymin, ymax = -64, 64
+    ylim_min, ylim_max = -150, 150
+    x_time = 10
 
     def setup_ui(self, MainWindow):
         self._run_thread = True
 
+        MainWindow.setWindowTitle('EEG Visualizer')
         MainWindow.setStyleSheet(
             'QMainWindow {'
             '   color: white;'
@@ -37,6 +47,22 @@ class PlotWindow():
             '}'
         )
 
+        self.setup_widgets()
+
+        # setting up data streams
+        random.seed(0)
+
+        self.xdata = [i/100 for i in range(self.n_data)]
+        self.ydata = [0 for i in range(self.n_data)]
+
+        # multithreading
+        self.threadpool = QtCore.QThreadPool()
+        self.start_thread(self.pull_data)
+        self.start_thread(self.update_eegplot)
+        self.start_thread(self.update_fftplot)
+
+
+    def setup_widgets(self):
         # creating eeg and fft windows
         self.central_widget.setWindowTitle('EEG Visualizer')
         self.setup_eeg_window()
@@ -46,30 +72,10 @@ class PlotWindow():
         layout.addWidget(self.eeg_canvas, 0, 0)
         layout.addWidget(self.fft_canvas, 0, 1)
 
-        # setting up data streams
-        random.seed(0)
-
-        self.xdata = deque([i/10 for i in range(self.n_data)])
-        self.ydata = deque([random.uniform(-64, 64) for i in range(self.n_data)])
-
-        # Storing a reference to the plotted line
-        self._plot_ref = None
-        self._moving_ref = None
-
-        # multithreading
-        self.threadpool = QtCore.QThreadPool()
-        self.start_thread(self.pull_data)
-
-        # Setup a timer to trigger the redraw
-        self.timer = QtCore.QTimer()
-        self.timer.setInterval(100)
-        self.timer.timeout.connect(lambda: self.start_thread(self.update_eegplot))
-        self.timer.start()
-
 
     def setup_eeg_window(self):
         self.eeg_canvas = MplCanvas(self, width=9, height=3, dpi=100)
-        self.eeg_canvas.axes.set_ylim(-150, 150)
+        self.eeg_canvas.axes.set_ylim(self.ylim_min, self.ylim_max)
         self.eeg_canvas.axes.set_title('EEG')
         self.eeg_canvas.axes.set_xlabel('Time (s)')
         self.eeg_canvas.axes.get_yaxis().set_visible(False)
@@ -85,32 +91,66 @@ class PlotWindow():
 
 
     def update_eegplot(self):
-        self.ydata[self.iter_n] = random.uniform(-64, 64)
-        self.iter_n = (self.iter_n + 1) % self.n_data
+        # storing a reference to the plotted lines for the eeg plot
+        plot_ref = None
+        moving_ref = None
 
-        if self._plot_ref is None:
-            self._plot_ref, = self.eeg_canvas.axes.plot(self.xdata,
-                self.ydata, '#00FF7F', linewidth=1)
-        else:
-            self._plot_ref.set_ydata(self.ydata)
+        # update the plot
+        while self._run_thread:
+            if plot_ref is None:
+                plot_ref, = self.eeg_canvas.axes.plot(self.xdata,
+                    self.ydata, '#00FF7F', linewidth=1)
+            else:
+                plot_ref.set_ydata(self.ydata)
 
-        if self._moving_ref != None:
-            self._moving_ref.remove()
-        self._moving_ref = self.eeg_canvas.axes.axvline(
-            self.xdata[self.iter_n], -64, 64, c='r')
+            if moving_ref is not None:
+                moving_ref.remove()
+            moving_ref = self.eeg_canvas.axes.axvline(
+                self.xdata[self.iter_n], self.ymin, self.ymax, c='r')
 
-        # trigger the canvas to update and redraw
-        self.eeg_canvas.draw()
+            # trigger the canvas to update and redraw
+            self.eeg_canvas.draw()
+            time.sleep(0.01)
+
+
+    def update_fftplot(self):
+        # sampling frequency
+        st = 1.0 / self.sampling_rate
+        # time vector
+        t = np.arange(self.n_data) * st
+
+        # getting number of frequency bins
+        bins = np.fft.fftfreq(self.n_data, st)
+        plot_ref = None
+
+        while self._run_thread:
+            fft = [i / (self.n_data/2) for i in np.fft.fft(self.ydata)]
+
+            if plot_ref is not None:
+                plot_ref.remove()
+            plot_ref, = self.fft_canvas.axes.plot(bins[:self.n_data//2],
+                np.abs(fft[:self.n_data//2]), '#00FF7F', linewidth=1)
+
+            self.fft_canvas.draw()
+            # TODO: slider of the fft frequency
+            time.sleep(0.01)
 
 
     def pull_data(self):
-        # TODO: make this update a buffer to plot from
         print('Looking for an EEG stream...')
         streams = resolve_stream('type', 'EEG')
         inlet = StreamInlet(streams[0])
+
+        first_time = None
+        initial = True
         while self._run_thread:
             sample, timestamp = inlet.pull_sample()
-            # print('timestamp:', timestamp, 'sample:', sample)
+            if initial:
+                first_time = sample[0]
+                initial = False
+
+            self.ydata[self.iter_n] = sample[1]
+            self.iter_n = (self.iter_n + 1) % self.n_data
 
 
     def start_thread(self, *args):
