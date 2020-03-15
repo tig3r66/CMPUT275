@@ -76,11 +76,12 @@ The discrete Fourier transform (DFT) is more useful to us as programmers. The na
         \item $X_k$ -- the complex number representing amplitude and phase.
     \end{itemize}
 \end{multicols}
-\textbf{Forward DFT} $$ X_k = \sum_{n=0}^{N-1} x_n \cdot e^{-i 2 \pi k n / N} $$
 
-\textbf{Inverse DFT} $$ x_n = \frac{1}{N} \sum_{n=0}^{N-1} X_k \cdot e^{-i 2 \pi k n / N} $$
+\textbf{Inverse DFT} $$ x_n = \frac{1}{N} \sum_{n=0}^{N-1} X_k \cdot e^{i 2 \pi k n / N} $$
+\textbf{Forward DFT} \vspace{-1em}
 
 \begin{align*}
+    X_k &= \sum_{n=0}^{N-1} x_n \cdot e^{-i 2 \pi k n / N}\\
     X_k &= \sum_{n=0}^{N-1} x_n \cdot e^{-i 2 \pi k n / N}\\
     \textbf{X} &= \textbf{x} \cdot M\\
     \intertext{Where the matrix $M$ is given by}

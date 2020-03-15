@@ -3,10 +3,15 @@ import numpy as np
 
 
 def transform(x, inverse):
-    if np.log2(len(x)) % 1 > 0:
-        vectorized_fft(x, False)
+    n = len(x)
+    if (x is None) or (n == 0):
+        return []
+    # is a power of 2
+    elif (n & (n -  1)) == 0:
+        return vectorized_fft(x, inverse)
+    # is not a power of 2
     else:
-        np.fft.fft(x)
+        return np.fft.fft(x)
 
 
 def recursive_fft(x, inverse):
@@ -168,4 +173,5 @@ if __name__ == '__main__':
     # print(fft_func_time(vectorized_fft, x))
     # print(fft_func_time(asarray_fft, x))
     # print(fft_func_time(recursive_fft, x))
-    print(np.allclose(recursive_fft(x, False), np.fft.fft(x)))
+    # print(np.allclose(recursive_fft(x, False), np.fft.fft(x)))
+    print(transform(x, False))

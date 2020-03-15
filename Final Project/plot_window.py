@@ -1,6 +1,6 @@
-import random, time
+import random, time, ctypes, threading
 import worker_threads as wt
-import fft
+import fft as my_fft
 
 # for data streaming
 from pylsl import StreamInlet, resolve_stream
@@ -27,14 +27,17 @@ class PlotWindow():
     ylim_min, ylim_max = -150, 150
     x_time = 10
 
+    # initial settings
+    resolved = False
+
     def setup_ui(self, MainWindow):
         self._run_thread = True
 
         MainWindow.setWindowTitle('EEG Visualizer')
         MainWindow.setStyleSheet(
             'QMainWindow {'
-            '   color: white;'
-            '   background-color: white;'
+            '   color: black;'
+            '   background-color: black;'
             '}'
         )
 
@@ -42,24 +45,19 @@ class PlotWindow():
         MainWindow.setCentralWidget(self.central_widget)
         self.central_widget.setStyleSheet(
             'QMainWindow {'
-            '   color: white;'
-            '   background-color: white;'
+            '   color: black;'
+            '   background-color: black;'
             '}'
         )
 
         self.setup_widgets()
 
-        # setting up data streams
-        random.seed(0)
-
+        # raw data to analyze
         self.xdata = [i/100 for i in range(self.n_data)]
         self.ydata = [0 for i in range(self.n_data)]
 
         # multithreading
         self.threadpool = QtCore.QThreadPool()
-        self.start_thread(self.pull_data)
-        self.start_thread(self.update_eegplot)
-        self.start_thread(self.update_fftplot)
 
 
     def setup_widgets(self):
@@ -71,6 +69,52 @@ class PlotWindow():
         layout = QtWidgets.QGridLayout(self.central_widget)
         layout.addWidget(self.eeg_canvas, 0, 0)
         layout.addWidget(self.fft_canvas, 0, 1)
+        # getting streams button
+        get_stream_btn = QtWidgets.QPushButton('Get Streams')
+        get_stream_btn.setStyleSheet(
+            'QPushButton {'
+            '   color: white;'
+            '   background-color: #282C34;'
+            '   font-family: Helvetica;'
+            '   max-height: 25px;'
+            '   max-width: 125px;'
+            '   text-align: center;'
+            '}'
+        )
+        # can only get the data once
+        self.get_stream_clicked = True
+        get_stream_btn.clicked.connect(self.get_stream)
+        layout.addWidget(get_stream_btn, 1, 0, alignment=QtCore.Qt.AlignCenter)
+
+
+    def get_stream(self):
+        if self.get_stream_clicked:
+            self.start_thread(self.pull_data)
+            self.get_stream_clicked = False
+            # 1 second timeout
+            self.kill_data_pull(timeout=1)
+
+
+    def kill_data_pull(self, timeout):
+        time.sleep(timeout)
+        if self.resolved is False:
+            self.get_stream_clicked = True
+            self.show_popup_msg()
+        else:
+            self.start_thread(self.update_eegplot)
+            self.start_thread(self.update_fftplot)
+
+
+    def show_popup_msg(self):
+        no_data_msg = QtWidgets.QMessageBox()
+        no_data_msg.setWindowTitle('Error')
+        no_data_msg.setText('No channels detected.')
+
+        no_data_msg.setIcon(QtWidgets.QMessageBox.Critical)
+        no_data_msg.setDefaultButton(QtWidgets.QMessageBox.Ok)
+        no_data_msg.setDetailedText('Ensure that EEG data is streaming over'
+            ' the correct network.')
+        no_data_msg.exec_()
 
 
     def setup_eeg_window(self):
@@ -116,24 +160,21 @@ class PlotWindow():
     def update_fftplot(self):
         # sampling frequency
         st = 1.0 / self.sampling_rate
-        # time vector
-        t = np.arange(self.n_data) * st
 
         # getting number of frequency bins
         bins = np.fft.fftfreq(self.n_data, st)
         plot_ref = None
 
         while self._run_thread:
-            fft = [i / (self.n_data/2) for i in np.fft.fft(self.ydata)]
-
+            fft = my_fft.transform(np.asarray(self.ydata), False)
             if plot_ref is not None:
                 plot_ref.remove()
-            plot_ref, = self.fft_canvas.axes.plot(bins[:self.n_data//2],
-                np.abs(fft[:self.n_data//2]), '#00FF7F', linewidth=1)
+            plot_ref, = self.fft_canvas.axes.plot(bins[:(self.n_data >> 1)],
+                np.abs(fft[:(self.n_data >> 1)]), '#00FF7F', linewidth=1)
 
             self.fft_canvas.draw()
             # TODO: slider of the fft frequency
-            time.sleep(0.01)
+            time.sleep(0.1)
 
 
     def pull_data(self):
@@ -141,15 +182,10 @@ class PlotWindow():
         streams = resolve_stream('type', 'EEG')
         inlet = StreamInlet(streams[0])
 
-        first_time = None
-        initial = True
+        self.resolved = True
         while self._run_thread:
             sample, timestamp = inlet.pull_sample()
-            if initial:
-                first_time = sample[0]
-                initial = False
-
-            self.ydata[self.iter_n] = sample[1]
+            self.ydata[self.iter_n] = sample[0]
             self.iter_n = (self.iter_n + 1) % self.n_data
 
 
