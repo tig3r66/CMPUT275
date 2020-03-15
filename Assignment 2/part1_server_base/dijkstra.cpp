@@ -91,11 +91,12 @@ void astar(const WDigraph& graph, int startVertex, int endVertex,
 			for (auto iter = graph.neighbours(v); iter != graph.endIterator(v);
                 iter++
             ) {
-                long long hVal = heuristic(points[*iter], points[endVertex]);
                 tempPair = make_pair(v, *iter);
                 events.insert(tempPair,
-                    currentEvent.key + graph.getCost(v, *iter) + hVal);
+                    currentEvent.key + graph.getCost(v, *iter));
+                    // + heuristic(points[*iter], points[endVertex]));
 			}
 		}
+        if (v == endVertex) return;
 	}
 }
