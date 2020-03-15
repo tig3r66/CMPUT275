@@ -38,7 +38,7 @@ public:
     // returns the number of items held in the heap
     int size() const;
 
-    private:
+private:
     // the array holding the heap
     std::vector< HeapItem<T, K> > heap;
 

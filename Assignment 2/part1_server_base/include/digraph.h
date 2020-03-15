@@ -55,7 +55,7 @@ public:
 
     // return a vector with all vertices
     vector<int> vertices();
-    
+
     // returns true if 'walk' represents a walk on this graph
     // A walk is a sequence of vertices (perhaps with repeated vertices) 
     // v0, v1, . . . , vk where (vi,vi+1) is an edge for each 0 <= i < k.

@@ -10,7 +10,9 @@ CC=g++
 OBJS=server.o dijkstra.o digraph.o
 CFLAGS=-Wall -c -std=c++11 -O3
 PROG=server
-INCLUDES=include/server.h include/wdigraph.h include/digraph.h include/dijkstra.h
+INCLUDES=include/server.h include/wdigraph.h include/digraph.h\
+	include/dijkstra.h include/points.h
+
 
 server: $(OBJS)
 	@$(CC) $(OBJS) -o $(PROG)

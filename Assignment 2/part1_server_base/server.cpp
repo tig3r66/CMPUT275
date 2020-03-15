@@ -217,6 +217,7 @@ int main(int argc, char* argv[]) {
         endIndex = findClosestPointOnMap(end, points);
 
         dijkstra(graph, startIndex, tree);
+        // astar(graph, startIndex, endIndex, tree, points);
 
         if (!findShortestPath(tree, path, startIndex, endIndex)) {
             // no path

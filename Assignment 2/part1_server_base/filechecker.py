@@ -7,12 +7,12 @@ fin1 = open(sys.argv[1], "r")
 fin2 = open(sys.argv[2], "r")
 
 fin1.read(1)
-counter1 = int(fin1.readline())
+counter1 = int(fin1.readline().strip())
 fin2.read(1)
-counter2 = int(fin2.readline())
+counter2 = int(fin2.readline().strip())
 
-if (counter1 != counter2):
-	raise Exception("number of lines do not match")
+# if (counter1 != counter2):
+	# raise Exception("number of lines do not match")
 
 i = 0
 sum1 = 0

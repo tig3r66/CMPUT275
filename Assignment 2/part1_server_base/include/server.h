@@ -12,15 +12,10 @@
 
 #include "wdigraph.h"
 #include "dijkstra.h"
+#include "points.h"
 #include <unordered_map>
 
 #define SCALE 100000
-
-// stores a point read from the map in 100,000-ths of a degree as integers
-struct Point {
-	long long lat;
-	long long lon;
-};
 
 /*
     Finds the closest waypoint on the map to the current vertex based on

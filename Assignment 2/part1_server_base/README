@@ -11,13 +11,13 @@ Included Files
     * server.cpp
     * dijkstra.cpp
     * digraph.cpp
-    * edmonton-roads-2.0.1.txt
     * include/
         * wdigraph.h
         * digraph.h
         * dijkstra.h
         * heap.h
         * server.h
+        * points.h
     * Makefile
     * README
 
