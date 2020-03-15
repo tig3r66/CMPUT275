@@ -2,6 +2,13 @@ import time, cmath, sys
 import numpy as np
 
 
+def transform(x, inverse):
+    if np.log2(len(x)) % 1 > 0:
+        vectorized_fft(x, False)
+    else:
+        np.fft.fft(x)
+
+
 def recursive_fft(x, inverse):
     """Recursive implementation of the 1D Cooley-Tukey FFT.
 
@@ -58,7 +65,7 @@ def asarray_fft(x, inverse):
     N = x.shape[0]
 
     # validating input array
-    if N % 2 != 0:
+    if np.log2(N) % 1 > 0:
         raise ValueError('array size must be a power of 2')
     # 32 was arbitrarily chosen as "good enough"
     elif N <= 32:
@@ -85,7 +92,7 @@ def vectorized_fft(x, inverse):
     N = x.shape[0]
 
     # validating input array
-    if N % 2 != 0:
+    if np.log2(N) % 1 > 0:
         raise ValueError('array size must be a power of 2')
     # 32 was arbitrarily chosen as "good enough"
     new_N = min(N, 32)
@@ -107,17 +114,18 @@ def vectorized_fft(x, inverse):
     return X.ravel()
 
 
-def fft_func_time(func, x):
+def fft_func_time(func, x, inverse):
     """Times various functions that takes a vector x as an input.
 
     Parameters:
         func (fft function): the function to be timed.
         x (array): the discrete amplitudes to transform.
+        inverse (bool): whether to perform the inverse Fourier transform.
     Returns:
         end - start (float): wall clock running time in seconds of func(x).
     """
     start = time.time()
-    func(x)
+    func(x, inverse)
     end = time.time()
     return (end - start)
 
@@ -130,8 +138,8 @@ def time_test_np_vanilla(func1, func2, power_size, num_tests):
 
     func1_wins, func2_wins = 0, 0
     for i in range(num_tests):
-        temp_func1 = fft_func_time(func1, x)
-        temp_func2 = fft_func_time(func2, x)
+        temp_func1 = fft_func_time(func1, x, False)
+        temp_func2 = fft_func_time(func2, x, False)
 
         if temp_func1 < temp_func2:
             # np was faster
@@ -151,7 +159,7 @@ def time_test_np_vanilla(func1, func2, power_size, num_tests):
 
 if __name__ == '__main__':
     np.random.seed(0)
-    x = np.asarray(np.random.random(1 << 10))
+    x = np.asarray(np.random.random(128))
     # output = time_test_np_vanilla(vectorized_fft, recursive_fft, 5, 5)
     # for i in output:
     #     print(i, end='\n')
@@ -160,4 +168,4 @@ if __name__ == '__main__':
     # print(fft_func_time(vectorized_fft, x))
     # print(fft_func_time(asarray_fft, x))
     # print(fft_func_time(recursive_fft, x))
-    print(np.allclose(vectorized_fft(x, False), np.fft.fft(x)))
+    print(np.allclose(recursive_fft(x, False), np.fft.fft(x)))
