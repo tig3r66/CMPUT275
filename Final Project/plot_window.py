@@ -92,6 +92,11 @@ class PlotWindow():
         top_widget.setLayout(self.layout)
         self.master_layout.addWidget(top_widget)
 
+        bottom_layout = QtWidgets.QHBoxLayout()
+        # left spacer
+        left_spacer = QtWidgets.QWidget()
+        bottom_layout.addWidget(left_spacer, 0)
+
         # getting streams button
         get_stream_btn = QtWidgets.QPushButton('Get Streams')
         get_stream_btn.setStyleSheet(
@@ -99,21 +104,62 @@ class PlotWindow():
             '   color: black;'
             '   background-color: #feda6a;'
             '   font-family: Helvetica;'
-            '   max-height: 100px;'
-            '   max-width: 100px;'
+            '   max-height: 200px;'
+            '   max-width: 150px;'
             '   text-align: center;'
             '}'
         )
-
         # can only get the data once
         self.get_stream_clicked = True
         get_stream_btn.clicked.connect(self.get_stream)
+        bottom_layout.addWidget(get_stream_btn, 1)
 
-        bottom_layout = QtWidgets.QGridLayout()
-        bottom_layout.addWidget(get_stream_btn)
+        # stopping streams button
+        stop_streams_btn = QtWidgets.QPushButton('Stop Streams')
+        stop_streams_btn.setStyleSheet(
+            'QPushButton {'
+            '   color: black;'
+            '   background-color: #feda6a;'
+            '   font-family: Helvetica;'
+            '   max-height: 200px;'
+            '   max-width: 150px;'
+            '   text-align: center;'
+            '}'
+        )
+        stop_streams_btn.clicked.connect(self.stop_streams)
+        bottom_layout.addWidget(stop_streams_btn, 2)
+
+        # right spacer
+        right_spacer = QtWidgets.QWidget()
+        bottom_layout.addWidget(right_spacer, 3)
+
+        # placing layout into a placeholder widget
         bottom_widget = QtWidgets.QWidget()
         bottom_widget.setLayout(bottom_layout)
+        # bottom to master
         self.master_layout.addWidget(bottom_widget)
+
+
+    def stop_streams(self):
+        self.close_threads()
+        # resetting
+        self._run_thread = True
+        self.get_stream_clicked = True
+        self.eeg_plot_ref.remove()
+        self.fft_plot_ref.remove()
+        self.moving_ref.remove()
+        self.eeg_canvas.draw()
+        self.fft_canvas.draw()
+        self.reset_data()
+
+
+    def reset_data(self):
+        self.iter_n = 0
+        # raw data to analyze
+        self.xdata = [i/100 for i in range(self.n_data)]
+        self.ydata = [0 for i in range(self.n_data)]
+        # fft data
+        self.fft = []
 
 
     def get_stream(self):
@@ -167,20 +213,20 @@ class PlotWindow():
 
     def update_eegplot(self):
         # storing a reference to the plotted lines for the eeg plot
-        plot_ref = None
-        moving_ref = None
+        self.eeg_plot_ref = None
+        self.moving_ref = None
 
         # update the plot
         while self._run_thread:
-            if plot_ref is None:
-                plot_ref, = self.eeg_canvas.axes.plot(self.xdata,
+            if self.eeg_plot_ref is None:
+                self.eeg_plot_ref, = self.eeg_canvas.axes.plot(self.xdata,
                     self.ydata, '#00FF7F', linewidth=1)
             else:
-                plot_ref.set_ydata(self.ydata)
+                self.eeg_plot_ref.set_ydata(self.ydata)
 
-            if moving_ref is not None:
-                moving_ref.remove()
-            moving_ref = self.eeg_canvas.axes.axvline(
+            if self.moving_ref is not None:
+                self.moving_ref.remove()
+            self.moving_ref = self.eeg_canvas.axes.axvline(
                 self.xdata[self.iter_n], self.ymin, self.ymax, c='r')
 
             # trigger the canvas to update and redraw
@@ -189,13 +235,13 @@ class PlotWindow():
 
 
     def update_fftplot(self):
-        plot_ref = None
+        self.fft_plot_ref = None
 
         while self._run_thread:
             self.fft = my_fft.transform(np.asarray(self.ydata), False)
-            if plot_ref is not None:
-                plot_ref.remove()
-            plot_ref, = self.fft_canvas.axes.plot(
+            if self.fft_plot_ref is not None:
+                self.fft_plot_ref.remove()
+            self.fft_plot_ref, = self.fft_canvas.axes.plot(
                 self.bins[:(self.n_data >> 1)],
                 np.abs(self.fft[:(self.n_data >> 1)]), '#00FF7F', linewidth=1)
 
