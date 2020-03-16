@@ -17,22 +17,40 @@ plt.style.use('dark_background')
 
 class PlotWindow():
     # number of points to plot
-    n_data = 1000
+    sampling_rate, n_data = 100, 1000
     # timepoint at which to plot
     iter_n = 0
-    sampling_rate = 100
 
     # window setting constants
     ymin, ymax = -64, 64
     ylim_min, ylim_max = -150, 150
+    xlim_min, xlim_max = 0, 10
     x_time = 10
 
     # initial settings
     resolved = False
 
     def setup_ui(self, MainWindow):
+        self.setup_mainwindow(MainWindow)
+        self.setup_widgets()
+
+        # raw data to analyze
+        self.xdata = [i/100 for i in range(self.n_data)]
+        self.ydata = [0 for i in range(self.n_data)]
+        # fft data
+        self.fft = []
+        # sampling frequency
+        self.st = 1.0 / self.sampling_rate
+        # getting number of frequency bins
+        self.bins = np.fft.fftfreq(self.n_data, self.st)
+
+        # multithreading
+        self.threadpool = QtCore.QThreadPool()
         self._run_thread = True
 
+
+    def setup_mainwindow(self, MainWindow):
+        MainWindow.resize(1400, 400)
         MainWindow.setWindowTitle('EEG Visualizer')
         MainWindow.setStyleSheet(
             'QMainWindow {'
@@ -45,19 +63,18 @@ class PlotWindow():
         MainWindow.setCentralWidget(self.central_widget)
         self.central_widget.setStyleSheet(
             'QMainWindow {'
-            '   color: black;'
+            '   color: white;'
             '   background-color: black;'
             '}'
         )
-
-        self.setup_widgets()
-
-        # raw data to analyze
-        self.xdata = [i/100 for i in range(self.n_data)]
-        self.ydata = [0 for i in range(self.n_data)]
-
-        # multithreading
-        self.threadpool = QtCore.QThreadPool()
+        self.statusbar = QtWidgets.QStatusBar(MainWindow)
+        self.statusbar.setStyleSheet(
+            'QStatusBar {'
+            '   color: #393f4d;'
+            '   background-color: #393f4d'
+            '}'
+        )
+        MainWindow.setStatusBar(self.statusbar)
 
 
     def setup_widgets(self):
@@ -65,26 +82,38 @@ class PlotWindow():
         self.central_widget.setWindowTitle('EEG Visualizer')
         self.setup_eeg_window()
         self.setup_fft_window()
+
         # organizing main window geometry
-        layout = QtWidgets.QGridLayout(self.central_widget)
-        layout.addWidget(self.eeg_canvas, 0, 0)
-        layout.addWidget(self.fft_canvas, 0, 1)
+        self.master_layout = QtWidgets.QVBoxLayout(self.central_widget)
+        self.layout = QtWidgets.QGridLayout()
+        self.layout.addWidget(self.eeg_canvas, 0, 0)
+        self.layout.addWidget(self.fft_canvas, 0, 1)
+        top_widget = QtWidgets.QWidget()
+        top_widget.setLayout(self.layout)
+        self.master_layout.addWidget(top_widget)
+
         # getting streams button
         get_stream_btn = QtWidgets.QPushButton('Get Streams')
         get_stream_btn.setStyleSheet(
             'QPushButton {'
-            '   color: white;'
-            '   background-color: #282C34;'
+            '   color: black;'
+            '   background-color: #feda6a;'
             '   font-family: Helvetica;'
-            '   max-height: 25px;'
-            '   max-width: 125px;'
+            '   max-height: 100px;'
+            '   max-width: 100px;'
             '   text-align: center;'
             '}'
         )
+
         # can only get the data once
         self.get_stream_clicked = True
         get_stream_btn.clicked.connect(self.get_stream)
-        layout.addWidget(get_stream_btn, 1, 0, alignment=QtCore.Qt.AlignCenter)
+
+        bottom_layout = QtWidgets.QGridLayout()
+        bottom_layout.addWidget(get_stream_btn)
+        bottom_widget = QtWidgets.QWidget()
+        bottom_widget.setLayout(bottom_layout)
+        self.master_layout.addWidget(bottom_widget)
 
 
     def get_stream(self):
@@ -101,6 +130,7 @@ class PlotWindow():
             self.get_stream_clicked = True
             self.show_popup_msg()
         else:
+            self.update_statusbar()
             self.start_thread(self.update_eegplot)
             self.start_thread(self.update_fftplot)
 
@@ -118,7 +148,8 @@ class PlotWindow():
 
 
     def setup_eeg_window(self):
-        self.eeg_canvas = MplCanvas(self, width=9, height=3, dpi=100)
+        self.eeg_canvas = MplCanvas(self, width=6, height=3, dpi=100)
+        self.eeg_canvas.axes.set_xlim(self.xlim_min, self.xlim_max)
         self.eeg_canvas.axes.set_ylim(self.ylim_min, self.ylim_max)
         self.eeg_canvas.axes.set_title('EEG')
         self.eeg_canvas.axes.set_xlabel('Time (s)')
@@ -154,23 +185,19 @@ class PlotWindow():
 
             # trigger the canvas to update and redraw
             self.eeg_canvas.draw()
-            time.sleep(0.01)
+            time.sleep(0.02)
 
 
     def update_fftplot(self):
-        # sampling frequency
-        st = 1.0 / self.sampling_rate
-
-        # getting number of frequency bins
-        bins = np.fft.fftfreq(self.n_data, st)
         plot_ref = None
 
         while self._run_thread:
-            fft = my_fft.transform(np.asarray(self.ydata), False)
+            self.fft = my_fft.transform(np.asarray(self.ydata), False)
             if plot_ref is not None:
                 plot_ref.remove()
-            plot_ref, = self.fft_canvas.axes.plot(bins[:(self.n_data >> 1)],
-                np.abs(fft[:(self.n_data >> 1)]), '#00FF7F', linewidth=1)
+            plot_ref, = self.fft_canvas.axes.plot(
+                self.bins[:(self.n_data >> 1)],
+                np.abs(self.fft[:(self.n_data >> 1)]), '#00FF7F', linewidth=1)
 
             self.fft_canvas.draw()
             # TODO: slider of the fft frequency
@@ -181,12 +208,29 @@ class PlotWindow():
         print('Looking for an EEG stream...')
         streams = resolve_stream('type', 'EEG')
         inlet = StreamInlet(streams[0])
-
+        # stream has been found
         self.resolved = True
+        # setting stream info
+        stream_info = inlet.info()
+        # setting class attributes
+        self.sampling_rate = stream_info.nominal_srate()
+        self.n_data = int(self.sampling_rate * self.x_time)
+
         while self._run_thread:
             sample, timestamp = inlet.pull_sample()
             self.ydata[self.iter_n] = sample[0]
             self.iter_n = (self.iter_n + 1) % self.n_data
+
+
+    def update_statusbar(self):
+        sampling_freq_lbl = QtWidgets.QLabel('Sampling rate: {:.1f} Hz'.\
+            format(self.sampling_rate))
+        sampling_freq_lbl.setStyleSheet(
+            'QLabel {'
+            '   color: #feda6a;'
+            '}'
+        )
+        self.statusbar.addWidget(sampling_freq_lbl)
 
 
     def start_thread(self, *args):
