@@ -74,6 +74,13 @@ class PlotWindow():
             '   background-color: #393f4d'
             '}'
         )
+        self.sampling_freq_lbl = QtWidgets.QLabel('Sampling rate:')
+        self.sampling_freq_lbl.setStyleSheet(
+            'QLabel {'
+            '   color: #feda6a;'
+            '}'
+        )
+        self.statusbar.addWidget(self.sampling_freq_lbl)
         MainWindow.setStatusBar(self.statusbar)
 
 
@@ -95,7 +102,7 @@ class PlotWindow():
         bottom_layout = QtWidgets.QHBoxLayout()
         # left spacer
         left_spacer = QtWidgets.QWidget()
-        bottom_layout.addWidget(left_spacer, 0)
+        bottom_layout.addWidget(left_spacer)
 
         # getting streams button
         get_stream_btn = QtWidgets.QPushButton('Get Streams')
@@ -112,7 +119,7 @@ class PlotWindow():
         # can only get the data once
         self.get_stream_clicked = True
         get_stream_btn.clicked.connect(self.get_stream)
-        bottom_layout.addWidget(get_stream_btn, 1)
+        bottom_layout.addWidget(get_stream_btn)
 
         # stopping streams button
         stop_streams_btn = QtWidgets.QPushButton('Stop Streams')
@@ -127,11 +134,11 @@ class PlotWindow():
             '}'
         )
         stop_streams_btn.clicked.connect(self.stop_streams)
-        bottom_layout.addWidget(stop_streams_btn, 2)
+        bottom_layout.addWidget(stop_streams_btn)
 
         # right spacer
         right_spacer = QtWidgets.QWidget()
-        bottom_layout.addWidget(right_spacer, 3)
+        bottom_layout.addWidget(right_spacer)
 
         # placing layout into a placeholder widget
         bottom_widget = QtWidgets.QWidget()
@@ -150,6 +157,7 @@ class PlotWindow():
         self.moving_ref.remove()
         self.eeg_canvas.draw()
         self.fft_canvas.draw()
+        self.sampling_freq_lbl.setText('Sampling rate:')
         self.reset_data()
 
 
@@ -176,7 +184,8 @@ class PlotWindow():
             self.get_stream_clicked = True
             self.show_popup_msg()
         else:
-            self.update_statusbar()
+            self.sampling_freq_lbl.setText('Sampling rate: {:.1f} Hz'.\
+                format(self.sampling_rate))
             self.start_thread(self.update_eegplot)
             self.start_thread(self.update_fftplot)
 
@@ -266,17 +275,6 @@ class PlotWindow():
             sample, timestamp = inlet.pull_sample()
             self.ydata[self.iter_n] = sample[0]
             self.iter_n = (self.iter_n + 1) % self.n_data
-
-
-    def update_statusbar(self):
-        sampling_freq_lbl = QtWidgets.QLabel('Sampling rate: {:.1f} Hz'.\
-            format(self.sampling_rate))
-        sampling_freq_lbl.setStyleSheet(
-            'QLabel {'
-            '   color: #feda6a;'
-            '}'
-        )
-        self.statusbar.addWidget(sampling_freq_lbl)
 
 
     def start_thread(self, *args):
