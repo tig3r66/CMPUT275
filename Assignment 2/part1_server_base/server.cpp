@@ -15,6 +15,7 @@
 #include "include/server.h"
 #include "include/wdigraph.h"
 #include "include/dijkstra.h"
+#include "include/serialport.h"
 
 using namespace std;
 
@@ -207,24 +208,36 @@ int main(int argc, char* argv[]) {
     // builds the weighted directed graph from the yegGraph input file
     readGraph(yegGraph, graph, points);
 
-    cin >> input;
-    if (input == 'R') {
-        cin >> startLat >> startLon >> endLat >> endLon; 
-        Point start = {startLat, startLon};
-        Point end = {endLat, endLon};
+    // states of server
+    enum state {WAITING_FOR_REQUEST, 
+        PROCESSING_REQUEST, SENDING_WAYPOINTS}};
+    state currentMode = WAITING_FOR_REQUEST;
 
-        startIndex = findClosestPointOnMap(start, points);
-        endIndex = findClosestPointOnMap(end, points);
+    // creation of serial port object
+    SerialPort serial("/dev/ttyACM0"); 
 
-        dijkstra(graph, startIndex, tree);
-
-        if (!findShortestPath(tree, path, startIndex, endIndex)) {
-            // no path
-            cout << "N 0" << endl;
-        } else {
-            processWaypoints(points, path);
-        }
+    while (WAITING_FOR_REQUEST) {
+        string input = 
     }
+
+    // cin >> input;
+    // if (input == 'R') {
+    //     cin >> startLat >> startLon >> endLat >> endLon; 
+    //     Point start = {startLat, startLon};
+    //     Point end = {endLat, endLon};
+
+    //     startIndex = findClosestPointOnMap(start, points);
+    //     endIndex = findClosestPointOnMap(end, points);
+
+    //     dijkstra(graph, startIndex, tree);
+
+    //     if (!findShortestPath(tree, path, startIndex, endIndex)) {
+    //         // no path
+    //         cout << "N 0" << endl;
+    //     } else {
+    //         processWaypoints(points, path);
+    //     }
+    // }
 
 	return 0;
 }

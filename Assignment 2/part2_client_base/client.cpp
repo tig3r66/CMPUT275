@@ -3,6 +3,7 @@
 #include <SD.h>
 #include "consts_and_types.h"
 #include "map_drawing.h"
+#include "draw_route.h"
 
 
 // The variables to be shared across the project, they are declared here!
