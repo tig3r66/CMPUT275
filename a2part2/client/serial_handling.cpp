@@ -8,6 +8,14 @@ uint8_t get_waypoints(const lon_lat_32& start, const lon_lat_32& end) {
   // the server over Serial using the protocol in the assignment description.
 
   // TODO: implement the communication protocol from the assignment
+  
+  long long startLat = start.lat, endLat = end.lat;
+  long long startLon = start.lon, endLon = end.lon;
+
+  //enum state {NOT_IN_REQUEST, SENDING_REQUEST, PROCESSING_WAYPOINTS}
+
+  // send request, wait for input
+
 
   // for now, nothing is stored
   shared.num_waypoints = 0;
