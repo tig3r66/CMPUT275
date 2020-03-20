@@ -170,7 +170,15 @@ void reset(unordered_map<int, PIL> &tree, list<int> &path) {
 // function that returns true if acknowledge is rec.
 // false if timeout or invaild input
 bool waitForAck(SerialPort *Serial) {
+    clock_t current = clock();
+    do {
+        // input == 'A\n'
+        if () {
+            return true;
+        }
 
+    } while ((clock() - current)/ CLOCKS_PER_SECOND < 1);
+    return false;
 }
 
 
@@ -216,7 +224,8 @@ int main() {
             } else {
                 // send path length
                 pathLength = path.size();
-
+                writeline(pathLength);
+                writeLine("\n");
                 // wait for ack, if ack recivced in time, move to next state
                 if (!waitForAck(&Serial)) {
                     reset(tree, path);
@@ -237,6 +246,7 @@ int main() {
                 }
             }
             // send final E with newline
+            writeline("E\n");
             reset(tree, path);
             currentMode = WAITING_FOR_REQUEST;
         }
