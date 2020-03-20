@@ -121,7 +121,7 @@ void isValidIfstream(const ifstream& filename) {
 
     Parameters:
         filename (const char*): the filename describing the road network file.
-        graph (WDigraph&): the weighted directed map to build.
+        graph (WDigraph&): the weighted directed graph to build.
         points (unordered_map<int, Point>&): a mapping between vertex
             identifiers and their coordinates.
 */
@@ -188,10 +188,10 @@ int main() {
     unordered_map<int, PIL> tree;
     list<int> path;
     long long startLon, startLat, endLon, endLat;
-    const char* yegGraph = "edmonton-roads-2.0.1.txt";
     int startIndex, endIndex, pathLength;
 
     // builds the weighted directed graph from the yegGraph input file
+    const char* yegGraph = "edmonton-roads-2.0.1.txt";
     readGraph(yegGraph, graph, points);
 
     // states of server
