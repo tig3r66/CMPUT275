@@ -10,8 +10,10 @@
 #include <iostream>
 #include <cmath>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <list>
+#include <time.h>
 #include "include/server.h"
 #include "include/wdigraph.h"
 #include "include/dijkstra.h"
@@ -173,15 +175,15 @@ bool waitForAck(SerialPort *Serial) {
     clock_t current = clock();
     do {
         // input == 'A\n'
-        if (((*Serial).readline()).cmp("A\n") == 0) {
+        if ((*Serial).readline() == "A\n") {
             return true;
         }
         // invaild input 
-        else if (((*Serial).readline()).cmp("") != 0) {
+        else if (((*Serial).readline()) != "") {
             return false;
         }
         // dont enter branches if input is 
-    } while ((clock() - current)/ CLOCKS_PER_SECOND < 1);
+    } while ((clock() - current)/ CLOCKS_PER_SEC < 1);
     return false;
 }
 
@@ -207,12 +209,50 @@ int main() {
     SerialPort Serial("/dev/ttyACM0"); 
 
     // server communcation
+
     while (true) {
         if (currentMode == WAITING_FOR_REQUEST) {
             string request = Serial.readline();
+            stringstream  ss(request);
+            string temp;
+            long long found;
+            ss >> temp;
             // check if vaild request or not
-            if (request[0] == 'R') {
-
+            if (temp == "R") {
+                if (!(ss >> found)) {
+                    ss.flush();
+                    cout << "Fail" << endl;
+                    continue;
+                }
+                startLon = found;
+                cout << startLon << endl;
+                if (!(ss >> found)) {
+                    ss.flush();
+                    cout << "Fail" << endl;
+                    continue;
+                }
+                startLat = found;
+                cout << startLat << endl;
+                if (!(ss >> found)) {
+                    ss.flush();
+                    cout << "Fail" << endl;
+                    continue;
+                }
+                endLon = found;
+                cout << endLon << endl;
+                if (!(ss >> found)) {
+                    ss.flush();
+                    cout << "Fail" << endl;
+                    continue;
+                }
+                endLat = found;
+                cout << endLat << endl;
+                if (!(ss.eof())) {
+                    ss.flush();
+                    cout << "Fail" << endl;
+                    continue;
+                }
+                currentMode = PROCESSING_REQUEST;
             }
         }
         else if (currentMode == PROCESSING_REQUEST) {
@@ -225,13 +265,14 @@ int main() {
 
             if (!findShortestPath(tree, path, startIndex, endIndex)) {
                 // send 0 and \n
+                Serial.writeline("0\n");
                 reset(tree, path);
                 currentMode = WAITING_FOR_REQUEST;
             } else {
                 // send path length
                 pathLength = path.size();
-                writeline(pathLength);
-                writeLine("\n");
+                string length = to_string(pathLength);
+                Serial.writeline(length+"\n");
                 // wait for ack, if ack recivced in time, move to next state
                 if (!waitForAck(&Serial)) {
                     reset(tree, path);
@@ -252,7 +293,7 @@ int main() {
                 }
             }
             // send final E with newline
-            writeline("E\n");
+            Serial.writeline("E\n");
             reset(tree, path);
             currentMode = WAITING_FOR_REQUEST;
         }

@@ -13,8 +13,7 @@ uint8_t get_waypoints(const lon_lat_32& start, const lon_lat_32& end) {
   long long startLon = start.lon, endLon = end.lon;
 
   //enum state {NOT_IN_REQUEST, SENDING_REQUEST, PROCESSING_WAYPOINTS}
-
-  // send request, wait for input
+  Serial.write("R " + startLat + startLon + endLat + endLon);
   int time = millis();
   bool timeout = true;
   do {
