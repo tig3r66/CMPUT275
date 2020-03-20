@@ -1,9 +1,9 @@
 #include <Arduino.h>
 #include <MCUFRIEND_kbv.h>
 #include <SD.h>
-#include "consts_and_types.h"
-#include "map_drawing.h"
-#include "draw_route.h"
+#include "include/consts_and_types.h"
+#include "include/map_drawing.h"
+#include "include/draw_route.h"
 
 
 // The variables to be shared across the project, they are declared here!
