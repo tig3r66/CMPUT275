@@ -29,9 +29,11 @@ dijkstra.o: dijkstra.cpp include/dijkstra.h include/heap.h
 digraph.o: digraph.cpp include/digraph.h
 	@g++ digraph.cpp -o digraph.o $(CFLAGS)
 	@echo digraph.o successfully compiled.
+
 serialport.o: serialport.cpp include/serialport.h
 	@g++ serialport.cpp -o serialport.o $(CFLAGS)
 	@echo serialport.o successfuly compiled
+
 help:
 	@echo Executable targets: $(PROG)
 	@echo Object targets: $(OBJS)
