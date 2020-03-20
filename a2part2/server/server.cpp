@@ -173,10 +173,14 @@ bool waitForAck(SerialPort *Serial) {
     clock_t current = clock();
     do {
         // input == 'A\n'
-        if () {
+        if (((*Serial).readline()).cmp("A\n") == 0) {
             return true;
         }
-
+        // invaild input 
+        else if (((*Serial).readline()).cmp("") != 0) {
+            return false;
+        }
+        // dont enter branches if input is 
     } while ((clock() - current)/ CLOCKS_PER_SECOND < 1);
     return false;
 }
@@ -207,7 +211,9 @@ int main() {
         if (currentMode == WAITING_FOR_REQUEST) {
             string request = Serial.readline();
             // check if vaild request or not
-            // pass in lat and lon
+            if (request[0] == 'R') {
+
+            }
         }
         else if (currentMode == PROCESSING_REQUEST) {
             Point start = {startLat, startLon};

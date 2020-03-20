@@ -4,6 +4,8 @@
 #include "consts_and_types.h"
 #include "map_drawing.h"
 
+#define TIMEOUT 10000
+
 /*
    Your job!
 

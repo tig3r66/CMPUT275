@@ -4,6 +4,7 @@
 #include "include/consts_and_types.h"
 #include "include/map_drawing.h"
 #include "include/draw_route.h"
+#include "include/serial_handling.h"
 
 
 // The variables to be shared across the project, they are declared here!

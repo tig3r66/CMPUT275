@@ -15,6 +15,17 @@ uint8_t get_waypoints(const lon_lat_32& start, const lon_lat_32& end) {
   //enum state {NOT_IN_REQUEST, SENDING_REQUEST, PROCESSING_WAYPOINTS}
 
   // send request, wait for input
+  int time = millis();
+  bool timeout = true;
+  do {
+    // check input
+  } while(millis() - time < 10000);
+
+  if (timeout) {
+    return 0;
+  }
+
+  
 
 
   // for now, nothing is stored
