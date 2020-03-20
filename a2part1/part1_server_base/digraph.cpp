@@ -1,6 +1,6 @@
 //  ========================================
 //  Name: Edward (Eddie) Guo
-//  ID: [redacted]
+//  ID: 1576381
 //  Partner: Jason Kim
 //  CMPUT 275, Winter 2020
 //
@@ -21,7 +21,7 @@ void Digraph::addVertex(int v) {
 
 void Digraph::addEdge(int u, int v) {
     addVertex(v);
-    nbrs[u].insert(v); // will also add u to nbrs if it was not there already
+    nbrs[u].insert(v);  // will also add u to nbrs if it was not there already
 }
 
 
@@ -74,7 +74,7 @@ vector<int> Digraph::vertices() {
 bool Digraph::isWalk(vector<int> walk) {
     if (walk.size() == 0) return false;
     if (walk.size() == 1) return isVertex(walk[0]);
-    for (vector<int>::size_type i=0; i<walk.size()-1; i++) {
+    for (vector<int>::size_type i=0; i < walk.size()-1; i++) {
         if (!isEdge(walk[i], walk[i+1]))
         return false;
     }

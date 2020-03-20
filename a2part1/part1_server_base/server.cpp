@@ -120,7 +120,7 @@ void isValidIfstream(const ifstream& filename) {
 
     Parameters:
         filename (const char*): the filename describing the road network file.
-        graph (WDigraph&): the weighted directed map to build.
+        graph (WDigraph&): the weighted directed graph to build.
         points (unordered_map<int, Point>&): a mapping between vertex
             identifiers and their coordinates.
 */
@@ -141,9 +141,10 @@ void readGraph(const char* filename, WDigraph& graph,
         if (graphID == 'V') {
             // vertex format: V,ID,Lat,Lon
             textIn >> ID >> comma >> lat >> comma >> lon;
+            // SCALE = 100000
             long long convertedLon = static_cast<long long>(lon * SCALE);
             long long convertedLat = static_cast<long long>(lat * SCALE);
-
+            // adding the vertex to the graph object
             point = {convertedLat, convertedLon};
             points[ID] = point;
             graph.addVertex(ID);
@@ -151,8 +152,7 @@ void readGraph(const char* filename, WDigraph& graph,
             // edge format: E,start,end,name
             textIn >> start >> comma >> end >> comma;
             getline(textIn, name);
-
-            // find points and gets Manhattan distance
+            // inserts Manhattan distance (cost of edge) into the graph object
             long long distance = manhattan(points[start], points[end]);
             graph.addEdge(start, end, distance);
         }
@@ -201,12 +201,11 @@ int main(int argc, char* argv[]) {
     list<int> path;
 	char input;
 	long long startLon, startLat, endLon, endLat;
-	const char* yegGraph = "edmonton-roads-2.0.1.txt";
 	int startIndex, endIndex;
 
     // builds the weighted directed graph from the yegGraph input file
+    const char* yegGraph = "edmonton-roads-2.0.1.txt";
     readGraph(yegGraph, graph, points);
-
     cin >> input;
     if (input == 'R') {
         cin >> startLat >> startLon >> endLat >> endLon;

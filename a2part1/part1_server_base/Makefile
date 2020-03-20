@@ -1,5 +1,6 @@
 #  ===========================
 #  Name: Edward (Eddie) Guo
+#  Partner: Jason Kim
 #  ID: 1576381
 #  CMPUT 275, Winter 2020
 #
@@ -7,11 +8,11 @@
 #  ===========================
 
 CC=g++
-OBJS=server.o dijkstra.o digraph.o serialport.o
+OBJS=server.o dijkstra.o digraph.o
 CFLAGS=-Wall -c -std=c++11 -O3
 PROG=server
 INCLUDES=include/server.h include/wdigraph.h include/digraph.h\
-	include/dijkstra.h include/points.h include/serialport.h
+	include/dijkstra.h include/points.h
 
 
 server: $(OBJS)
@@ -29,9 +30,7 @@ dijkstra.o: dijkstra.cpp include/dijkstra.h include/heap.h
 digraph.o: digraph.cpp include/digraph.h
 	@g++ digraph.cpp -o digraph.o $(CFLAGS)
 	@echo digraph.o successfully compiled.
-serialport.o: serialport.cpp include/serialport.h
-	@g++ serialport.cpp -o serialport.o $(CFLAGS)
-	@echo serialport.o successfuly compiled
+
 help:
 	@echo Executable targets: $(PROG)
 	@echo Object targets: $(OBJS)

@@ -9,13 +9,12 @@ def get_sum(sum, in_file):
 	i = 0
 	for line in in_file:
 		if i < 1:
-			temp_coord = line.strip().split()
+			temp_coord = map(int, line.strip().split())
 			i += 1
 		else:
-			new_coord = line.strip().split()
+			new_coord = map(int, line.strip().split())
 			try:
-				sum += manhattan(int(temp_coord[1]), int(temp_coord[2]),
-					int(new_coord[1]), int(new_coord[2]))
+				sum += manhattan(temp_coord[1], temp_coord[2], new_coord[1], new_coord[2])
 				temp_coord = new_coord
 			except IndexError:
 				pass

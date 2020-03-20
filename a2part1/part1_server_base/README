@@ -1,5 +1,5 @@
 Name: Edward (Eddie) Guo
-ID: [redacted]
+ID: 1576381
 Partner: Jason Kim
 CMPUT 275, Winter 2020
 
@@ -20,6 +20,7 @@ Included Files
         * points.h
     * Makefile
     * README
+    * edmonton-roads-2.0.1.txt
 
 ----------------
 Makefile Targets
@@ -32,7 +33,7 @@ Makefile Targets
     - make digraph.o: generates an object file called 'digraph.o'.
 
     - make help: prints a list of executable and object targets.
-	- make clean: removes all object files and executables.
+    - make clean: removes all object files and executables.
 
 ---------------------
 Running Instructions
@@ -52,10 +53,6 @@ Notes
 -----
     * server.cpp contains the main program.
 
-    * The program assumes that a command-line argument of the digraph .txt file
-    is passed. I.e., after 'make graph_concepts', the user could type
-    './graph_concepts edmonton-roads-2.0.1.txt'.
-
     * If an invalid graph file name is passed to readGraph(), the program will
     inform the user that there is no valid digraph text file provided, give the
     correct usage, and exit the program.
@@ -72,3 +69,5 @@ Notes
         E,2,1,None
 
     * The Makefile will echo helpful messages to the user upon correct usage.
+
+    * points.h includes the Point struct.
