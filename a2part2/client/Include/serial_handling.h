@@ -25,4 +25,8 @@
 */
 uint8_t get_waypoints(const lon_lat_32& start, const lon_lat_32& end);
 
+void writeInt64_t(unsigned long long n);
+
+bool waitForResponse(int timeout);
+
 #endif
