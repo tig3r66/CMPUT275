@@ -3,7 +3,6 @@
 
 #include "consts_and_types.h"
 #include "map_drawing.h"
-#include <sstream>
 
 #define TIMEOUT_LARGE 10000
 #define TIMEOUT_NORMAL 1000

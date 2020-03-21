@@ -2,38 +2,15 @@
 
 extern shared_vars shared;
 
-int waitForwaypoint(long long &lon, long long &lat) {
-  int starttime = millis();
-  bool state = false;
-  string temp;
-  
-  while (millis() - starttime < TIMEOUT_NORMAL) {
+bool waitForResponse(int timeout) {
+  int startTime = millis();
+  while (millis() - startTime <  timeout) {
     if (Serial.available()) {
-      string inputLine = Serial.readline();
-      stringstream ss(inputLine);
-      ss >> temp;
-      if (temp == "N") {
-        if (!(ss >> lat)) {
-          return 0;
-        }
-        if (!(ss >> lon)) {
-          return 0;
-        }
-        if (!(ss.eof())) {
-          return 0;
-        }
-
-      }
-      else if (temp == "E") {
-        return 1;
-      }
-      else {
-        return 0;
-      }
+      return true;
     }
   }
-  return 0;
 }
+return false;
 
 uint8_t get_waypoints(const lon_lat_32& start, const lon_lat_32& end) {
   // Currently this does not communicate over the serial port.
@@ -47,56 +24,23 @@ uint8_t get_waypoints(const lon_lat_32& start, const lon_lat_32& end) {
   long long startLon = start.lon, endLon = end.lon;
 
   // sending request
-  Serial.write("R " + startLon + startLat + endLon + endLat);
+  Serial.write("R " + startLon + " " + startLat + " " +  endLon 
+  " " + endLat + "\n");
 
-  int startTime = millis();
-  bool timeout = true;
-  string temp;
-  while (millis() - startTime < TIMEOUT_LARGE) {
-    if (Serial.available()) {
-      string waypointsAmount = Serial.readline();
-      stringstream ss(waypointsAmount);
-      ss >> temp
-      if (temp == 'N') {
-        if (!(ss >> shared.waypoints_num)) {
-          return 0;
-        }
-        if (!ss.eof()) {
-          return 0;
-        }
-      }
-      else {
-        return 0;
-      }
-    }
-  }
+  // wait for response
+  if (!waitForResponse(TIMEOUT_LARGE)) {return 0;}
 
-  ss.flush();
-
-  if (timeout) {
+  if (Serial.read() != 'N') {
     return 0;
   }
+  else {
+    Serial.read();
+    string readline = Serial.readline();
+    
 
-  if (shared.waypoints_num >= 0 && shared.waypoints_num > max_waypoints) {
-    Serial.println("Path invaild");
+
   }
 
-  int i = 0;
-  while (true) {
-    Serial.write('A\n');
-    long long lat, lon;
-    if (waitForwaypoint(lon, lat) == 0) {
-      return 0;
-    }
-    else if (waitForwaypoint(lon, lat) == 1) {
-      break;
-    }
-    else {
-      lon_lat_32 waypoint = {lon, lat};
-      shared.waypoints[i] = waypoint;
-      i++;
-    }
-  }
 
   // 1 indicates a successful exchange, of course you should only output 1
   // in your final solution if the exchange was indeed successful
