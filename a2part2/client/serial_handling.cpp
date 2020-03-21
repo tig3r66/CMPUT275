@@ -36,7 +36,16 @@ uint8_t get_waypoints(const lon_lat_32& start, const lon_lat_32& end) {
   else {
     Serial.read();
     string readline = Serial.readline();
-    
+    int waypointNum = readline.toInt(); 
+    if (waypointNum == 0 || waypointNum > max_waypoints) {
+      Serial.println("good");
+      return 0;
+    }
+    else {
+      shared.waypoint_num = waypointNum;
+      Serial.println("good");
+    }
+  }
 
 
   }
