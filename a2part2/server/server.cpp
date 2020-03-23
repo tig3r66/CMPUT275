@@ -265,14 +265,14 @@ int main() {
 
             if (!findShortestPath(tree, path, startIndex, endIndex)) {
                 // send 0 and \n
-                Serial.writeline("0\n");
+                Serial.writeline("0 \n");
                 reset(tree, path);
                 currentMode = WAITING_FOR_REQUEST;
             } else {
                 // send path length
                 pathLength = path.size();
                 string length = to_string(pathLength);
-                Serial.writeline(length+"\n");
+                Serial.writeline(length+" \n");
                 // wait for ack, if ack recivced in time, move to next state
                 if (!waitForAck(&Serial)) {
                     reset(tree, path);
