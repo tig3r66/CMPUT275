@@ -217,6 +217,8 @@ int main() {
             string temp;
             long long found;
             ss >> temp;
+            // DEBUG REMOVE LATER, checks if string was properly read
+            cout >> "Request: " >> temp >> endl;
             // check if vaild request or not
             if (temp == "R") {
                 if (!(ss >> found)) {
@@ -225,28 +227,32 @@ int main() {
                     continue;
                 }
                 startLon = found;
-                cout << startLon << endl;
+                // DEBUG REMOVE LATER, checks values of lat, lon
+                cout << "StartLon: " << startLon << endl;
                 if (!(ss >> found)) {
                     ss.flush();
                     cout << "Fail" << endl;
                     continue;
                 }
                 startLat = found;
-                cout << startLat << endl;
+                // DEBUG REMOVE LATER, checks values of lat, lon
+                cout <<  "StartLat: "  << startLat << endl;
                 if (!(ss >> found)) {
                     ss.flush();
                     cout << "Fail" << endl;
                     continue;
                 }
                 endLon = found;
-                cout << endLon << endl;
+                // DEBUG REMOVE LATER, checks values of lat, lon
+                cout << "EndLon: "  << endLon << endl;
                 if (!(ss >> found)) {
                     ss.flush();
                     cout << "Fail" << endl;
                     continue;
                 }
                 endLat = found;
-                cout << endLat << endl;
+                // DEBUG REMOVE LATER, checks values of lat, lon
+                cout << "EndLat: " << endLat << endl;
                 if (!(ss.eof())) {
                     ss.flush();
                     cout << "Fail" << endl;
