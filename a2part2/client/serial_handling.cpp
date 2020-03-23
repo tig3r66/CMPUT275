@@ -3,6 +3,7 @@
 
 extern shared_vars shared;
 
+// simple exp function
 long long power(int base, int exp) {
     for (int i = 0; i < exp; i++) {
         base *= base;
@@ -29,16 +30,16 @@ void writeInt64_t(long long n) {
     }
     // printing each digit from most sig to least sig
     else {
+        // finding num of digits 
         long long test = n;
         int digits = 0;
         while (test > 0) {
             test = test / 10;
             digits++;
         }
-        // find a way to get each digit needed, in order of most
-        // sig to least sig
+        // pritnting digitss
         for (int i = digits-1; i >= 0; i--) {
-            long long modifier = power(10, i); // should be 10 pow i, use an exp function?
+            long long modifier = power(10, i); 
             int digit = n / modifier;
             Serial.print(digit);
             n = n - digit*modifer;
@@ -58,7 +59,7 @@ uint8_t get_waypoints(const lon_lat_32& start, const lon_lat_32& end) {
     long long startLat = start.lat, endLat = end.lat;
     long long startLon = start.lon, endLon = end.lon;
 
-    // sending initial request
+    // sending initial request, does the function work?
     Serial.print("R ");
     writeInt64_t(startLon);
     Serial.print(" ");
@@ -93,12 +94,25 @@ uint8_t get_waypoints(const lon_lat_32& start, const lon_lat_32& end) {
         if (!waitForResponse(TIMEOUT_SMALL)) return 0;
 
         // handle waypoint input here, should be same as before
+        if (Serial.read() != 'W') return 0;
+
+        long long waypointLat = Serial.read();
+        Serial.read(); // read space;
+        long long waypointLon = Serial.read();
+
+        // store waypoints
+        lon_lat_32 waypoint = {waypointLon, waypointLat};
+        shared.waypoints[i] = waypoint;
+       
     }
 
+    // last ACK sent
     Serial.println("A");
     if (!waitForResponse(TIMEOUT_SMALL)) return 0;
 
     // handle last E
+    if (Serial.read() != 'E') return 0;
+
 
 
     // 1 indicates a successful exchange, of course you should only output 1
