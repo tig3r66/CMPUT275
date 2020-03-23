@@ -3,7 +3,12 @@
 
 extern shared_vars shared;
 
-
+long long power(int base, int exp) {
+    for (int i = 0; i < exp; i++) {
+        base *= base;
+    }
+    return base;
+}
 // waits for a serial input from server for specified timeout
 bool waitForResponse(int timeout) {
     int startTime = millis();
@@ -33,7 +38,7 @@ void writeInt64_t(long long n) {
         // find a way to get each digit needed, in order of most
         // sig to least sig
         for (int i = digits-1; i >= 0; i--) {
-            long long modifier = 0; // should be 10 pow i, use an exp function?
+            long long modifier = power(10, i); // should be 10 pow i, use an exp function?
             int digit = n / modifier;
             Serial.print(digit);
             n = n - digit*modifer;
