@@ -13,7 +13,7 @@ long long power(int base, int exp) {
 // waits for a serial input from server for specified timeout
 bool waitForResponse(int timeout) {
     int startTime = millis();
-    while (millis() - startTime < timeout) {
+    while ((millis() - startTime) < timeout) {
         if (Serial.available()) {
         return true;
         }
@@ -42,7 +42,7 @@ void writeInt64_t(long long n) {
             long long modifier = power(10, i); 
             int digit = n / modifier;
             Serial.print(digit);
-            n = n - digit*modifer;
+            n = n - digit*modifier;
         }
     }
 }
@@ -96,14 +96,13 @@ uint8_t get_waypoints(const lon_lat_32& start, const lon_lat_32& end) {
         // handle waypoint input here, should be same as before
         if (Serial.read() != 'W') return 0;
 
-        long long waypointLat = Serial.read();
+        long waypointLat = Serial.read();
         Serial.read(); // read space;
-        long long waypointLon = Serial.read();
+        long waypointLon = Serial.read();
 
         // store waypoints
         lon_lat_32 waypoint = {waypointLon, waypointLat};
         shared.waypoints[i] = waypoint;
-       
     }
 
     // last ACK sent
