@@ -1,3 +1,12 @@
+# ===================================
+#   Name: Edward (Eddie) Guo
+#   ID: 1576381
+#   Partner: Jason Kim
+#   CMPUT 275, Fall 2020
+#
+#   Final Assignment: EEG Visualizer
+# ===================================
+
 import random, time, ctypes, threading
 import worker_threads as wt
 import fft as my_fft
@@ -16,7 +25,10 @@ plt.style.use('dark_background')
 
 
 class PlotWindow():
-    # number of points to plot
+    """Creates a subwindow including the live EEG data and FFT plots. This acts
+    as the UI for the QMainWindow found in main.py.
+    """
+    # default number of points to plot (updated when data streams are pulled)
     sampling_rate, n_data = 100, 1000
     # timepoint at which to plot
     iter_n = 0
@@ -27,29 +39,43 @@ class PlotWindow():
     xlim_min, xlim_max = 0, 10
     x_time = 10
 
-    # initial settings
+    # attribute of whether to continue or stop threads
     resolved = False
 
     def setup_ui(self, MainWindow):
+        """Initializes the plot windows and threadpool for use in the
+        QMainWindow. Must be called when instantiating the QMainWindow.
+
+        Arguments:
+            MainWindow (QMainWindow): the object to instantiate with the
+                PlotWindow UI.
+        """
         self.setup_mainwindow(MainWindow)
         self.setup_widgets()
 
         # raw data to analyze
+        # the size of these initial settings are updated when data is pulled
         self.xdata = [i/100 for i in range(self.n_data)]
         self.ydata = [0 for i in range(self.n_data)]
         # fft data
         self.fft = []
-        # sampling frequency
+        # sampling frequency (updated when data is pulled)
         self.st = 1.0 / self.sampling_rate
-        # getting number of frequency bins
+        # number of frequency bins (updated when data is pulled)
         self.bins = np.fft.fftfreq(self.n_data, self.st)
 
-        # multithreading
+        # 3 major threads: data pull, EEG plot, FFT plot
         self.threadpool = QtCore.QThreadPool()
         self._run_thread = True
 
 
     def setup_mainwindow(self, MainWindow):
+        """Sets up the QMainWindow dimensions, statusbar, title, etc.
+
+        Arguments:
+            MainWindow (QMainWindow): the object to instantiate with the
+                PlotWindow UI.
+        """
         MainWindow.resize(1400, 400)
         MainWindow.setWindowTitle('EEG Visualizer')
         MainWindow.setStyleSheet(
@@ -85,6 +111,10 @@ class PlotWindow():
 
 
     def setup_widgets(self):
+        """Creates the layout for the main window. Consists of a master layout
+        (QVBoxLayout) which holds two child layouts. Each child layout holds
+        their respective widgets.
+        """
         # creating eeg and fft windows
         self.central_widget.setWindowTitle('EEG Visualizer')
         self.setup_eeg_window()
@@ -148,6 +178,9 @@ class PlotWindow():
 
 
     def stop_streams(self):
+        """Stops the major threads, resets the sampling rate label, and clears
+        the plots when the button pressed signal is emitted.
+        """
         self.close_threads()
         # resetting
         self._run_thread = True
@@ -162,6 +195,9 @@ class PlotWindow():
 
 
     def reset_data(self):
+        """Helper function which resets all sources of plotted data when the
+        streams are stopped.
+        """
         self.iter_n = 0
         # raw data to analyze
         self.xdata = [i/100 for i in range(self.n_data)]
@@ -171,6 +207,10 @@ class PlotWindow():
 
 
     def get_stream(self):
+        """Attempts to start the streams when the start streams button is
+        pressed (this function is connected to the button pressed signal). The
+        timeout is 1 second before an error dialog pops up.
+        """
         if self.get_stream_clicked:
             self.start_thread(self.pull_data)
             self.get_stream_clicked = False
@@ -179,6 +219,13 @@ class PlotWindow():
 
 
     def kill_data_pull(self, timeout):
+        """Helper function for get_stream. If the data pulling is not successful
+        after the timeout, an error dialog pops up. Otherwise, it starts the
+        relevant threads needed for plotting.
+
+        Arguments:
+            timeout (int, float, double): the timeout in seconds.
+        """
         time.sleep(timeout)
         if self.resolved is False:
             self.get_stream_clicked = True
@@ -191,6 +238,9 @@ class PlotWindow():
 
 
     def show_popup_msg(self):
+        """A helper function which pops an error dialog if no EEG channels
+        are detected on the local network.
+        """
         no_data_msg = QtWidgets.QMessageBox()
         no_data_msg.setWindowTitle('Error')
         no_data_msg.setText('No channels detected.')
@@ -203,6 +253,8 @@ class PlotWindow():
 
 
     def setup_eeg_window(self):
+        """Sets the layout of the EEG plot window.
+        """
         self.eeg_canvas = MplCanvas(self, width=6, height=3, dpi=100)
         self.eeg_canvas.axes.set_xlim(self.xlim_min, self.xlim_max)
         self.eeg_canvas.axes.set_ylim(self.ylim_min, self.ylim_max)
@@ -213,6 +265,8 @@ class PlotWindow():
 
 
     def setup_fft_window(self):
+        """Sets the layout of the FFT plot window.
+        """
         self.fft_canvas = MplCanvas(self, width=6, height=3, dpi=100)
         self.fft_canvas.axes.set_title('FFT Plot')
         self.fft_canvas.axes.set_xlabel('Frequency (Hz)')
@@ -221,18 +275,23 @@ class PlotWindow():
 
 
     def update_eegplot(self):
+        """Continually plots a live EEG graph with a moving vertical line
+        indicating the most recent timepoint pulled.
+        """
         # storing a reference to the plotted lines for the eeg plot
         self.eeg_plot_ref = None
         self.moving_ref = None
 
         # update the plot
         while self._run_thread:
+            # updating the EEG signals
             if self.eeg_plot_ref is None:
                 self.eeg_plot_ref, = self.eeg_canvas.axes.plot(self.xdata,
                     self.ydata, '#00FF7F', linewidth=1)
             else:
                 self.eeg_plot_ref.set_ydata(self.ydata)
 
+            # updating the vertical line
             if self.moving_ref is not None:
                 self.moving_ref.remove()
             self.moving_ref = self.eeg_canvas.axes.axvline(
@@ -244,6 +303,10 @@ class PlotWindow():
 
 
     def update_fftplot(self):
+        """Continually plots the FFT (absolute value of the complex output) of
+        the EEG graph. Takes half the FFT plot due to symmetry and the Nyquist
+        sampling limit.
+        """
         self.fft_plot_ref = None
 
         while self._run_thread:
@@ -260,6 +323,9 @@ class PlotWindow():
 
 
     def pull_data(self):
+        """Continually pulls data from an LSL stream over the local network and
+        updates data sampling rate-related class attributes.
+        """
         print('Looking for an EEG stream...')
         streams = resolve_stream('type', 'EEG')
         inlet = StreamInlet(streams[0])
@@ -269,20 +335,36 @@ class PlotWindow():
         stream_info = inlet.info()
         # setting class attributes
         self.sampling_rate = stream_info.nominal_srate()
-        self.n_data = int(self.sampling_rate * self.x_time)
 
+        # printing stream info
+        print('{:=^30s} Streams {:=^30s}'.format('', ''))
+        print(f'\nChannel name: {stream_info.name()}'
+              f'\nData type: {stream_info.type()}'
+              f'\nChannel count: {stream_info.channel_count()}'
+              f'\nSource ID: {stream_info.source_id()}'
+            )
+        # nice ;)
+        print('{:=^69s}'.format(''))
+
+        # updating sampling rate
+        self.n_data = int(self.sampling_rate * self.x_time)
         while self._run_thread:
+            # timestamp unused
             sample, timestamp = inlet.pull_sample()
             self.ydata[self.iter_n] = sample[0]
             self.iter_n = (self.iter_n + 1) % self.n_data
 
 
     def start_thread(self, *args):
+        """Helper function that adds new QRunnables to the threadpool.
+        """
         for func in args:
             self.thread = wt.Worker(func)
             self.threadpool.start(self.thread)
 
 
     def close_threads(self):
+        """Helper function that stops all running threads.
+        """
         self._run_thread = False
         self.threadpool.waitForDone()

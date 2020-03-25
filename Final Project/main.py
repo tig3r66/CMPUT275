@@ -1,3 +1,12 @@
+# ===================================
+#   Name: Edward (Eddie) Guo
+#   ID: 1576381
+#   Partner: Jason Kim
+#   CMPUT 275, Fall 2020
+#
+#   Final Assignment: EEG Visualizer
+# ===================================
+
 import sys
 
 # for UI
@@ -6,8 +15,14 @@ from plot_window import PlotWindow
 
 
 class Controller:
+    """Controller class for slave QMainWindows. Used for expandability in case
+    the user wishes to create additional windows for the program (ex: home
+    window).
+    """
 
     def show_plot_window(self):
+        """Creates the main window (EEG and FFT plots) from plot_window.py.
+        """
         self.plot_window = QtWidgets.QMainWindow()
         self.ui = PlotWindow()
         self.ui.setup_ui(self.plot_window)
@@ -17,6 +32,9 @@ class Controller:
 
 
     def close_threads(self):
+        """Helper function that closes all running threads when the application
+        is about to quit.
+        """
         self.ui.close_threads()
 
 

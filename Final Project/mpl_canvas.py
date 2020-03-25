@@ -1,3 +1,12 @@
+# ===================================
+#   Name: Edward (Eddie) Guo
+#   ID: 1576381
+#   Partner: Jason Kim
+#   CMPUT 275, Fall 2020
+#
+#   Final Assignment: EEG Visualizer
+# ===================================
+
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 

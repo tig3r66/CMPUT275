@@ -1,3 +1,12 @@
+# ===================================
+#   Name: Edward (Eddie) Guo
+#   ID: 1576381
+#   Partner: Jason Kim
+#   CMPUT 275, Fall 2020
+#
+#   Final Assignment: EEG Visualizer
+# ===================================
+
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
@@ -19,8 +28,7 @@ class WorkerSignals(QObject):
 
 class Worker(QRunnable):
     '''Worker thread that inherits from QRunnable to handle worker thread
-    setup, signals and wrap-up. Supplied args and kwargs will be passed through
-    to the runner.
+    setup, signals and wrap-up.
     '''
     def __init__(self, fn, *args, **kwargs):
         super(Worker, self).__init__()
@@ -34,7 +42,8 @@ class Worker(QRunnable):
 
     @pyqtSlot()
     def run(self):
-        '''Initialize the runner function with passed args, kwargs.
+        '''Initialize the runner function with passed args, kwargs. Starts the
+        thread for the QRunnable.
         '''
         try:
             result = self.fn(*self.args, **self.kwargs)

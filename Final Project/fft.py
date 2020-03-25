@@ -1,8 +1,27 @@
+# ===================================
+#   Name: Edward (Eddie) Guo
+#   ID: 1576381
+#   Partner: Jason Kim
+#   CMPUT 275, Fall 2020
+#
+#   Final Assignment: EEG Visualizer
+# ===================================
+
 import time, cmath, sys
 import numpy as np
 
 
 def transform(x, inverse):
+    """FFT transformation routine for the main program.
+
+    Parameters:
+        x (array): the discrete amplitudes to transform.
+        inverse (bool): perform the inverse FFT if true.
+    Returns:
+        x (array): the amplitudes of the original signal.
+            OR
+        X (complex number array): the phase and amplitude of the transformation.
+    """
     n = len(x)
     if (x is None) or (n == 0):
         return []
@@ -19,8 +38,10 @@ def recursive_fft(x, inverse):
 
     Parameters:
         x (array): the discrete amplitudes to transform.
-        inverse (bool): perform the inverse fft if true.
+        inverse (bool): perform the inverse FFT if true.
     Returns:
+        x (array): the amplitudes of the original signal.
+            OR
         X (complex number array): the phase and amplitude of the transformation.
     """
     coef = 1 if inverse else -1
@@ -44,6 +65,8 @@ def dft(x, inverse):
         x (array): the discrete amplitudes to transform.
         inverse (bool): perform the inverse fft if true.
     Returns:
+        x (array): the amplitudes of the original signal.
+            OR
         np.dot(M, x) (complex number array): the phase and amplitude of the
             transformation.
     """
@@ -64,6 +87,8 @@ def asarray_fft(x, inverse):
         x (array): the discrete amplitudes to transform.
         inverse (bool): perform the inverse fft if true.
     Returns:
+        x (array): the amplitudes of the original signal.
+            OR
         X (complex number array): the phase and amplitude of the transformation.
     """
     coef = 1 if inverse else -1
@@ -91,6 +116,8 @@ def vectorized_fft(x, inverse):
         x (array): the discrete amplitudes to transform.
         inverse (bool): perform the inverse fft if true.
     Returns:
+        x (array): the amplitudes of the original signal.
+            OR
         X (complex number array): the phase and amplitude of the transformation.
     """
     coef = 1 if inverse else -1
