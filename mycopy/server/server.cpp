@@ -239,13 +239,13 @@ int main() {
             // check if vaild request or not
             if (temp == "R") {
                 ss >> startLon >> startLat >> endLon >> endLat;
-                //cout << temp << ' ' << startLon << ' ' << startLat << ' ' << endLon << ' ' << endLat << endl;
+                cout << temp << ' ' << startLon << ' ' << startLat << ' ' << endLon << ' ' << endLat << endl;
                 currState = PROCESSING_REQUEST;
             }
         }
         // finding path for requests
         else if (currState == PROCESSING_REQUEST) {
-
+            cout << "Progessed!" << endl;
             Point start = {startLat, startLon};
             Point end = {endLat, endLon};
 
