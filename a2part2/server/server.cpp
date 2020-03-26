@@ -212,55 +212,19 @@ int main() {
 
     while (true) {
         if (currentMode == WAITING_FOR_REQUEST) {
-            string request = Serial.readline(1000); // should wait indef for \n
-            stringstream  ss(request);
+            string request = Serial.readline(1000);
+            stringstream ss(request);
+
             string temp;
-            long long found;
             ss >> temp;
-            // DEBUG REMOVE LATER, checks if string was properly read
-            cout >> "Request: " >> temp >> endl;
             // check if vaild request or not
             if (temp == "R") {
-                if (!(ss >> found)) {
-                    ss.flush();
-                    cout << "Fail" << endl;
-                    continue;
-                }
-                startLon = found;
-                // DEBUG REMOVE LATER, checks values of lat, lon
-                cout << "StartLon: " << startLon << endl;
-                if (!(ss >> found)) {
-                    ss.flush();
-                    cout << "Fail" << endl;
-                    continue;
-                }
-                startLat = found;
-                // DEBUG REMOVE LATER, checks values of lat, lon
-                cout <<  "StartLat: "  << startLat << endl;
-                if (!(ss >> found)) {
-                    ss.flush();
-                    cout << "Fail" << endl;
-                    continue;
-                }
-                endLon = found;
-                // DEBUG REMOVE LATER, checks values of lat, lon
-                cout << "EndLon: "  << endLon << endl;
-                if (!(ss >> found)) {
-                    ss.flush();
-                    cout << "Fail" << endl;
-                    continue;
-                }
-                endLat = found;
-                // DEBUG REMOVE LATER, checks values of lat, lon
-                cout << "EndLat: " << endLat << endl;
-                if (!(ss.eof())) {
-                    ss.flush();
-                    cout << "Fail" << endl;
-                    continue;
-                }
+            	ss >> startLon >> startLat >> endLon >> endLat;
+            	cout << temp << ' ' << startLon << ' ' << startLat << ' ' << endLon << ' ' << endLat << endl;
                 currentMode = PROCESSING_REQUEST;
             }
         }
+
         else if (currentMode == PROCESSING_REQUEST) {
             Point start = {startLat, startLon};
             Point end = {endLat, endLon};
@@ -270,15 +234,14 @@ int main() {
             dijkstra(graph, startIndex, tree);
 
             if (!findShortestPath(tree, path, startIndex, endIndex)) {
-                // send 0 and \n
-                Serial.writeline("0 \n");
+                Serial.writeline("0\n");
                 reset(tree, path);
                 currentMode = WAITING_FOR_REQUEST;
             } else {
                 // send path length
                 pathLength = path.size();
                 string length = to_string(pathLength);
-                Serial.writeline(length+" \n");
+                Serial.writeline(length+"\n");
                 // wait for ack, if ack recivced in time, move to next state
                 if (!waitForAck(&Serial)) {
                     reset(tree, path);
@@ -289,6 +252,7 @@ int main() {
                 }
             }
         }
+
         else if (currentMode == SENDING_WAYPOINTS) {
             for (int i = 0; i < pathLength; i++) {
                 //send waypoint
@@ -298,11 +262,11 @@ int main() {
                     break;
                 }
             }
-            // send final E with newline
             Serial.writeline("E\n");
             reset(tree, path);
             currentMode = WAITING_FOR_REQUEST;
         }
     }
+
     return 0;
 }
