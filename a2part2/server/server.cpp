@@ -212,7 +212,7 @@ int main() {
 
     while (true) {
         if (currentMode == WAITING_FOR_REQUEST) {
-            string request = Serial.readline();
+            string request = Serial.readline(1000); // should wait indef for \n
             stringstream  ss(request);
             string temp;
             long long found;
