@@ -234,7 +234,7 @@ int main() {
             dijkstra(graph, startIndex, tree);
 
             if (!findShortestPath(tree, path, startIndex, endIndex)) {
-                Serial.writeline("0\n");
+                Serial.writeline("N 0\n");
                 reset(tree, path);
                 currentMode = WAITING_FOR_REQUEST;
             } else {
