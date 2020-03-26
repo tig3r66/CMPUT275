@@ -211,6 +211,7 @@ int main() {
     // server communcation
 
     while (true) {
+
         if (currentMode == WAITING_FOR_REQUEST) {
             string request = Serial.readline(1000);
             stringstream ss(request);
@@ -219,13 +220,16 @@ int main() {
             ss >> temp;
             // check if vaild request or not
             if (temp == "R") {
+                // pass in start and end lon and lats
             	ss >> startLon >> startLat >> endLon >> endLat;
+                // DEBUGGING TOOL REMOVE LATER
             	cout << temp << ' ' << startLon << ' ' << startLat << ' ' << endLon << ' ' << endLat << endl;
                 currentMode = PROCESSING_REQUEST;
             }
         }
 
         else if (currentMode == PROCESSING_REQUEST) {
+            // convert into point structs
             Point start = {startLat, startLon};
             Point end = {endLat, endLon};
 
@@ -241,7 +245,7 @@ int main() {
                 // send path length
                 pathLength = path.size();
                 string length = to_string(pathLength);
-                Serial.writeline(length+"\n");
+                Serial.writeline(length);
                 // wait for ack, if ack recivced in time, move to next state
                 if (!waitForAck(&Serial)) {
                     reset(tree, path);
@@ -256,6 +260,7 @@ int main() {
         else if (currentMode == SENDING_WAYPOINTS) {
             for (int i = 0; i < pathLength; i++) {
                 //send waypoint
+
                 if (!waitForAck(&Serial)) {
                     currentMode = WAITING_FOR_REQUEST;
                     reset(tree, path);
