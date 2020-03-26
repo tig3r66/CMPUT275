@@ -11,6 +11,7 @@
 #include <cmath>
 #include <fstream>
 #include <string>
+#include <sstream>
 #include <list>
 #include "include/server.h"
 #include "include/wdigraph.h"
@@ -159,33 +160,57 @@ void readGraph(const char* filename, WDigraph& graph,
             identifiers and their coordinates.
         path (list<int>&): the path of waypoints to traverse.
 */
-void processWaypoints(unordered_map<int, Point>& points, list<int>& path,
-    SerialPort Serial
-) {
-    Serial.writeline("N ");
-    Serial.writeline(to_string(path.size()));
-    Serial.writeline("\n\r");
+// void processWaypoints(unordered_map<int, Point>& points, list<int>& path,
+//     SerialPort Serial
+// ) {
+//     Serial.writeline("N ");
+//     Serial.writeline(to_string(path.size()));
+//     Serial.writeline("\n\r");
 
-    char input;
-    for (int i = 0; i < path.size(); i++) {
-        cin >> input;
-        if (input == 'A') {
-            int waypointID = path.front();
-            path.pop_front();
-            Point wayPoint = points[waypointID];
-            cout << "W " << wayPoint.lat << " " << wayPoint.lon << endl;
+//     char input;
+//     for (int i = 0; i < path.size(); i++) {
+//         cin >> input;
+//         if (input == 'A') {
+//             int waypointID = path.front();
+//             path.pop_front();
+//             Point wayPoint = points[waypointID];
+//             cout << "W " << wayPoint.lat << " " << wayPoint.lon << endl;
+//         }
+//     }
+
+//     // last acknowledge
+//     cin >> input;
+//     if (input == 'A') {
+//         cout << 'E' << endl;
+//     }
+// }
+
+// function that clears search tree and path formed between waypoints
+void reset(unordered_map<int, PIL> &tree, list<int> &path) {
+    tree.clear();
+    path.clear();
+}
+
+// function that returns true if acknowledge is rec.
+// false if timeout or invaild input
+bool waitForAck(SerialPort *Serial) {
+    clock_t current = clock();
+    do {
+        // input == 'A\n'
+        if ((*Serial).readline() == "A\n") {
+            return true;
         }
-    }
-
-    // last acknowledge
-    cin >> input;
-    if (input == 'A') {
-        cout << 'E' << endl;
-    }
+        // invaild input 
+        else if (((*Serial).readline()) != "") {
+            return false;
+        }
+        // dont enter branches if input is 
+    } while ((clock() - current)/ CLOCKS_PER_SEC < 1);
+    return false;
 }
 
 
-int main(int argc, char* argv[]) {
+int main() {
     SerialPort Serial("/dev/ttyACM0");
     WDigraph graph;
     unordered_map<int, Point> points;
@@ -194,37 +219,86 @@ int main(int argc, char* argv[]) {
     string line;
 	long long startLon, startLat, endLon, endLat;
 	int startIndex, endIndex;
+    int pathLength;
 
     // builds the weighted directed graph from the yegGraph input file
     const char* yegGraph = "edmonton-roads-2.0.1.txt";
     readGraph(yegGraph, graph, points);
 
     // finite state machine for server
-    enum {START, SEND_WAYPOINTS, END} currState = START;
+    enum {LISTENING, PROCESSING_REQUEST, 
+        SENDING_WAYPOINTS} currState = LISTENING;
     while (true) {
-        while (currState != END) {
-            line = Serial.readline();
-            if (line[0] == 'R') cout << "YES" << endl;
+        // listening for vaild requests
+        if (currState == LISTENING) {
+            string request = Serial.readline(1000);
+            stringstream ss(request);
+
+            string temp;
+            ss >> temp;
+            // check if vaild request or not
+            if (temp == "R") {
+                ss >> startLon >> startLat >> endLon >> endLat;
+                //cout << temp << ' ' << startLon << ' ' << startLat << ' ' << endLon << ' ' << endLat << endl;
+                currState = PROCESSING_REQUEST;
+            }
+        }
+        // finding path for requests
+        else if (currState == PROCESSING_REQUEST) {
+
+            Point start = {startLat, startLon};
+            Point end = {endLat, endLon};
+
+            startIndex = findClosestPointOnMap(start, points);
+            endIndex = findClosestPointOnMap(end, points);
+            dijkstra(graph, startIndex, tree);
+
+            if (!findShortestPath(tree, path, startIndex, endIndex)) {
+                Serial.writeline("N 0\n");
+                reset(tree, path);
+                currState = LISTENING;
+            } else {
+                // send path length
+                pathLength = path.size();
+                string length = to_string(pathLength);
+                Serial.writeline("N ");
+                Serial.writeline(length);
+                Serial.writeline("\n");
+                // wait for ack, if ack recivced in time, move to next state
+                if (!waitForAck(&Serial)) {
+                    reset(tree, path);
+                    currState = LISTENING;
+                }
+                else {
+                    currState = SENDING_WAYPOINTS;
+                }
+            }
+        }
+
+        else if (currState == SENDING_WAYPOINTS) {
+            for (int i = 0; i < pathLength; i++) {
+                int waypointID = path.front();
+                path.pop_front();
+                Point waypoint = points[waypointID];
+                string lat = to_string(waypoint.lat);
+                string lon = to_string(waypoint.lon);
+                //send waypoint
+                Serial.writeline("W ");
+                Serial.writeline(lat);
+                Serial.writeline(" ");
+                Serial.writeline(lon);
+                Serial.writeline("\n");
+                if (!waitForAck(&Serial)) {
+                    currState = LISTENING;
+                    reset(tree, path);
+                    break;
+                }
+            }
+            Serial.writeline("E\n");
+            reset(tree, path);
+            currState = LISTENING;
         }
     }
-
-    // cin >> input;
-    // if (input == 'R') {
-    //     cin >> startLat >> startLon >> endLat >> endLon;
-    //     Point start = {startLat, startLon};
-    //     Point end = {endLat, endLon};
-
-    //     startIndex = findClosestPointOnMap(start, points);
-    //     endIndex = findClosestPointOnMap(end, points);
-
-    //     dijkstra(graph, startIndex, tree);
-
-    //     if (!findShortestPath(tree, path, startIndex, endIndex)) {
-    //         Serial.writeline("N 0\n\r");
-    //     } else {
-    //         processWaypoints(points, path, Serial);
-    //     }
-    // }
 
 	return 0;
 }
