@@ -150,41 +150,6 @@ void readGraph(const char* filename, WDigraph& graph,
 }
 
 
-/*
-    Helper function that processes valid requests sent to the server via stdin
-    and stdout. This function will print waypoints to the command-line from the
-    requested start and end points.
-
-    Parameters:
-        points (unordered_map<int, Point>&): a mapping between vertex
-            identifiers and their coordinates.
-        path (list<int>&): the path of waypoints to traverse.
-*/
-// void processWaypoints(unordered_map<int, Point>& points, list<int>& path,
-//     SerialPort Serial
-// ) {
-//     Serial.writeline("N ");
-//     Serial.writeline(to_string(path.size()));
-//     Serial.writeline("\n\r");
-
-//     char input;
-//     for (int i = 0; i < path.size(); i++) {
-//         cin >> input;
-//         if (input == 'A') {
-//             int waypointID = path.front();
-//             path.pop_front();
-//             Point wayPoint = points[waypointID];
-//             cout << "W " << wayPoint.lat << " " << wayPoint.lon << endl;
-//         }
-//     }
-
-//     // last acknowledge
-//     cin >> input;
-//     if (input == 'A') {
-//         cout << 'E' << endl;
-//     }
-// }
-
 // function that clears search tree and path formed between waypoints
 void reset(unordered_map<int, PIL> &tree, list<int> &path) {
     tree.clear();
@@ -196,14 +161,12 @@ void reset(unordered_map<int, PIL> &tree, list<int> &path) {
 bool waitForAck(SerialPort *Serial) {
     cout << "are we here" << endl;
     string readline = (*Serial).readline(TIMEOUT);
-    cout << readline << endl; 
+    cout << "NEXT CHAR SHOULD BE ACK: " << readline << endl;
     if (readline == "A\n") {
         return true;
-    }
-    else {
+    } else {
         return false;
     }
-
 }
 
 
@@ -216,76 +179,76 @@ int main() {
     string line;
 	long long startLon, startLat, endLon, endLat;
 	int startIndex, endIndex;
-    int pathLength;
 
     // builds the weighted directed graph from the yegGraph input file
     const char* yegGraph = "edmonton-roads-2.0.1.txt";
     readGraph(yegGraph, graph, points);
 
     // finite state machine for server
-    enum {LISTENING, PROCESSING_REQUEST, 
-        SENDING_WAYPOINTS} currState = LISTENING;
+    enum {LISTENING, PROCESSING_REQUEST, SENDING_WAYPOINTS} currState = LISTENING;
     while (true) {
         // listening for vaild requests
         if (currState == LISTENING) {
             cout << "o" << endl;
             string request = Serial.readline(1000);
             cout << "r" << endl;
-            stringstream ss(request); 
+
+            stringstream ss(request);
             string temp;
             ss >> temp;
             // check if vaild request or not
             if (temp == "R") {
-                ss >> startLon >> startLat >> endLon >> endLat;
-                cout << temp << ' ' << startLon << ' ' << startLat << ' ' << endLon << ' ' << endLat << endl;
+                ss >> startLat >> startLon >> endLat >> endLon;
+                cout << temp << ' ' << startLat << ' ' << startLon << ' ' << endLat << ' ' << endLon << endl;
                 currState = PROCESSING_REQUEST;
-                cout << "here" << endl;
             }
         }
+
         // finding path for requests
         else if (currState == PROCESSING_REQUEST) {
-            cout << "Progessed!" << endl;
             Point start = {startLat, startLon};
             Point end = {endLat, endLon};
 
             startIndex = findClosestPointOnMap(start, points);
             endIndex = findClosestPointOnMap(end, points);
             dijkstra(graph, startIndex, tree);
-            cout << "done my shite" << endl;
 
             if (!findShortestPath(tree, path, startIndex, endIndex)) {
                 Serial.writeline("N 0\n");
-                cout << "0 case" << endl;
+                cout << "NO WAYPOINTS: N 0" << endl;
                 reset(tree, path);
                 currState = LISTENING;
             } else {
                 // send path length
-                pathLength = path.size();
-                cout << pathLength << " case" << endl;
-                string length = to_string(pathLength);
+                cout << path.size() << " cases" << endl;
+
+                string length = to_string(path.size());
                 Serial.writeline("N ");
                 Serial.writeline(length);
                 Serial.writeline("\n");
-                cout << "we reached here eh?" << endl;
+
                 // wait for ack, if ack recivced in time, move to next state
                 if (!waitForAck(&Serial)) {
                     reset(tree, path);
                     currState = LISTENING;
-                }
-                else {
+                    cout << "LISTENING FOR ACK" << endl;
+                } else {
                     currState = SENDING_WAYPOINTS;
                 }
             }
         }
 
         else if (currState == SENDING_WAYPOINTS) {
-            for (int i = 0; i < pathLength; i++) {
+            long numWaypoints = path.size();
+            for (int i = 0; i < numWaypoints; i++) {
                 int waypointID = path.front();
                 path.pop_front();
+
                 Point waypoint = points[waypointID];
                 string lat = to_string(waypoint.lat);
                 string lon = to_string(waypoint.lon);
-                //send waypoint
+                cout << "waypointID: " << waypointID << " W " << lat << ' ' << lon << endl;
+                // send waypoint
                 Serial.writeline("W ");
                 Serial.writeline(lat);
                 Serial.writeline(" ");
