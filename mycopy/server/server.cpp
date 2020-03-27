@@ -194,19 +194,14 @@ void reset(unordered_map<int, PIL> &tree, list<int> &path) {
 // function that returns true if acknowledge is rec.
 // false if timeout or invaild input
 bool waitForAck(SerialPort *Serial) {
-    clock_t current = clock();
-    do {
-        // input == 'A\n'
-        if ((*Serial).readline() == "A\n") {
-            return true;
-        }
-        // invaild input 
-        else if (((*Serial).readline()) != "") {
-            return false;
-        }
-        // dont enter branches if input is 
-    } while ((clock() - current)/ CLOCKS_PER_SEC < 1);
-    return false;
+    string readline = (*Serial).readline(1000); //replace with a constant
+    if (readline == "A\n") {
+        return true;
+    }
+    else {
+        return false;
+    }
+
 }
 
 
@@ -231,9 +226,10 @@ int main() {
     while (true) {
         // listening for vaild requests
         if (currState == LISTENING) {
+            cout << "o" << endl;
             string request = Serial.readline(1000);
-            stringstream ss(request);
-
+            cout << "r" << endl;
+            stringstream ss(request); 
             string temp;
             ss >> temp;
             // check if vaild request or not
@@ -241,6 +237,7 @@ int main() {
                 ss >> startLon >> startLat >> endLon >> endLat;
                 cout << temp << ' ' << startLon << ' ' << startLat << ' ' << endLon << ' ' << endLat << endl;
                 currState = PROCESSING_REQUEST;
+                cout << "here" << endl;
             }
         }
         // finding path for requests
@@ -252,6 +249,7 @@ int main() {
             startIndex = findClosestPointOnMap(start, points);
             endIndex = findClosestPointOnMap(end, points);
             dijkstra(graph, startIndex, tree);
+            cout << "done my shite" << endl;
 
             if (!findShortestPath(tree, path, startIndex, endIndex)) {
                 Serial.writeline("N 0\n");

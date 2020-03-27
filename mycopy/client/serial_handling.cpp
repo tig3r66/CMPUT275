@@ -30,6 +30,7 @@ void sendRequest(const lon_lat_32& start, const lon_lat_32& end) {
     Serial.write(' ');
     Serial.print(endLon);
     Serial.print('\n');
+
 }
 
 

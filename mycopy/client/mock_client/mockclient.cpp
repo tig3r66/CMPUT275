@@ -8,16 +8,19 @@ void setup() {
 
 int main() {
     setup();
+    int32_t Slat = 5365486, Slon = -11333915;
+    int32_t Elat = 5364728, Elon = -11335891;
 
     // sent request
     Serial.write("R ");
-    Serial.print(5365486);
+    Serial.print(Slat);
     Serial.write(' ');
-    Serial.print(11333915);
+    Serial.print(Slon);
     Serial.write(' ');
-    Serial.print(5364728);
+    Serial.print(Elat);
     Serial.write(' ');
-    Serial.print(5365486);
+    Serial.print(Elon);
+    delay(100);
     Serial.write('\n');
 
 
