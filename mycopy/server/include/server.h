@@ -17,6 +17,7 @@
 #include <unordered_map>
 
 #define SCALE 100000
+#define TIMEOUT 1000
 
 /*
     Finds the closest waypoint on the map to the current vertex based on
@@ -58,5 +59,9 @@ void readGraph(string filename, WDigraph& graph,
     program and informs the user of the correct usage.
 */
 void isValidIfstream(const ifstream& filename);
+
+bool waitForAck(SerialPort *Serial);
+
+void reset(unordered_map<int, PIL> &tree, list<int> &path);
 
 #endif

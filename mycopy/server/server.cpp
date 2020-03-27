@@ -195,7 +195,8 @@ void reset(unordered_map<int, PIL> &tree, list<int> &path) {
 // false if timeout or invaild input
 bool waitForAck(SerialPort *Serial) {
     cout << "are we here" << endl;
-    string readline = (*Serial).readline(1000); //replace with a constant
+    string readline = (*Serial).readline(TIMEOUT);
+    cout << readline << endl; 
     if (readline == "A\n") {
         return true;
     }
