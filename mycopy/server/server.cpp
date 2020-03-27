@@ -194,6 +194,7 @@ void reset(unordered_map<int, PIL> &tree, list<int> &path) {
 // function that returns true if acknowledge is rec.
 // false if timeout or invaild input
 bool waitForAck(SerialPort *Serial) {
+    cout << "are we here" << endl;
     string readline = (*Serial).readline(1000); //replace with a constant
     if (readline == "A\n") {
         return true;
@@ -253,15 +254,18 @@ int main() {
 
             if (!findShortestPath(tree, path, startIndex, endIndex)) {
                 Serial.writeline("N 0\n");
+                cout << "0 case" << endl;
                 reset(tree, path);
                 currState = LISTENING;
             } else {
                 // send path length
                 pathLength = path.size();
+                cout << pathLength << " case" << endl;
                 string length = to_string(pathLength);
                 Serial.writeline("N ");
                 Serial.writeline(length);
                 Serial.writeline("\n");
+                cout << "we reached here eh?" << endl;
                 // wait for ack, if ack recivced in time, move to next state
                 if (!waitForAck(&Serial)) {
                     reset(tree, path);
