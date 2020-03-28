@@ -35,10 +35,11 @@ void sendRequest(const lon_lat_32& start, const lon_lat_32& end) {
 
 /*
     Returns:
-        true:
-        false:
+        -1: invaild input
+        0: vaild input but no path
+        1: vaild input
 */
-bool recNumWayAndAck() {
+int recNumWayAndAck() {
     // reading and validating
     char num = Serial.read();
     char space = Serial.read();
@@ -51,23 +52,25 @@ bool recNumWayAndAck() {
     Serial.print('\n');
     if (shared.num_waypoints > max_waypoints) {
         status_message("too many waypoints requested");
-        return false;
+        return 0;
     }
 
-    if (shared.num_waypoints > 0) return true;
-    else return false;
+    if (shared.num_waypoints > 0) return 1;
+    else return 0;
 }
 
 
 /*
     Returns:
-        true:
-        false:
+        0: input is E
+        1: input is vaild
+        -1: input is invaild
 */
-bool recWayAndAck(uint32_t counter) {
+int recWayAndAck(uint32_t counter) {
     char way = Serial.read();
     char space = Serial.read();
-    if (way != 'W' || space != ' ') return false;
+    if (way != 'W' || way != 'E' || space != ' ') return -1;
+    else if (way == 'E') return 0;
 
     int32_t lat = atol(Serial.readStringUntil(' ').c_str());
     int32_t lon = atol(Serial.readStringUntil('\n').c_str());
@@ -76,7 +79,7 @@ bool recWayAndAck(uint32_t counter) {
     Serial.print('A');
     Serial.print('\n');
 
-    return true;
+    return 1;
 }
 
 
@@ -96,24 +99,27 @@ uint8_t get_waypoints(const lon_lat_32& start, const lon_lat_32& end) {
         else if (currState == WAIT_ON_WAYPOINTS) {
             // waiting for >= 3 bytes and timeout of 10 seconds
             if (waitOnSerial(3, tenSeconds)) {
-                if (recNumWayAndAck()) currState = REC_WAYPOINTS;
+                int state = recNumWayAndAck();
+                if (state == 1) currState = REC_WAYPOINTS;
+                else if (state == 0) return 1;
                 else return 0;
             } else {
-                currState = START;
+                return 0;
             }
         }
 
         else if (currState == REC_WAYPOINTS) {
             if (waitOnSerial(1, oneSecond)) {
-                if (recWayAndAck(wayCounter)) wayCounter++;
-                else break;
+               int state = recWayAndAck(wayCounter);
+               if (state == -1) return 0;
+               else if (state == 0) state == END;
+               else wayCounter++;
             } else {
-                currState = START;
+                return 0;
             }
         }
     }
 
-    if (currState != END) return 0;
     // 1 indicates a successful exchange
     return 1;
 }
