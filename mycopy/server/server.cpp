@@ -200,6 +200,7 @@ int main() {
                 cout << temp << ' ' << startLat << ' ' << startLon << ' ' << endLat << ' ' << endLon << endl;
                 currState = PROCESSING_REQUEST;
             }
+            ss.flush();
         }
 
         // finding path for requests

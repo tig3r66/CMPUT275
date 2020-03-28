@@ -72,8 +72,10 @@ int recWayAndAck(uint32_t counter) {
     if ((way != 'W' && way != 'E') || (space != ' ' && space != '\n')) {
         return -1;
     }
-    else if (way == 'E' && space == '\n') return 0;
-    
+    else if (way == 'E' && space == '\n') {
+        return 0;
+    }
+
     int32_t lat = atol(Serial.readStringUntil(' ').c_str());
     int32_t lon = atol(Serial.readStringUntil('\n').c_str());
 
