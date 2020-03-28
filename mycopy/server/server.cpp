@@ -260,6 +260,7 @@ int main() {
                     break;
                 }
             }
+            cout << "AT END" << endl;
             Serial.writeline("E\n");
             reset(tree, path);
             currState = LISTENING;
