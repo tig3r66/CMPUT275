@@ -79,7 +79,8 @@ int recWayAndAck(uint32_t counter) {
     int32_t lat = atol(Serial.readStringUntil(' ').c_str());
     int32_t lon = atol(Serial.readStringUntil('\n').c_str());
 
-    shared.waypoints[counter] = {lat, lon};
+
+    shared.waypoints[counter] = {lon, lat};
     Serial.print('A');
     Serial.print('\n');
 
