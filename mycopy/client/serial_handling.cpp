@@ -90,7 +90,7 @@ uint8_t get_waypoints(const lon_lat_32& start, const lon_lat_32& end) {
     uint32_t wayCounter = 0;
 
     consumeSerialInput();
-    while (true) {
+    while (currState != END) {
         if (currState == START) {
             sendRequest(start, end);
             currState = WAIT_ON_WAYPOINTS;
