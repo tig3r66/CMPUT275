@@ -11,9 +11,9 @@ bool waitOnSerial(uint8_t nBytes, uint32_t timeout);
 
 void sendRequest(const lon_lat_32& start, const lon_lat_32& end);
 
-bool recNumWayAndAck();
+int recNumWayAndAck();
 
-bool recWayAndAck(uint32_t counter);
+int recWayAndAck(uint32_t counter);
 
 /*
     Print the request with the given endpoints and read the replies
