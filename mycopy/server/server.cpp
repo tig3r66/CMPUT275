@@ -159,9 +159,7 @@ void reset(unordered_map<int, PIL> &tree, list<int> &path) {
 // function that returns true if acknowledge is rec.
 // false if timeout or invaild input
 bool waitForAck(SerialPort *Serial) {
-    cout << "are we here" << endl;
     string readline = (*Serial).readline(TIMEOUT);
-    cout << "NEXT CHAR SHOULD BE ACK: " << readline << endl;
     if (readline == "A\n") {
         return true;
     } else {
@@ -214,12 +212,12 @@ int main() {
 
             if (!findShortestPath(tree, path, startIndex, endIndex)) {
                 Serial.writeline("N 0\n");
-                cout << "NO WAYPOINTS: N 0" << endl;
+                cout << "PATH NOT FOUND" << endl;
                 reset(tree, path);
                 currState = LISTENING;
             } else {
                 // send path length
-                cout << path.size() << " cases" << endl;
+                cout << "N " << path.size() << endl;
 
                 string length = to_string(path.size());
                 Serial.writeline("N ");
@@ -230,7 +228,6 @@ int main() {
                 if (!waitForAck(&Serial)) {
                     reset(tree, path);
                     currState = LISTENING;
-                    cout << "LISTENING FOR ACK" << endl;
                 } else {
                     currState = SENDING_WAYPOINTS;
                 }
@@ -246,7 +243,7 @@ int main() {
                 Point waypoint = points[waypointID];
                 string lat = to_string(waypoint.lat);
                 string lon = to_string(waypoint.lon);
-                cout << "waypointID: " << waypointID << " W " << lat << ' ' << lon << endl;
+                cout << "W " << lat << ' ' << lon << endl;
                 // send waypoint
                 Serial.writeline("W ");
                 Serial.writeline(lat);
@@ -259,9 +256,8 @@ int main() {
                     break;
                 }
             }
-            cout << "AT END" << endl;
-            Serial.writeline("E");
-            Serial.writeline("\n");
+            cout << "END OF REQUEST" << endl;
+            Serial.writeline("E\n");
             reset(tree, path);
             currState = LISTENING;
         }

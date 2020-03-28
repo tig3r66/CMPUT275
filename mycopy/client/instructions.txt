@@ -68,4 +68,4 @@ modifying these files.
    view.
 
  - serial_handling.h and .cpp (*)
-   Contains a function you have to modify to communicate with the Python server.
+   Contains a function you have to modify to communicate with the C++ server.
