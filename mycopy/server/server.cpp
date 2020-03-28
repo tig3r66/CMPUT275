@@ -189,9 +189,7 @@ int main() {
     while (true) {
         // listening for vaild requests
         if (currState == LISTENING) {
-            cout << "o" << endl;
             string request = Serial.readline(1000);
-            cout << "r" << endl;
 
             stringstream ss(request);
             string temp;
