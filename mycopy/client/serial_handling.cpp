@@ -109,7 +109,7 @@ uint8_t get_waypoints(const lon_lat_32& start, const lon_lat_32& end) {
         }
 
         else if (currState == REC_WAYPOINTS) {
-            if (waitOnSerial(1, oneSecond)) {
+            if (waitOnSerial(2, oneSecond)) {
                int state = recWayAndAck(wayCounter);
                if (state == -1) return 0;
                else if (state == 0) state == END;
