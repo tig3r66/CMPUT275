@@ -261,7 +261,8 @@ int main() {
                 }
             }
             cout << "AT END" << endl;
-            Serial.writeline("E\n");
+            Serial.writeline("E");
+            Serial.writeline("\n");
             reset(tree, path);
             currState = LISTENING;
         }
