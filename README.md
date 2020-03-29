@@ -1,4 +1,4 @@
-# CMPUT 275
+# My Projects in CMPUT 275
 
 **COURSE DESCRIPTION**
 
