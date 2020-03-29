@@ -23,7 +23,7 @@ This is a Google-maps-esque application on the Arduino with the Adafruit 3.5" TF
 This project visualizes live-time EEG data alongside a Fast Fourier Transform plot in an application run by PyQt5 and MatPlotLib (data obtained from https://raphaelvallat.com/bandpower.html; the subject has high delta power as the signals were obtained during N3 sleep). Here, we implement the radix-2 decimation-in-time algorithm. This project is still under development.
 
 <p align="center">
-  < ![](eeg_vis.gif) />
+  <gif src="![EEG Visualizer Application](eeg_vis.gif)" />
 </p>
 
 ## License
