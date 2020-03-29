@@ -1,5 +1,4 @@
-# CMPUT 275
-## Introduction to Tangible Computing II, University of Alberta
+# Introduction to Tangible Computing II, University of Alberta
 
 **COURSE DESCRIPTION**
 
