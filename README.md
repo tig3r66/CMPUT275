@@ -11,15 +11,15 @@ The course uses a problem-based approach to motivate the concepts and illustrate
 
 This repository contains projects and assignments from a computing science course at the University of Alberta called Introduction to Tangible Computing II. Please take all uploaded code with a grain of salt as errata may be present and code may not be optimized.
 
-# Project Descriptions
+## Project Descriptions
 
-## Assignment 1: Restaurant Finder
+### Assignment 1: Restaurant Finder
 This project implements a scrollable map of Edmonton on the Arduino using an Adafruit 3.5" TFT LCD display (touchscreen) and joystick. Users can tap the screen to view restaurants based on their mapped ratings. They may also find a restaurant based on Manhattan distance from the cursor (a caching system, quicksort, and/or insertion sort used to sort the restaurants). This assignment received a grade of 100% for both part 1 and part 2.
 
-## Assignment 2: Driving Route Finder
+### Assignment 2: Driving Route Finder
 This is a Google-maps-esque application on the Arduino with the Adafruit 3.5" TFT LCD display (touchscreen) and joystick. Users can press a pushbutton to select two points they wish to visit on a zoomable and scrollable map of Edmonton. The shortest path between the two points is calculated using Dijkstra's algorithm.
 
-## Final Project: EEG Visualizer
+### Final Project: EEG Visualizer
 Here, we visualize live-time EEG data alongside a Fast Fourier Transform plot in an application run by PyQt5 and Matplotlib (data obtained from https://raphaelvallat.com/bandpower.html). The subject from which data has been obtained has high delta power as the signals were obtained during N3 sleep. Here, we implement the radix-2 decimation-in-time algorithm. This project is still under development.
 
 <p align="center">
