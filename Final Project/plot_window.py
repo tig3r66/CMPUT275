@@ -338,7 +338,7 @@ class PlotWindow():
 
         # printing stream info
         print('{:=^30s} Streams {:=^30s}'.format('', ''))
-        print(f'\nChannel name: {stream_info.name()}'
+        print(f'Channel name: {stream_info.name()}'
               f'\nData type: {stream_info.type()}'
               f'\nChannel count: {stream_info.channel_count()}'
               f'\nSource ID: {stream_info.source_id()}'
