@@ -1,4 +1,4 @@
-# Introduction to Tangible Computing II, University of Alberta
+# CMPUT 275: tig3r66
 
 **COURSE DESCRIPTION**
 
