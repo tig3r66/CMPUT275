@@ -107,6 +107,8 @@ Server
 -----
 Notes
 -----
+    - Press the joystick button to request points.
+
     - The server Makefile will echo helpful messages to the user.
 
     - Both the client and server must be running concurrently for the program

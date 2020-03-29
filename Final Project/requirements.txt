@@ -1,0 +1,4 @@
+pyqt
+numpy
+matplotlib
+pylsl
