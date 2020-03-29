@@ -17,10 +17,10 @@ This repository contains projects and assignments from a computing science cours
 This project implements a scrollable map of Edmonton on the Arduino using an Adafruit 3.5" TFT LCD display (touchscreen) and joystick. Users can tap the screen to view restaurants based on their mapped ratings. They may also find a restaurant based on Manhattan distance from the cursor (a caching system, quicksort, and/or insertion sort used to sort the restaurants). This assignment received a grade of 100% for both part 1 and part 2.
 
 ## Assignment 2: Driving Route Finder
-Here we implement a Google-maps-esque application on the Arduino with the Adafruit 3.5" TFT LCD display (touchscreen) and joystick. Users can press a pushbutton to select two points they wish to visit on a zoomable and scrollable map of Edmonton. The shortest path between the two points is calculated using Dijkstra's algorithm (an A* algorithm is also implemented, but unused -- comment the A* function in the main function to enable it).
+This is a Google-maps-esque application on the Arduino with the Adafruit 3.5" TFT LCD display (touchscreen) and joystick. Users can press a pushbutton to select two points they wish to visit on a zoomable and scrollable map of Edmonton. The shortest path between the two points is calculated using Dijkstra's algorithm.
 
 ## Final Project: EEG Visualizer
-This project visualizes live-time mock EEG data alongside a fast Fourier fransform plot in an application run by PyQt5. Here, we implement the radix-2 decimation-in-time algorithm and the chirp Z-transform (aka Bluestein’s FFT algorithm). This project is still under development.
+This project visualizes live-time EEG data alongside a Fast Fourier Transform plot in an application run by PyQt5 and MatPlotLib (data obtained from https://raphaelvallat.com/bandpower.html; the subject has high delta power as the signals were obtained during N3 sleep). Here, we implement the radix-2 decimation-in-time algorithm. This project is still under development.
 
 ## License
 This repository is licensed under the MIT license. See [LICENSE](./LICENSE) for further detail.
