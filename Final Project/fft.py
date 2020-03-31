@@ -7,6 +7,10 @@
 #   Final Assignment: EEG Visualizer
 # ===================================
 
+"""
+Contains the forward and inverse FFT algorithms along with unit tests.
+"""
+
 import time, cmath, sys
 import numpy as np
 
@@ -190,15 +194,22 @@ def time_test_np_vanilla(func1, func2, power_size, num_tests):
 
 
 if __name__ == '__main__':
+    """
+    Unit testing.
+    """
     np.random.seed(0)
     x = np.asarray(np.random.random(128))
-    # output = time_test_np_vanilla(vectorized_fft, recursive_fft, 5, 5)
-    # for i in output:
-    #     print(i, end='\n')
 
-    # print(fft_func_time(np.fft.fft, x))
-    # print(fft_func_time(vectorized_fft, x))
-    # print(fft_func_time(asarray_fft, x))
-    # print(fft_func_time(recursive_fft, x))
-    # print(np.allclose(recursive_fft(x, False), np.fft.fft(x)))
-    print(transform(x, False))
+    print(f"{'':=^32} START TESTS {'':=^32}")
+    output = time_test_np_vanilla(vectorized_fft, recursive_fft, 5, 5)
+    for i in output:
+        print(i, end='\n')
+
+    print('Naive recursive FFT:', fft_func_time(recursive_fft, x, False))
+    print('Non-vectorized FFT:', fft_func_time(asarray_fft, x, False))
+    print('Vectorized FFT:', fft_func_time(vectorized_fft, x, False))
+
+    print(f'{recursive_fft.__name__}() is correct:',
+        np.allclose(recursive_fft(x, False), np.fft.fft(x)))
+    print(f"{'':=^33} END TESTS {'':=^33}")
+    # print(transform(x, False))

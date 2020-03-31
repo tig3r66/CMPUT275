@@ -7,27 +7,35 @@
 #   Final Assignment: EEG Visualizer
 # ===================================
 
-import random, time, ctypes, threading
-import worker_threads as wt
-import fft as my_fft
+"""
+Plot window class for instantiation by a QMainWindow. PlotWindow plots the live
+EEG and FFT plots, and it includes helper methods for multi-threading and data
+buffer management.
+"""
+
+import time, ctypes, threading
+import helper_classes.worker_threads as wt
 
 # for data streaming
 from pylsl import StreamInlet, resolve_stream
 
 # for UI
 from PyQt5 import QtCore, QtWidgets
-from mpl_canvas import MplCanvas
+from helper_classes.mpl_canvas import MplCanvas
 
 # for data plotting
+import fft as my_fft
 import numpy as np
 import matplotlib.pyplot as plt
 plt.style.use('dark_background')
 
 
 class PlotWindow():
+
     """Creates a subwindow including the live EEG data and FFT plots. This acts
     as the UI for the QMainWindow found in main.py.
     """
+
     # default number of points to plot (updated when data streams are pulled)
     sampling_rate, n_data = 100, 1000
     # timepoint at which to plot
@@ -39,7 +47,7 @@ class PlotWindow():
     xlim_min, xlim_max = 0, 10
     x_time = 10
 
-    # attribute of whether to continue or stop threads
+    # determines whether to continue or stop threads
     resolved = False
 
     def setup_ui(self, MainWindow):
@@ -181,17 +189,24 @@ class PlotWindow():
         """Stops the major threads, resets the sampling rate label, and clears
         the plots when the button pressed signal is emitted.
         """
-        self.close_threads()
-        # resetting
-        self._run_thread = True
-        self.get_stream_clicked = True
-        self.eeg_plot_ref.remove()
-        self.fft_plot_ref.remove()
-        self.moving_ref.remove()
-        self.eeg_canvas.draw()
-        self.fft_canvas.draw()
-        self.sampling_freq_lbl.setText('Sampling rate:')
-        self.reset_data()
+        try:
+            self.close_threads()
+            # resetting
+            self._run_thread = True
+            self.get_stream_clicked = True
+            self.eeg_plot_ref.remove()
+            self.fft_plot_ref.remove()
+            self.moving_ref.remove()
+            self.eeg_canvas.draw()
+            self.fft_canvas.draw()
+            self.sampling_freq_lbl.setText('Sampling rate:')
+            self.reset_data()
+        except AttributeError:
+            # the plot references do not exist yet, so do nothing
+            pass
+        except ValueError:
+            # cannot remove an empty list
+            pass
 
 
     def reset_data(self):
@@ -331,20 +346,20 @@ class PlotWindow():
         inlet = StreamInlet(streams[0])
         # stream has been found
         self.resolved = True
-        # setting stream info
+        # getting stream metadata
         stream_info = inlet.info()
         # setting class attributes
         self.sampling_rate = stream_info.nominal_srate()
 
         # printing stream info
-        print('{:=^30s} Streams {:=^30s}'.format('', ''))
+        print(f"{'':=^30s} Streams {'':=^30s}")
         print(f'Channel name: {stream_info.name()}'
               f'\nData type: {stream_info.type()}'
               f'\nChannel count: {stream_info.channel_count()}'
               f'\nSource ID: {stream_info.source_id()}'
             )
         # nice ;)
-        print('{:=^69s}'.format(''))
+        print(f"{'':=^69s}")
 
         # updating sampling rate
         self.n_data = int(self.sampling_rate * self.x_time)

@@ -7,6 +7,11 @@
 #   Final Assignment: EEG Visualizer
 # ===================================
 
+"""
+Contains the QApplication which holds the PlotWindow QMainWindow object. The
+controller class is here for convenient additions of extra QMainWindows.
+"""
+
 import sys
 
 # for UI
@@ -15,6 +20,7 @@ from plot_window import PlotWindow
 
 
 class Controller:
+
     """Controller class for slave QMainWindows. Used for expandability in case
     the user wishes to create additional windows for the program (ex: home
     window).

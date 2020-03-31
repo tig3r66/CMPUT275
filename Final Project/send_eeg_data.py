@@ -7,10 +7,6 @@
 #   Final Assignment: EEG Visualizer
 # ===================================
 
-import time
-import numpy as np
-from pylsl import StreamInfo, StreamOutlet
-
 """
 Simple routine that sends EEG data from a text file over a local network.
 The data was retrieved from https://raphaelvallat.com/bandpower.html. This
@@ -20,16 +16,18 @@ recorded in the N3 phase of sleep for 30 s. The program continually loops the
 data via Lab Streaming Layer (LSL).
 """
 
+import time
+import numpy as np
+from pylsl import StreamInfo, StreamOutlet
 
-"""
-Creating a data stream with the following properties:
-    name = BioSemi
-    signal type = EEG
-    number of channels = 1
-    frequency = 100 Hz
-    data type = float32
-    unique identifier = eeg_project_123
-"""
+
+# Creating a data stream with the following properties:
+#     name = BioSemi
+#     signal type = EEG
+#     number of channels = 1
+#     frequency = 100 Hz
+#     data type = float32
+#     unique identifier = eeg_project_123
 info = StreamInfo('BioSemi', 'EEG', 1, 100, 'float32', 'eeg_project_123')
 
 

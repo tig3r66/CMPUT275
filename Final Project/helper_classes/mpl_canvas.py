@@ -7,10 +7,16 @@
 #   Final Assignment: EEG Visualizer
 # ===================================
 
+"""
+Matplotlib backend to create a QWidget that can be embedded in a QMainWindow.
+This is used for the live EEG and FFT plots in plot_window.py.
+"""
+
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
 class MplCanvas(FigureCanvas):
+
     """Creates a figure and adds a single set of axes. The canvas object is a
     QWidget that can be embedded into Qt.
     """

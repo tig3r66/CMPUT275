@@ -7,6 +7,11 @@
 #   Final Assignment: EEG Visualizer
 # ===================================
 
+"""
+Contains helper classes for multi-thread maintenance. Signals from the
+QRunnable instances are captured by WorkerSignals.
+"""
+
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
@@ -14,6 +19,7 @@ import traceback, sys
 
 
 class WorkerSignals(QObject):
+
     '''Defines the signals available from a running worker thread.
 
     Attributes:
@@ -27,6 +33,7 @@ class WorkerSignals(QObject):
 
 
 class Worker(QRunnable):
+
     '''Worker thread that inherits from QRunnable to handle worker thread
     setup, signals and wrap-up.
     '''
