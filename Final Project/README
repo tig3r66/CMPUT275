@@ -8,12 +8,29 @@ Final Project: EEG Visualizer
 --------------
 Included Files
 --------------
-Source
-    * 
+* README
+* requirements.txt
 
-Miscellaneous
-    * Makefile
-    * README
+* src/
+    * eeg_data/
+        * data.txt
+    * helper_classes/
+        * mpl_canvas.py
+        * worker_threads.py
+    * fft.py
+    * main.py
+    * plot_window.py
+    * send_eeg_data.py
+
+* documentation/
+    * fft_math/
+        * cooley_tukey.pdf
+        * cooley_tukey.tex
+        * Makefile
+    * proposal/
+        * Makefile
+        * proposal.pdf
+        * proposal.tex
 
 ---------------------
 Running Instructions
