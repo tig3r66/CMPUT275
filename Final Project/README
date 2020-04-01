@@ -32,12 +32,54 @@ Included Files
         * proposal.pdf
         * proposal.tex
 
+------------
+Requirements
+------------
+    1. Python 3.6 or later.
+    2. Packages: PyQt5, matplotlib, numpy, pylsl
+
+------------
+Installation
+------------
+    1. Ensure that you are in the directory containing "requirements
+    2. Type "pip3 install -r requirements.txt" in the command-line.
+
 ---------------------
 Running Instructions
 ---------------------
-    1. 
+    1. Navigate into the "src/" directory (the one with "main.py").
+
+    2. Ensure that an EEG signal is sending data over your local network via
+    LSL (Lab Streaming Layer). If not, then type "python3 send_eeg_data.py" in
+    the command-line to send EEG data from a text file (this is a continual
+    loop).
+
+    3. To run the application, type "python3 main.py" in the command-line.
 
 -----
 Notes
 -----
-    *
+    * This application only displays the live EEG signals and FFT plot for a
+    single channel. If there are multiple channels, only the first channel in
+    your stream outlet will be visualized.
+
+    * Data must be streaming before you click "Get Streams" in the main
+    application. Otherwise an error dialogue will pop up. Please restart the
+    program if this occurs.
+
+    * All data is plotted at their respective timestamps. This means that any
+    seemingly time-inconsistent data plotting is due to the time it takes to
+    plot the data from the data buffer.
+
+----------
+Known Bugs
+----------
+    * If you click "Get Streams" without data streaming, send the data, then
+    click "Get Streams" again, the visualization will not be correct (it does
+    not plot all the points at the correct timestamp).
+
+    *  If you click "Get Streams" without data streaming, send the data, then
+    click "Stop Streams", the program will freeze. This is because the thread
+    that tries to pull data will keep on searching the network for a stream. The
+    function that pulls data was from the LSL library, and we could not find a
+    way to incorporate a proper  timeout.
