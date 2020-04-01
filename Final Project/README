@@ -72,7 +72,8 @@ Notes
     plot the data from the data buffer.
 
     * TeXed documentation for the proposal and FFT algorithms are located in
-    the "documentation" directory.
+    the "documentation" directory. The GitHub repository contains a GIF of the
+    running application: https://github.com/tig3r66/CMPUT275.
 
 ----------
 Known Bugs
