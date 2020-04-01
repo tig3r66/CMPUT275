@@ -85,7 +85,7 @@ Known Bugs
     click "Stop Streams", the program will freeze. This is because the thread
     that tries to pull data will keep on searching the network for a stream. The
     function that pulls data was from the LSL library, and we could not find a
-    way to incorporate a proper  timeout.
+    way to incorporate a proper timeout.
 
 -------------
 Contributions
