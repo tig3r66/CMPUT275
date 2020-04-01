@@ -71,6 +71,9 @@ Notes
     seemingly time-inconsistent data plotting is due to the time it takes to
     plot the data from the data buffer.
 
+    * TeXed documentation for the proposal and FFT algorithms are located in
+    the "documentation" directory.
+
 ----------
 Known Bugs
 ----------
@@ -83,3 +86,17 @@ Known Bugs
     that tries to pull data will keep on searching the network for a stream. The
     function that pulls data was from the LSL library, and we could not find a
     way to incorporate a proper  timeout.
+
+-------------
+Contributions
+-------------
+Eddie
+    * Wrote the UI code and application logic.
+    * Managed the multi-threading aspects.
+    * Handled LSL-related code.
+    * Wrote TeXed documentation.
+
+Jason
+    * Wrote the FFT code and unit tests.
+    * Created the helper matplotlib class to integrate the plots as QWidgets.
+    * Tested the main application for bugs.
