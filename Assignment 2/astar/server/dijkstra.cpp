@@ -102,13 +102,15 @@ void astar(const WDigraph& graph, int startVertex, int endVertex,
         }
 
         tree[v] = PIL(currentEvent.item.u, currentEvent.key);
-        for (auto iter = graph.neighbours(v); iter != graph.endIterator(v); iter++) {
-            tempHeur = { v, *iter,
-                heuristic(points[*iter], points[endVertex])
-                    + currentEvent.key + graph.getCost(v, *iter) };
+        for (auto iter = graph.neighbours(v); iter != graph.endIterator(v);
+        	iter++
+        ) {
+            tempHeur = { v, *iter, heuristic(points[*iter], points[endVertex])
+            	+ currentEvent.key + graph.getCost(v, *iter) };
 
             // inserting into heap
-            heur_events.insert(tempHeur, currentEvent.key + graph.getCost(v, *iter));
+            heur_events.insert(tempHeur, currentEvent.key
+            	+ graph.getCost(v, *iter));
         }
     }
 }
