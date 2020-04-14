@@ -1,0 +1,122 @@
+Name: Edward (Eddie) Guo
+ID: 1576381
+Partner: Jason Kim
+CMPUT 275, Winter 2020
+
+Assignment 2 Part 2: Directions
+
+--------------
+Included Files
+--------------
+* README
+
+* server/
+    * digraph.cpp
+    * dijkstra.cpp
+    * serialport.cpp
+    * server.cpp
+    * edmonton-roads-2.0.1.txt
+    * Makefile
+    * include/
+        * a1part2.h
+        * lcd_image.h
+        * yeg_draw.h
+        * yeg_rest_coords.h
+        * yeg_sort.h
+
+* client/
+    * client.cpp
+    * draw_route.cpp
+    * lcd_image.cpp
+    * map_drawing.cpp
+    * serial_handling.cpp
+    * Makefile
+    * include/
+        * consts_and_type.h
+        * draw_route.h
+        * lcd_image.h
+        * map_drawing.h
+        * serial_handling.h
+
+-----------
+Accessories
+-----------
+    * Arduino Mega 2560 Board X1
+    * USB cable type A/B X1
+    * 3.5" TFT LCD 480x320 HD color screen module for Arduino UNO & MEGA 2560
+        board with touch panel X1
+    * Dual axis XY Joystick with push switch for Arduino X1
+    * Breadboard X1
+    * Male jumper wire X10
+    * Male-to-female jumper wire X5
+    * Pushbuttons X2
+
+--------------------
+Wiring Instructions
+--------------------
+Arduino
+    * Arduino GND <--> BB GND
+
+Joystick
+    * Arduino Digital pin 53 <--> BB <--> Joystick Pin SW
+    * Arduino Analog Pin A8 <--> BB <--> Joystick VRy
+    * Arduino Analog Pin A9 <--> BB <--> Joystick VRx
+    * Arduino +5V Pin <--> BB <--> Joystick +5V
+    * BB GND <--> BB <--> Joystick GND
+
+Pushbuttons
+    * BB GND <--> Zoom Out Button <--> Digital Pin 47
+    * BB GND <--> Zoom In Button <--> Digital Pin 45
+
+---------------------
+Running Instructions
+---------------------
+Client
+    1. Connect the Arduino with the appropriate componenets (ex: TFT display) to
+    a computer using an A-B style USB cable. Ensure that the Arduino is using
+    the proper serial port (/dev/ttyACMO0).
+
+    2. In the directory containing "client.cpp", type "make upload" to start
+    the client-side program.
+
+Server
+    1. In the directory containing "server.cpp", type "make" or "make server" in
+    the command-line to compile the server executable.
+
+    2. Next, type "./server" in the command-line to start the server-side
+    program.
+
+----------------
+Makefile Targets
+----------------
+Client
+    - make: creates the Arduino executable.
+    - make upload: uploads the executable to the Arduino.
+
+Server
+    - make: generates an executable called 'server'.
+    - make graph_concepts: generates an executable called 'server'.
+
+    - make server.o: generates an object file called 'server.o'.
+    - make dijkstra.o: generates an object file called 'dijkstra.o'.
+    - make digraph.o: generates an object file called 'digraph.o'.
+
+    - make help: prints a list of executable and object targets.
+    - make clean: removes all object files and executables.
+
+-----
+Notes
+-----
+    - Press the joystick button to request points.
+
+    - The server Makefile will echo helpful messages to the user.
+
+    - Both the client and server must be running concurrently for the program
+    to work properly.
+
+    - The indentation was modified in all client files and lines longer than
+    80 characters were split into multiple lines. Unnecessary comments were
+    removed from the starter files.
+
+    - The status bar is redrawn after the route is drawn (added 1 line in
+    client.cpp).
