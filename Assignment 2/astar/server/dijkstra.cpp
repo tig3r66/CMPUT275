@@ -112,5 +112,7 @@ void astar(const WDigraph& graph, int startVertex, int endVertex,
             heur_events.insert(tempDist,
                 heuristic(points[*iter], points[endVertex]) + realDist);
         }
+
+        if (v == endVertex) break;
     }
 }
