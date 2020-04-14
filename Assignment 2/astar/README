@@ -12,7 +12,7 @@ Included Files
 
 * server/
     * digraph.cpp
-    * dijkstra.cpp
+    * dijkstra.cpp (contains A* implementation)
     * serialport.cpp
     * server.cpp
     * edmonton-roads-2.0.1.txt
