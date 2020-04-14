@@ -4,7 +4,7 @@
 //  Partner: Jason Kim
 //  CMPUT 275, Winter 2020
 //
-//  Assignment 2 Part 2: Directions (Server)
+//  Assignment 2 Part 1: Directions (Server)
 //  ========================================
 
 #include <iostream>
@@ -55,7 +55,6 @@ void dijkstra(const WDigraph& graph, int startVertex,
 	}
 }
 
-
 /*
     Computes the Manhattan distance between two Point objects.
 
@@ -88,9 +87,9 @@ void astar(const WDigraph& graph, int startVertex, int endVertex,
     unordered_map<int, PIL>& tree, unordered_map<int, Point>& points
 ) {
     BinaryHeap< UvHeuristic, long long> heur_events;
-    // placing the first vertex into the events heap (cost = 0)
-    UvHeuristic tempHeur = {startVertex, startVertex, 0};
-    heur_events.insert(tempHeur, 0);
+    UvHeuristic tempDist = {startVertex, startVertex, 0};
+    // placing the first vertex into the events heap (heuristic cost = 0)
+    heur_events.insert(tempDist, 0);
 
     while (heur_events.size() > 0) {
         HeapItem<UvHeuristic, long long> currentEvent = heur_events.min();
@@ -101,16 +100,17 @@ void astar(const WDigraph& graph, int startVertex, int endVertex,
             continue;
         }
 
-        tree[v] = PIL(currentEvent.item.u, currentEvent.key);
+        tree[v] = PIL(currentEvent.item.u, currentEvent.item.distance);
         for (auto iter = graph.neighbours(v); iter != graph.endIterator(v);
         	iter++
         ) {
-            tempHeur = { v, *iter, heuristic(points[*iter], points[endVertex])
-            	+ currentEvent.key + graph.getCost(v, *iter) };
+            long long realDist = currentEvent.item.distance
+                                    + graph.getCost(v, *iter);
+            tempDist = { v, *iter, realDist };
 
             // inserting into heap
-            heur_events.insert(tempHeur, currentEvent.key
-            	+ graph.getCost(v, *iter));
+            heur_events.insert(tempDist,
+                heuristic(points[*iter], points[endVertex]) + realDist);
         }
     }
 }
