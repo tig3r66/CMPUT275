@@ -19,7 +19,7 @@ This project implements a scrollable map of Edmonton on the Arduino using an Ada
 This is a Google-maps-esque application on the Arduino with the Adafruit 3.5" TFT LCD display (touchscreen) and joystick. Users can press a pushbutton to select two points they wish to visit on a zoomable and scrollable map of Edmonton. The shortest path between the two points is calculated using the A-star algorithm. If desired, the user can switch the algorithm to Dijkstra's algorithm (uncomment the code in server.cpp). This assignment received a grade of 100% for both part 1 and part 2.
 
 ### Final Project: EEG Visualizer
-Here, we visualize live-time EEG data alongside a Fast Fourier Transform plot in an application run by PyQt5 and Matplotlib (data obtained from https://raphaelvallat.com/bandpower.html). The subject from which data has been obtained has high delta power as the signals were obtained during N3 sleep. Here, we implement the radix-2 decimation-in-time algorithm. This project is still under development. This assignment received a grade of 97%.
+Here, we visualize live-time EEG data alongside a Fast Fourier Transform plot in an application run by PyQt5 and Matplotlib (data obtained from https://raphaelvallat.com/bandpower.html). The subject from which data has been obtained has high delta power as the signals were obtained during N3 sleep. Here, we implement the radix-2 decimation-in-time algorithm. This project is still under development. This assignment received a grade of 97% (here, students were permitted to create any type of project).
 
 <p align="center">
   <img style="border-radius:1%" src="https://github.com/tig3r66/CMPUT275/blob/good_copy/eeg_vis.gif?raw=true"/>
