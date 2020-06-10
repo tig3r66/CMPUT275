@@ -19,11 +19,11 @@ using namespace std;
 
 // u (int): current vertex
 // v (int): neighbour vertex
-// heuristic (long long): map distance + heuristic (manhattan)
+// distance (long long): map distance
 struct UvHeuristic {
     int u;
     int v;
-    long long heuristic;
+    long long distance;
 };
 
 typedef pair<int, long long> PIL;

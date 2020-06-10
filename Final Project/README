@@ -5,11 +5,14 @@ CMPUT 275, Winter 2020
 
 Final Project: EEG Visualizer
 
+Video link: https://drive.google.com/file/d/1q6Bk2-tndph_bBO89cXf5Dsgq7j0_WrZ/view?usp=sharing
+
 --------------
 Included Files
 --------------
 * README
 * requirements.txt
+* eddie_jason_cmput275.mp4
 
 * src/
     * eeg_data/
@@ -67,26 +70,28 @@ Notes
     application. Otherwise an error dialogue will pop up. Please restart the
     program if this occurs.
 
+        * If you click "Get Streams" without data streaming, send the data, then
+        click "Get Streams" again, the visualization will not be correct (it
+        does not plot all the points at the correct timestamp).
+
+        * If you click "Get Streams" without data streaming, send the data,
+        then click "Stop Streams", the program will freeze. This is because the
+        thread that tries to pull data will keep on searching the network for a
+        stream. The function that pulls data was from the LSL library, and we
+        could not find a way to incorporate a proper timeout.
+
     * All data is plotted at their respective timestamps. This means that any
     seemingly time-inconsistent data plotting is due to the time it takes to
     plot the data from the data buffer.
 
+    * We did not feel comfortable including Bluestein's chirp-Z transform as we
+    did not have the adequate background to confidently understand the math
+    behind it (though we originally implemented it based on pseudo-code).
+    Consequently, we only implemented the radix-2 decimation-in-time algorithm.
+
     * TeXed documentation for the proposal and FFT algorithms are located in
     the "documentation" directory. The GitHub repository contains a GIF of the
     running application: https://github.com/tig3r66/CMPUT275.
-
-----------
-Known Bugs
-----------
-    * If you click "Get Streams" without data streaming, send the data, then
-    click "Get Streams" again, the visualization will not be correct (it does
-    not plot all the points at the correct timestamp).
-
-    *  If you click "Get Streams" without data streaming, send the data, then
-    click "Stop Streams", the program will freeze. This is because the thread
-    that tries to pull data will keep on searching the network for a stream. The
-    function that pulls data was from the LSL library, and we could not find a
-    way to incorporate a proper timeout.
 
 -------------
 Contributions
